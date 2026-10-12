@@ -1,7 +1,11 @@
 name: Diagnose portals
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      script:
+        description: script in src/ to run
+        default: diagnose
 
 permissions:
   contents: write
@@ -15,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node src/diagnose.js
+      - run: node src/${{ inputs.script || 'diagnose' }}.js
       - name: Publish result to the "diag" branch
         run: |
           git config user.name "zulli-bot"
