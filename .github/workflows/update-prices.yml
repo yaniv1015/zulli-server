@@ -24,7 +24,7 @@ jobs:
       - run: node test/run.js
       - name: Fetch price files
         timeout-minutes: 90
-        run: node src/fetch.js --stores=15
+        run: node src/fetch.js
       - name: Publish data to the "data" branch
         if: always()
         run: |
