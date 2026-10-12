@@ -7,6 +7,11 @@
 // Ministry of Economy (gov.il → "שקיפות מחירים ברשתות השיווק").
 
 const UA = { 'user-agent': 'Mozilla/5.0 (zulli price fetcher)' };
+// every request has a time limit and is logged, so one slow server can never stall the whole run
+const fetch = (url, opts = {}) => {
+  console.log('  GET', String(url).slice(0, 140));
+  return globalThis.fetch(url, { ...opts, signal: AbortSignal.timeout(opts.timeout || 60000) });
+};
 const TYPES = ['PriceFull', 'PromoFull', 'Stores'];
 
 /** Return the newest URL per (type, store) from a list of file names / URLs. */

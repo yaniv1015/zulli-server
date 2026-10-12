@@ -19,8 +19,10 @@ jobs:
           node-version: 22
       - run: node test/run.js
       - name: Fetch price files
-        run: node src/fetch.js --online-only
+        timeout-minutes: 30
+        run: node src/fetch.js --online-only --stores=5
       - name: Publish data to the "data" branch
+        if: always()
         run: |
           git config user.name "zulli-bot"
           git config user.email "bot@users.noreply.github.com"

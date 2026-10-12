@@ -21,8 +21,11 @@ for (const key of chainKeys) {
   const ad = ADAPTERS[key];
   const r = (report.chains[key] = { files: 0, products: 0, promos: 0, errors: [] });
   if (!ad) { r.errors.push('unknown chain'); continue; }
+  const t0 = Date.now();
+  console.log(`\n▶ ${ad.name}`);
   try {
     const files = await ad.list();
+    console.log(`  ${files.length} files listed (${files.filter((f) => f.type === 'PriceFull').length} stores with prices)`);
     const stores = files.find((f) => f.type === 'Stores');
     let storeInfo = {};
     if (stores) {
@@ -32,7 +35,10 @@ for (const key of chainKeys) {
       r.files++;
     }
     let storeIds = [...new Set(files.filter((f) => f.type === 'PriceFull').map((f) => f.store))];
-    if (onlineOnly) storeIds = storeIds.filter((id) => ['2', '3'].includes(storeInfo[id]?.type) || /אונליין|online|אינטרנט/i.test(storeInfo[id]?.name || ''));
+    if (onlineOnly) {
+      const online = storeIds.filter((id) => ['2', '3'].includes(storeInfo[id]?.type) || /אונליין|online|אינטרנט/i.test(storeInfo[id]?.name || ''));
+      if (online.length) storeIds = online; // if the chain does not mark online stores, keep all of them
+    }
     storeIds = storeIds.slice(0, maxStores);
     for (const sid of storeIds) {
       for (const type of ['PriceFull', 'PromoFull']) {
@@ -46,7 +52,7 @@ for (const key of chainKeys) {
         } catch (e) { r.errors.push(`${f.name}: ${e.message}`); }
       }
     }
-    console.log(`✓ ${ad.name}: ${storeIds.length} stores, ${r.products} prices, ${r.promos} promos`);
+    console.log(`✓ ${ad.name}: ${storeIds.length} stores, ${r.products} prices, ${r.promos} promos, ${Math.round((Date.now() - t0) / 1000)}s`);
   } catch (e) {
     r.errors.push(e.message);
     console.warn(`✗ ${ad.name}: ${e.message}`);
