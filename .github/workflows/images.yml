@@ -1,0 +1,42 @@
+name: Product photos
+
+on:
+  workflow_dispatch:
+    inputs:
+      min_chains:
+        description: only products sold in at least this many chains
+        default: '3'
+  schedule:
+    - cron: '41 2 * * 0'   # weekly, Sunday 05:41 Israel time
+
+permissions:
+  contents: write
+
+concurrency:
+  group: images
+  cancel-in-progress: false
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save sharp@0.33.5
+      - name: Get the latest price summary
+        run: |
+          git fetch --depth 1 origin data
+          mkdir -p data && git show origin/data:data/summary.json > data/summary.json
+      - run: node src/images.js data/summary.json ${{ inputs.min_chains || '3' }}
+      - name: Publish to the "images" branch
+        run: |
+          git config user.name "zulli-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git checkout --orphan images-tmp
+          git rm -rf --cached . > /dev/null
+          git add -f img
+          git commit -m "images $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -f origin images-tmp:images
