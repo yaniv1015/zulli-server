@@ -24,7 +24,7 @@ for (const key of chainKeys) {
   const t0 = Date.now();
   console.log(`\n▶ ${ad.name}`);
   try {
-    const files = await ad.list();
+    const files = await ad.list({ maxStores });
     console.log(`  ${files.length} files listed (${files.filter((f) => f.type === 'PriceFull').length} stores with prices)`);
     const stores = files.find((f) => f.type === 'Stores');
     let storeInfo = {};

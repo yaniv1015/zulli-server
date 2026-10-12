@@ -37,24 +37,26 @@ export function pickLatest(urls) {
 }
 
 /* ---------- Shufersal: public listing pages with links to blob storage ---------- */
+// The listing site is slow (10–20 s per page), so we stop paging as soon as we have enough stores.
 export const shufersal = {
   key: 'shufersal', name: 'שופרסל', chainId: '7290027600007',
-  async list({ maxPages = 30 } = {}) {
+  async list({ maxStores = Infinity, maxPages = 60 } = {}) {
     const cats = { PriceFull: 2, PromoFull: 4, Stores: 5 };
     const urls = [];
-    for (const cat of Object.values(cats)) {
-      for (let page = 1; page <= maxPages; page++) {
-        const res = await fetch(`https://prices.shufersal.co.il/FileObject/UpdateCategory?catID=${cat}&storeId=0&page=${page}`, { headers: UA });
-        if (!res.ok) throw new Error(`shufersal listing ${res.status}`);
-        const html = await res.text();
+    for (const [type, cat] of Object.entries(cats)) {
+      const stores = new Set();
+      for (let page = 1; page <= (type === 'Stores' ? 1 : maxPages); page++) {
+        const html = await getText(`https://prices.shufersal.co.il/FileObject/UpdateCategory?catID=${cat}&storeId=0&page=${page}`, { timeout: 120000, retries: 1 });
         const found = [...html.matchAll(/href="(https?:\/\/[^"]+?\.(?:gz|xml|zip)[^"]*)"/gi)].map((m) => m[1].replace(/&amp;/g, '&'));
         if (!found.length) break;
         urls.push(...found);
+        for (const f of pickLatest(found)) stores.add(f.store);
+        if (stores.size >= maxStores) break;
       }
     }
     return pickLatest(urls);
   },
-  download: (f) => fetchBuffer(f.url),
+  download: (f) => fetchBuffer(f.url, { timeout: 120000, retries: 1 }),
 };
 
 /* ---------- Cerberus portal (url.publishedprices.co.il): many chains share it ---------- */
@@ -97,28 +99,60 @@ function cerberus(key, name, user, chainId) {
 export const rami = cerberus('rami', 'רמי לוי', 'RamiLevi', '7290058140886');
 export const yochananof = cerberus('yochananof', 'יוחננוף', 'yohananof', '7290803800003');
 
-/* ---------- Chains still to wire up: fill in the portal URL after checking the official list ---------- */
-function listingPage(key, name, url, chainId) {
+/* ---------- PublishPrice portals (prices.<chain>.co.il): the page script holds `const files = [...]` ---------- */
+export function parsePublishPrice(html, base) {
+  const m = html.match(/const\s+files\s*=\s*(\[[\s\S]*?\]);/);
+  if (!m) throw new Error('file list not found on the page');
+  const files = JSON.parse(m[1]);
+  const path = ((html.match(/const\s+path\s*=\s*['"`]([^'"`]*)['"`]/) || [])[1] || '').replace(/^\.?\/+|\/+$/g, '');
+  const root = base.replace(/\/+$/, '');
+  return files.map((f) => (typeof f === 'string' ? f : f.name)).filter(Boolean)
+    .map((name) => (path ? `${root}/${path}/${name}` : `${root}/${name}`));
+}
+function publishPrice(key, name, site, chainId) {
+  const base = `https://prices.${site}.co.il/`;
   return {
-    key, name, chainId, todo: !url,
-    async list() {
-      if (!url) throw new Error(`${name}: portal URL not configured yet (see README)`);
-      const html = await (await fetch(url, { headers: UA })).text();
-      const found = [...html.matchAll(/href="([^"]+?\.(?:gz|xml|zip)[^"]*)"/gi)].map((m) => new URL(m[1].replace(/&amp;/g, '&'), url).href);
-      return pickLatest(found);
-    },
-    download: (f) => fetchBuffer(f.url),
+    key, name, chainId,
+    async list() { return pickLatest(parsePublishPrice(await getText(base, { timeout: 90000, retries: 1 }), base)); },
+    download: (f) => fetchBuffer(f.url, { timeout: 120000, retries: 1 }),
   };
 }
-export const victory = listingPage('victory', 'ויקטורי', '', '7290696200003');
-export const carrefour = listingPage('carrefour', 'קרפור', '', '');
+export const carrefour = publishPrice('carrefour', 'קרפור', 'carrefour', '7290055700007');
+
+/* ---------- Victory: laibcatalog API. Its server does not answer GitHub's (non-Israeli) servers, see README ---------- */
+export const victory = {
+  key: 'victory', name: 'ויקטורי', chainId: '7290696200003',
+  async list() {
+    const base = 'https://laibcatalog.co.il';
+    let json;
+    try { json = JSON.parse(await getText(`${base}/webapi/api/getfiles?edi=7290696200003`, { timeout: 30000 })); }
+    catch (e) { throw new Error(`ויקטורי: השרת שלהם לא עונה מחוץ לישראל (${e.name === 'TimeoutError' ? 'timeout' : e.message})`); }
+    const list = Array.isArray(json) ? json : json.files || json.data || [];
+    return pickLatest(list.map((f) => `${base}/webapi/7290696200003/${f.fileName || f.FileName}`));
+  },
+  download: (f) => fetchBuffer(f.url, { timeout: 120000 }),
+};
 
 export const osherad = cerberus('osherad', 'אושר עד', 'osherad', ''); // verify username on the Cerberus portal
 
 export const ADAPTERS = { shufersal, rami, yochananof, victory, carrefour, osherad };
 
-export async function fetchBuffer(url, { cookie } = {}) {
-  const res = await fetch(url, { headers: cookie ? { ...UA, cookie } : UA });
-  if (!res.ok) throw new Error(`download ${res.status} ${url}`);
-  return Buffer.from(await res.arrayBuffer());
+async function withRetry(fn, retries) {
+  for (let i = 0; ; i++) {
+    try { return await fn(); } catch (e) { if (i >= retries) throw e; console.log(`  retry after: ${e.message}`); await new Promise((r) => setTimeout(r, 3000)); }
+  }
+}
+export async function getText(url, { timeout = 60000, retries = 0, headers = UA } = {}) {
+  return withRetry(async () => {
+    const res = await fetch(url, { headers, timeout });
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${url.slice(0, 80)}`);
+    return res.text();
+  }, retries);
+}
+export async function fetchBuffer(url, { cookie, timeout = 60000, retries = 0 } = {}) {
+  return withRetry(async () => {
+    const res = await fetch(url, { headers: cookie ? { ...UA, cookie } : UA, timeout });
+    if (!res.ok) throw new Error(`download ${res.status} ${url.slice(0, 80)}`);
+    return Buffer.from(await res.arrayBuffer());
+  }, retries);
 }

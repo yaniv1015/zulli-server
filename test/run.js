@@ -5,7 +5,7 @@ import { gzipSync } from 'node:zlib';
 import { decodeFile, parsePrices, parsePromos, parseStores } from '../src/parse.js';
 import { emptyDb, addPrices, addPromos, addStores, buildSummary } from '../src/normalize.js';
 import { compareBasket, linePrice } from '../src/compare.js';
-import { pickLatest } from '../src/adapters.js';
+import { pickLatest, parsePublishPrice } from '../src/adapters.js';
 
 const MILK = '7290004131074', BAMBA = '7290000066318', SHAMPOO = '7290108350692';
 
@@ -91,5 +91,10 @@ assert.equal(latest.find((f) => f.type === 'PriceFull').stamp, '202610110600');
 assert.equal(latest.find((f) => f.type === 'PriceFull').store, '413');
 const cer = pickLatest(['/f/PriceFull7290058140886-039-202610110300.gz', '/f/PromoFull7290803800003-001-005-20261011-030000.xml.gz', '/f/Stores7290027600007-000-202610110201.gz']);
 assert.deepEqual(cer.map((f) => `${f.type}:${f.store}:${f.stamp}`), ['PriceFull:39:202610110300', 'PromoFull:5:20261011030000', 'Stores:0:202610110201']);
+
+// 6. PublishPrice page (Carrefour)
+const pp = parsePublishPrice(`<script>const path = './20261012'; const files = [{"name":"PriceFull7290055700007-001-020-20261012-020000.gz","modified":"x"},{"name":"Stores7290055700007-000-20261012-020000.gz"}];</script>`, 'https://prices.carrefour.co.il/');
+assert.deepEqual(pp, ['https://prices.carrefour.co.il/20261012/PriceFull7290055700007-001-020-20261012-020000.gz', 'https://prices.carrefour.co.il/20261012/Stores7290055700007-000-20261012-020000.gz']);
+assert.equal(pickLatest(pp).find((f) => f.type === 'PriceFull').store, '20');
 
 console.log('all tests passed ✓');
