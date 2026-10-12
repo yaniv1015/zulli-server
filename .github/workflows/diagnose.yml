@@ -1,0 +1,27 @@
+name: Diagnose portals
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node src/diagnose.js
+      - name: Publish result to the "diag" branch
+        run: |
+          git config user.name "zulli-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git checkout --orphan diag-tmp
+          git rm -rf --cached . > /dev/null
+          git add -f data/diag.json
+          git commit -m "diag $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -f origin diag-tmp:diag
