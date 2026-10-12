@@ -1,0 +1,12 @@
+{
+  "name": "zulli-server",
+  "version": "0.1.0",
+  "description": "זול-לי: משיכת קבצי שקיפות מחירים מרשתות השיווק, התאמה לפי ברקוד והשוואת סל",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "fetch": "node src/fetch.js",
+    "test": "node test/run.js"
+  },
+  "license": "UNLICENSED"
+}
