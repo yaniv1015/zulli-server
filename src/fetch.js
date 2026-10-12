@@ -33,7 +33,8 @@ for (const key of chainKeys) {
   const t0 = Date.now();
   console.log(`\n▶ ${ad.name}`);
   try {
-    const files = await ad.list({ maxStores });
+    const types = db.compact ? ['PriceFull'] : ['PriceFull', 'PromoFull']; // promotions are not used in compact runs yet
+    const files = await ad.list({ maxStores, types });
     console.log(`  ${files.length} files listed (${files.filter((f) => f.type === 'PriceFull').length} stores with prices)`);
     const stores = files.find((f) => f.type === 'Stores');
     let storeInfo = {};
@@ -50,7 +51,7 @@ for (const key of chainKeys) {
     }
     storeIds = storeIds.slice(0, maxStores);
     for (const sid of storeIds) {
-      for (const type of ['PriceFull', 'PromoFull']) {
+      for (const type of types) {
         const f = files.find((x) => x.type === type && x.store === sid);
         if (!f) continue;
         try {

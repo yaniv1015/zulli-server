@@ -40,10 +40,11 @@ export function pickLatest(urls) {
 // The listing site is slow (10–20 s per page), so we stop paging as soon as we have enough stores.
 export const shufersal = {
   key: 'shufersal', name: 'שופרסל', chainId: '7290027600007',
-  async list({ maxStores = Infinity, maxPages = 60 } = {}) {
+  async list({ maxStores = Infinity, maxPages = 60, types = ['PriceFull', 'PromoFull'] } = {}) {
     const cats = { PriceFull: 2, PromoFull: 4, Stores: 5 };
     const urls = [];
     for (const [type, cat] of Object.entries(cats)) {
+      if (type !== 'Stores' && !types.includes(type)) continue;
       const stores = new Set();
       for (let page = 1; page <= (type === 'Stores' ? 1 : maxPages); page++) {
         const html = await getText(`https://prices.shufersal.co.il/FileObject/UpdateCategory?catID=${cat}&storeId=0&page=${page}`, { timeout: 120000, retries: 1 });
@@ -56,7 +57,18 @@ export const shufersal = {
     }
     return pickLatest(urls);
   },
-  download: (f) => fetchBuffer(f.url, { timeout: 120000, retries: 1 }),
+  // download links are signed and expire after about an hour: if one has expired, ask the site for a fresh link for that store
+  async download(f) {
+    try { return await fetchBuffer(f.url, { timeout: 120000 }); }
+    catch (e) {
+      if (!/download 403/.test(e.message)) throw e;
+      const cat = { PriceFull: 2, PromoFull: 4, Stores: 5 }[f.type];
+      const html = await getText(`https://prices.shufersal.co.il/FileObject/UpdateCategory?catID=${cat}&storeId=${f.store}`, { timeout: 120000, retries: 1 });
+      const fresh = pickLatest([...html.matchAll(/href="(https?:\/\/[^"]+?\.(?:gz|xml|zip)[^"]*)"/gi)].map((m) => m[1].replace(/&amp;/g, '&'))).find((x) => x.type === f.type);
+      if (!fresh) throw e;
+      return fetchBuffer(fresh.url, { timeout: 120000, retries: 1 });
+    }
+  },
 };
 
 /* ---------- Cerberus portal (url.publishedprices.co.il): many chains share it ---------- */
