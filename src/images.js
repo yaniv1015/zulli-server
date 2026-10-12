@@ -5,7 +5,7 @@
 // Sources, in order: Open Food Facts (open database, CC BY-SA), then Rami Levy's product image server.
 // Retailer photos belong to the retailer; get permission before a public launch.
 //
-// Usage: node src/images.js [path/to/summary.json] [minChains]
+// Usage: node src/images.js [path/to/summary.json] [minChains for Open Food Facts]
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import sharp from 'sharp';
 
@@ -39,29 +39,36 @@ async function thumb(buf) {
 }
 
 const sum = JSON.parse(readFileSync(SUMMARY, 'utf8'));
-const codes = Object.entries(sum.products)
-  .filter(([bc, p]) => /^\d{8,14}$/.test(bc) && Object.keys(p.p || {}).length >= MIN_CHAINS)
-  .sort((a, b) => Object.keys(b[1].p).length - Object.keys(a[1].p).length)
-  .map(([bc]) => bc);
-console.log(`${codes.length} products in ${MIN_CHAINS}+ chains`);
+const real = Object.entries(sum.products).filter(([bc]) => /^\d{8,14}$/.test(bc));
+const nCh = (p) => Object.keys(p.p || {}).length;
+// 1) everything Rami Levy sells: its image server has these (fast, parallel)
+const ramiCodes = real.filter(([, p]) => p.p?.rami != null).sort((a, b) => nCh(b[1]) - nCh(a[1])).map(([bc]) => bc);
+// 2) products Rami does not sell, in MIN_CHAINS+ chains: Open Food Facts, slowly (it allows ~100 product reads a minute)
+const offCodes = real.filter(([, p]) => p.p?.rami == null && nCh(p) >= MIN_CHAINS).sort((a, b) => nCh(b[1]) - nCh(a[1])).map(([bc]) => bc);
+console.log(`rami: ${ramiCodes.length} · open food facts: ${offCodes.length}`);
 
-// Open Food Facts asks for gentle use: only ask it for the first part, retailer server for the rest.
-const OFF_LIMIT = Number(process.env.OFF_LIMIT || 3000);
 const chunks = Array.from({ length: CHUNKS }, () => ({}));
 const stats = { off: 0, rami: 0, miss: 0, bytes: 0 };
-let next = 0, done = 0; const t0 = Date.now();
-async function worker() {
-  while (next < codes.length) {
-    const i = next++, bc = codes[i];
-    let raw = null, src = null;
-    if (i < OFF_LIMIT) { raw = await fromOff(bc); if (raw) src = 'off'; }
-    if (!raw) { raw = await fromRami(bc); if (raw) src = 'rami'; }
-    if (raw) { try { const w = await thumb(raw); chunks[chunkOf(bc)][bc] = w.toString('base64'); stats[src]++; stats.bytes += w.length; } catch { stats.miss++; } }
-    else stats.miss++;
-    if (++done % 500 === 0) console.log(`${done}/${codes.length} · off ${stats.off} · rami ${stats.rami} · miss ${stats.miss} · ${Math.round(stats.bytes / 1024)}KB · ${Math.round((Date.now() - t0) / 1000)}s`);
-  }
+const t0 = Date.now();
+async function keep(bc, raw, src) {
+  if (!raw) { stats.miss++; return; }
+  try { const w = await thumb(raw); chunks[chunkOf(bc)][bc] = w.toString('base64'); stats[src]++; stats.bytes += w.length; } catch { stats.miss++; }
 }
-await Promise.all(Array.from({ length: CONC }, worker));
+const log = (n, of) => console.log(`${n}/${of} · off ${stats.off} · rami ${stats.rami} · miss ${stats.miss} · ${Math.round(stats.bytes / 1024)}KB · ${Math.round((Date.now() - t0) / 1000)}s`);
+async function pool(list, conc, fn, every = 1000) {
+  let next = 0, done = 0;
+  await Promise.all(Array.from({ length: conc }, async () => { while (next < list.length) { const bc = list[next++]; await fn(bc); if (++done % every === 0) log(done, list.length); } }));
+}
+const OFF_MINUTES = Number(process.env.OFF_MINUTES || 40);
+const offRun = (async () => {   // runs alongside the Rami pass: one request every ~0.7s, stops after OFF_MINUTES
+  for (const [i, bc] of offCodes.entries()) {
+    if (Date.now() - t0 > OFF_MINUTES * 60000) { console.log(`open food facts: stopped after ${i} products (time limit)`); break; }
+    const s = Date.now(); await keep(bc, await fromOff(bc), 'off');
+    await new Promise((r) => setTimeout(r, Math.max(0, 700 - (Date.now() - s))));
+  }
+})();
+await pool(ramiCodes, CONC, async (bc) => keep(bc, await fromRami(bc), 'rami'));
+await offRun;
 mkdirSync('img', { recursive: true });
 chunks.forEach((c, i) => writeFileSync(`img/${String(i).padStart(3, '0')}.json`, JSON.stringify(c)));
 const index = { updated: new Date().toISOString(), chunks: CHUNKS, count: stats.off + stats.rami, ...stats };
