@@ -75,7 +75,12 @@ export function buildSummary(db) {
       const vals = typeof stores === 'number' ? [stores] : Object.values(stores);
       if (vals.length) best[chain] = Math.min(...vals);
     }
-    out[bc] = { n: p.name, m: p.manufacturer, q: p.quantity, u: p.unit, w: p.weighted ? 1 : 0, p: best };
+    const known = (x) => x && !/^(לא ידוע|unknown)$/i.test(String(x).trim());
+    const row = { n: p.name, q: p.quantity, p: best }; // short keys and no empty fields keep the app's file small
+    if (known(p.manufacturer)) row.m = p.manufacturer;
+    if (known(p.unit)) row.u = p.unit;
+    if (p.weighted) row.w = 1;
+    out[bc] = row;
   }
   // real branches per chain, for the app's location screen: { chain: [{ id, name, city, address }] }
   const stores = {};
