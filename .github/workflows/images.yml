@@ -7,7 +7,7 @@ on:
         description: only products sold in at least this many chains
         default: '3'
   schedule:
-    - cron: '41 2 * * 0'   # weekly, Sunday 05:41 Israel time
+    - cron: '41 */6 * * *'   # every 6 hours; each run adds photos and keeps the old ones
 
 permissions:
   contents: write
@@ -30,6 +30,10 @@ jobs:
         run: |
           git fetch --depth 1 origin data
           mkdir -p data && git show origin/data:data/summary.json > data/summary.json
+      - name: Get the photos collected so far
+        run: |
+          git fetch --depth 1 origin images || true
+          mkdir -p prev && (git archive origin/images img | tar -x -C prev) || true
       - run: node src/images.js data/summary.json ${{ inputs.min_chains || '3' }}
       - name: Publish to the "images" branch
         run: |
