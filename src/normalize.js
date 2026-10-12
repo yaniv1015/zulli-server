@@ -7,8 +7,10 @@
 //   promos: { chain: { [promoId]: promo } }
 // }
 
-export function emptyDb() {
-  return { updated: new Date().toISOString(), chains: {}, products: {}, promos: {} };
+// compact: keep only the cheapest price per chain (and how many stores sell it) instead of a price per store.
+// A full run covers ~800 stores; per-store prices would not fit in memory.
+export function emptyDb({ compact = false } = {}) {
+  return { updated: new Date().toISOString(), compact, chains: {}, products: {}, promos: {} };
 }
 
 /** Chain-internal codes (ItemType 0, or short codes) are not shared barcodes; prefix them with the chain. */
@@ -29,17 +31,21 @@ export function addPrices(db, chainKey, chainName, parsed) {
     const key = productKey(chainKey, it);
     const p = (db.products[key] ||= {
       name: it.name, manufacturer: it.manufacturer, quantity: it.quantity, unit: it.unitQty,
-      weighted: it.weighted, names: {}, prices: {}, promos: {},
+      weighted: it.weighted, names: db.compact ? undefined : {}, prices: {}, promos: {}, stores: db.compact ? {} : undefined,
     });
-    p.names[chainKey] ||= it.name;
+    if (!db.compact) p.names[chainKey] ||= it.name;
     // keep the most descriptive name and fill gaps from other chains
     if (it.name && it.name.length > (p.name || '').length) p.name = it.name;
     if (!p.manufacturer && it.manufacturer) p.manufacturer = it.manufacturer;
-    (p.prices[chainKey] ||= {})[parsed.storeId] = it.price;
+    if (db.compact) {
+      if (p.prices[chainKey] == null || it.price < p.prices[chainKey]) p.prices[chainKey] = it.price;
+      p.stores[chainKey] = (p.stores[chainKey] || 0) + 1;
+    } else (p.prices[chainKey] ||= {})[parsed.storeId] = it.price;
   }
 }
 
 export function addPromos(db, chainKey, parsed) {
+  if (db.compact) return; // promotions are not in the app's file yet
   const store = parsed.storeId;
   const bucket = (db.promos[chainKey] ||= {});
   for (const pr of parsed.promos) {
@@ -62,7 +68,7 @@ export function buildSummary(db) {
   for (const [bc, p] of Object.entries(db.products)) {
     const best = {};
     for (const [chain, stores] of Object.entries(p.prices)) {
-      const vals = Object.values(stores);
+      const vals = typeof stores === 'number' ? [stores] : Object.values(stores);
       if (vals.length) best[chain] = Math.min(...vals);
     }
     out[bc] = { n: p.name, m: p.manufacturer, q: p.quantity, u: p.unit, w: p.weighted ? 1 : 0, p: best };

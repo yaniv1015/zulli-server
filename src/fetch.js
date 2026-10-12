@@ -1,5 +1,5 @@
 // Download the latest files from every enabled chain, parse them and write:
-//   data/db.json       full catalog (prices per store + promotions)
+//   (prices are kept compact: cheapest price per chain, so a run over all stores fits in memory)
 //   data/summary.json  light file for the app: cheapest price per product per chain
 //   data/report.json   what was fetched, what failed
 //
@@ -14,7 +14,7 @@ const chainKeys = args.chains ? String(args.chains).split(',') : Object.keys(ADA
 const maxStores = args.stores ? +args.stores : Infinity; // limit while testing
 const onlineOnly = !!args['online-only'];
 
-const db = emptyDb();
+const db = emptyDb({ compact: true });
 const report = { started: new Date().toISOString(), chains: {} };
 
 for (const key of chainKeys) {
@@ -52,6 +52,7 @@ for (const key of chainKeys) {
         } catch (e) { r.errors.push(`${f.name}: ${e.message}`); }
       }
     }
+    r.stores = storeIds.length;
     console.log(`✓ ${ad.name}: ${storeIds.length} stores, ${r.products} prices, ${r.promos} promos, ${Math.round((Date.now() - t0) / 1000)}s`);
   } catch (e) {
     r.errors.push(e.message);
@@ -62,7 +63,6 @@ for (const key of chainKeys) {
 report.finished = new Date().toISOString();
 report.totalProducts = Object.keys(db.products).length;
 await mkdir('data', { recursive: true });
-await writeFile('data/db.json', JSON.stringify(db));
 await writeFile('data/summary.json', JSON.stringify(buildSummary(db)));
 await writeFile('data/report.json', JSON.stringify(report, null, 2));
 console.log(`Done: ${report.totalProducts} products → data/`);

@@ -24,6 +24,8 @@ jobs:
       - run: node test/run.js
       - name: Fetch price files
         timeout-minutes: 90
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
         run: node src/fetch.js
       - name: Publish data to the "data" branch
         if: always()
