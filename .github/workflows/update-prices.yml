@@ -34,6 +34,7 @@ jobs:
           git config user.email "bot@users.noreply.github.com"
           git checkout --orphan data-tmp
           git rm -rf --cached . > /dev/null
+          test -f data/summary.json || exit 0
           git add -f data/summary.json data/report.json
           git commit -m "prices $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -f origin data-tmp:data

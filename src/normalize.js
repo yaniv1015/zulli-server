@@ -13,6 +13,10 @@ export function emptyDb({ compact = false } = {}) {
   return { updated: new Date().toISOString(), compact, chains: {}, products: {}, promos: {} };
 }
 
+// Strings cut out of a big XML file keep the whole file alive in memory (V8 "sliced strings").
+// Copy them so each file can be freed after it is parsed.
+const own = (x) => (typeof x === 'string' ? Buffer.from(x, 'utf8').toString('utf8') : x);
+
 /** Chain-internal codes (ItemType 0, or short codes) are not shared barcodes; prefix them with the chain. */
 export function productKey(chainKey, item) {
   const code = item.barcode.replace(/^0+(?=\d{8,})/, '');
@@ -22,7 +26,7 @@ export function productKey(chainKey, item) {
 
 export function addStores(db, chainKey, chainName, parsed) {
   const ch = (db.chains[chainKey] ||= { name: chainName, stores: {} });
-  for (const s of parsed.stores) ch.stores[s.storeId] = { name: s.name, city: s.city, address: s.address, type: s.type };
+  for (const s of parsed.stores) ch.stores[own(s.storeId)] = { name: own(s.name), city: own(s.city), address: own(s.address), type: own(s.type) };
 }
 
 export function addPrices(db, chainKey, chainName, parsed) {
@@ -30,13 +34,13 @@ export function addPrices(db, chainKey, chainName, parsed) {
   for (const it of parsed.items) {
     const key = productKey(chainKey, it);
     const p = (db.products[key] ||= {
-      name: it.name, manufacturer: it.manufacturer, quantity: it.quantity, unit: it.unitQty,
+      name: own(it.name), manufacturer: own(it.manufacturer), quantity: it.quantity, unit: own(it.unitQty),
       weighted: it.weighted, names: db.compact ? undefined : {}, prices: {}, promos: {}, stores: db.compact ? {} : undefined,
     });
     if (!db.compact) p.names[chainKey] ||= it.name;
     // keep the most descriptive name and fill gaps from other chains
-    if (it.name && it.name.length > (p.name || '').length) p.name = it.name;
-    if (!p.manufacturer && it.manufacturer) p.manufacturer = it.manufacturer;
+    if (it.name && it.name.length > (p.name || '').length) p.name = own(it.name);
+    if (!p.manufacturer && it.manufacturer) p.manufacturer = own(it.manufacturer);
     if (db.compact) {
       if (p.prices[chainKey] == null || it.price < p.prices[chainKey]) p.prices[chainKey] = it.price;
       p.stores[chainKey] = (p.stores[chainKey] || 0) + 1;

@@ -17,6 +17,15 @@ const onlineOnly = !!args['online-only'];
 const db = emptyDb({ compact: true });
 const report = { started: new Date().toISOString(), chains: {} };
 
+// results are written after every chain, so a crash late in the run still leaves the chains done so far
+async function saveOutputs(done = false) {
+  if (done) report.finished = new Date().toISOString();
+  report.totalProducts = Object.keys(db.products).length;
+  await mkdir('data', { recursive: true });
+  await writeFile('data/summary.json', JSON.stringify(buildSummary(db)));
+  await writeFile('data/report.json', JSON.stringify(report, null, 2));
+}
+
 for (const key of chainKeys) {
   const ad = ADAPTERS[key];
   const r = (report.chains[key] = { files: 0, products: 0, promos: 0, errors: [] });
@@ -53,16 +62,14 @@ for (const key of chainKeys) {
       }
     }
     r.stores = storeIds.length;
+    r.heapMB = Math.round(process.memoryUsage().heapUsed / 1048576);
     console.log(`✓ ${ad.name}: ${storeIds.length} stores, ${r.products} prices, ${r.promos} promos, ${Math.round((Date.now() - t0) / 1000)}s`);
   } catch (e) {
     r.errors.push(e.message);
     console.warn(`✗ ${ad.name}: ${e.message}`);
   }
+  await saveOutputs();
 }
 
-report.finished = new Date().toISOString();
-report.totalProducts = Object.keys(db.products).length;
-await mkdir('data', { recursive: true });
-await writeFile('data/summary.json', JSON.stringify(buildSummary(db)));
-await writeFile('data/report.json', JSON.stringify(report, null, 2));
+await saveOutputs(true);
 console.log(`Done: ${report.totalProducts} products → data/`);
