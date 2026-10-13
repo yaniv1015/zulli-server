@@ -4,7 +4,7 @@ import { ADAPTERS } from './adapters.js';
 import { decodeFile, parsePromos, parsePrices } from './parse.js';
 import { dealFor } from './normalize.js';
 const out = {};
-for (const key of ['shufersal', 'yochananof', 'osherad', 'carrefour']) {
+for (const key of ['shufersal']) {
   const ad = ADAPTERS[key]; const o = (out[key] = {});
   try {
     const files = await ad.list({ maxStores: 3, maxPromoStores: 2, maxPages: 2, types: ['PriceFull', 'PromoFull'] });
@@ -12,7 +12,8 @@ for (const key of ['shufersal', 'yochananof', 'osherad', 'carrefour']) {
     o.sampleNames = files.slice(0, 5).map((f) => f.name);
     const pf = files.find((f) => f.type === 'PromoFull'); const prf = files.find((f) => f.type === 'PriceFull' && pf && f.store === pf.store) || files.find((f) => f.type === 'PriceFull');
     if (!pf) { o.err = 'no PromoFull'; continue; }
-    const promos = parsePromos(decodeFile(await ad.download(pf)));
+    const rawXml = decodeFile(await ad.download(pf)); o.raw = rawXml.slice(0, 2500); o.rawLen = rawXml.length; o.tags = [...new Set([...rawXml.slice(0, 200000).matchAll(/<([A-Za-z]+)[\s>]/g)].map((m) => m[1]))].slice(0, 60);
+    const promos = parsePromos(rawXml);
     const prices = prf ? parsePrices(decodeFile(await ad.download(prf))) : { items: [] };
     const base = new Map(prices.items.map((i) => [i.barcode.replace(/^0+(?=\d{8,})/, ''), i.price]));
     const why = {}; const ex = [];
