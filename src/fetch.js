@@ -4,7 +4,7 @@
 //   data/report.json   what was fetched, what failed
 //
 // Usage: node src/fetch.js [--chains=shufersal,rami] [--stores=5] [--online-only]
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { ADAPTERS } from './adapters.js';
 import { decodeFile, parsePrices, parsePromos, parseStores } from './parse.js';
 import { emptyDb, addStores, addPrices, addPromos, buildSummary } from './normalize.js';
@@ -20,11 +20,40 @@ const db = emptyDb({ compact: true });
 const report = { started: new Date().toISOString(), chains: {} };
 
 // results are written after every chain, so a crash late in the run still leaves the chains done so far
+// The previous summary (data/prev.json, from the data branch) protects against a bad night: chains sometimes
+// replace their files around midnight and list only part of them. A chain that comes back with far fewer
+// stores than last time keeps its previous prices, deals and branches instead of shrinking the app's catalog.
+let prev = null;
+try { prev = JSON.parse(await readFile('data/prev.json', 'utf8')); } catch {}
+function withFallback(sum) {
+  if (!prev?.products) return sum;
+  for (const key of chainKeys) {
+    const before = (prev.stores?.[key] || []).length, now = (sum.stores?.[key] || []).length;
+    const priced = report.chains[key]?.stores || 0;
+    const prevCount = Object.values(prev.products).filter((p) => p.p?.[key] != null).length;
+    const nowCount = Object.values(sum.products).filter((p) => p.p?.[key] != null).length;
+    if (!prevCount || nowCount >= prevCount * 0.7) continue;
+    report.chains[key].keptPrevious = { prevProducts: prevCount, newProducts: nowCount, storesPriced: priced, prevBranches: before, newBranches: now };
+    for (const p of Object.values(sum.products)) { delete p.p[key]; if (p.d) delete p.d[key]; if (p.dc) delete p.dc[key]; }
+    for (const [bc, pp] of Object.entries(prev.products)) {
+      if (pp.p?.[key] == null) continue;
+      const row = (sum.products[bc] ||= { n: pp.n, q: pp.q, p: {}, ...(pp.m ? { m: pp.m } : {}), ...(pp.u ? { u: pp.u } : {}), ...(pp.w ? { w: 1 } : {}) });
+      row.p[key] = pp.p[key];
+      if (pp.d?.[key]) (row.d ||= {})[key] = pp.d[key];
+      if (pp.dc?.[key]) (row.dc ||= {})[key] = pp.dc[key];
+    }
+    if (before > now) sum.stores[key] = prev.stores[key];
+  }
+  for (const p of Object.values(sum.products)) { if (p.d && !Object.keys(p.d).length) delete p.d; if (p.dc && !Object.keys(p.dc).length) delete p.dc; }
+  for (const [bc, p] of Object.entries(sum.products)) if (!Object.keys(p.p).length) delete sum.products[bc];
+  return sum;
+}
+
 async function saveOutputs(done = false) {
   if (done) report.finished = new Date().toISOString();
   report.totalProducts = Object.keys(db.products).length;
   await mkdir('data', { recursive: true });
-  await writeFile('data/summary.json', JSON.stringify(buildSummary(db)));
+  await writeFile('data/summary.json', JSON.stringify(done ? withFallback(buildSummary(db)) : buildSummary(db)));
   await writeFile('data/report.json', JSON.stringify(report, null, 2));
 }
 

@@ -52,7 +52,7 @@ export function addPrices(db, chainKey, chainName, parsed) {
  *  Returns null for promotions the app cannot price per product (gifts, basket thresholds, odd values). */
 export function dealFor(pr, base, now = new Date()) {
   if (!(base > 0) || pr.isGiftItem || (pr.minPurchaseAmount > 0)) return null;
-  const day = (s) => String(s || '').slice(0, 10);
+  const day = (s) => (String(s || '').match(/^\d{4}-\d{2}-\d{2}/) || [''])[0]; // a bare hour is not a date
   const today = now.toISOString().slice(0, 10);
   if (pr.end && day(pr.end) && day(pr.end) < today) return null;
   if (pr.start && day(pr.start) && day(pr.start) > today) return null;

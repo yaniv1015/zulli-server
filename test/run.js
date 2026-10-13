@@ -97,6 +97,18 @@ const pp = parsePublishPrice(`<script>const path = './20261012'; const files = [
 assert.deepEqual(pp, ['https://prices.carrefour.co.il/20261012/PriceFull7290055700007-001-020-20261012-020000.gz', 'https://prices.carrefour.co.il/20261012/Stores7290055700007-000-20261012-020000.gz']);
 assert.equal(pickLatest(pp).find((f) => f.type === 'PriceFull').store, '20');
 
+// 5b. Shufersal promotion layout: items under Groups/PromotionItems, one DateTime field, club text
+const shufPromo = `<Root><ChainID>7290027600007</ChainID><StoreID>550</StoreID><Promotions><Promotion><PromotionID>1</PromotionID>
+<PromotionDescription>במבה 3 ב-12</PromotionDescription><PromotionStartDateTime>2026-01-01T00:00:00.000</PromotionStartDateTime>
+<PromotionEndDateTime>2099-08-01T02:59:00.000</PromotionEndDateTime><PromotionEndHour>02:59:00.000</PromotionEndHour><ClubID>0 - כלל הלקוחות</ClubID>
+<Groups><Group><MinPurchaseAmount>0</MinPurchaseAmount><PromotionItems><PromotionItem><ItemCode>${BAMBA}</ItemCode><RewardType>1</RewardType><MinQty>3</MinQty><DiscountedPrice>12.00</DiscountedPrice></PromotionItem>
+<PromotionItem><ItemCode>${MILK}</ItemCode><RewardType>1</RewardType><MinQty>3</MinQty><DiscountedPrice>12.00</DiscountedPrice></PromotionItem></PromotionItems></Group></Groups></Promotion></Promotions></Root>`;
+const sp = parsePromos(shufPromo).promos[0];
+assert.deepEqual(sp.barcodes, [BAMBA, MILK]);
+assert.deepEqual(sp.clubs, ['0']);
+assert.equal(sp.end.slice(0, 10), '2099-08-01');
+assert.equal(parsePromos(shufPromo.replace('0 - כלל הלקוחות', '(2=מועדון קרפור אשראי|2=מועדון אפליקציה)')).promos[0].clubs[0], '2');
+
 // 6. compact runs keep the best regular deal and the best club deal per chain, packed for the app
 const cdb = emptyDb({ compact: true });
 addPrices(cdb, 'shufersal', 'שופרסל', p1);

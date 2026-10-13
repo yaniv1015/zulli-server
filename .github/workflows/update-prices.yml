@@ -22,6 +22,10 @@ jobs:
         with:
           node-version: 22
       - run: node test/run.js
+      - name: Get the previous summary (kept for chains that come back short)
+        run: |
+          git fetch --depth 1 origin data || true
+          mkdir -p data && (git show origin/data:data/summary.json > data/prev.json || rm -f data/prev.json)
       - name: Fetch price files
         timeout-minutes: 90
         env:

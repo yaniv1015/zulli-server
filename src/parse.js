@@ -84,16 +84,19 @@ export function parsePromos(xml) {
   const chainId = field(xml, ['ChainId', 'ChainID']);
   const storeId = field(xml, ['StoreId', 'StoreID']).replace(/^0+(?=\d)/, '');
   const promos = blocks(xml, ['Promotion', 'Sale']).map((b) => {
-    const barcodes = blocks(b, ['Item']).map((i) => field(i, ['ItemCode'])).filter(Boolean);
+    const barcodes = blocks(b, ['Item', 'PromotionItem']).map((i) => field(i, ['ItemCode'])).filter(Boolean);
     if (!barcodes.length) { const one = field(b, ['ItemCode']); if (one) barcodes.push(one); }
-    const clubs = blocks(b, ['Club', 'Clubs']).map((c) => field(c, ['ClubId'])).filter(Boolean);
+    // club ids come as "0", "0 - כלל הלקוחות" (Shufersal) or "(2=מועדון קרפור אשראי|…)" (Carrefour): keep the number
+    const clubId = (c) => (String(c).match(/\d+/) || [String(c).trim()])[0];
+    const clubs = blocks(b, ['Club', 'Clubs']).map((c) => field(c, ['ClubId'])).filter(Boolean).map(clubId);
     const club = field(b, ['ClubId']);
-    if (club && !clubs.includes(club)) clubs.push(club);
+    if (club && !clubs.includes(clubId(club))) clubs.push(clubId(club));
     return {
       id: field(b, ['PromotionId', 'PromotionID']),
       description: field(b, ['PromotionDescription', 'PromotionDesc']),
-      start: `${field(b, ['PromotionStartDate'])} ${field(b, ['PromotionStartHour'])}`.trim(),
-      end: `${field(b, ['PromotionEndDate'])} ${field(b, ['PromotionEndHour'])}`.trim(),
+      // dates: PromotionStartDate + PromotionStartHour, or one PromotionStartDateTime (Shufersal)
+      start: field(b, ['PromotionStartDateTime']).replace('T', ' ') || `${field(b, ['PromotionStartDate'])} ${field(b, ['PromotionStartHour'])}`.trim(),
+      end: field(b, ['PromotionEndDateTime']).replace('T', ' ') || `${field(b, ['PromotionEndDate'])} ${field(b, ['PromotionEndHour'])}`.trim(),
       rewardType: field(b, ['RewardType']),
       minQty: num(field(b, ['MinQty'])) ?? 1,
       maxQty: num(field(b, ['MaxQty'])),
