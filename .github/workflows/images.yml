@@ -7,7 +7,7 @@ on:
         description: only products sold in at least this many chains
         default: '3'
   schedule:
-    - cron: '41 */6 * * *'   # every 6 hours; each run adds photos and keeps the old ones
+    - cron: '23 * * * *'   # hourly short runs; each adds photos and keeps the old ones
 
 permissions:
   contents: write
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   images:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

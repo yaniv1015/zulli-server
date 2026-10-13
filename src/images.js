@@ -67,27 +67,30 @@ async function keep(bc, raw, src) {
 }
 const log = (n, of) => console.log(`${n}/${of} · off ${stats.off} · rami ${stats.rami} · miss ${stats.miss} · ${Math.round((Date.now() - t0) / 1000)}s`);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const RUN_MINUTES = Number(process.env.RUN_MINUTES || 45);
+const RUN_MINUTES = Number(process.env.RUN_MINUTES || 20);
+const RAMI_MAX = Number(process.env.RAMI_MAX || 2500);   // the server starts refusing after a few thousand requests from one machine
 const timeUp = () => Date.now() - t0 > RUN_MINUTES * 60000;
 
 // Rami Levy: a few requests at a time with pauses. If the server stops answering (a long run of
 // failures on products that usually have photos), stop for this run instead of marking them all as missing.
-const ramiTodo = ramiCodes.filter(fresh);
+const ramiTodo = ramiCodes.filter(fresh).slice(0, RAMI_MAX);
 console.log(`rami to try: ${ramiTodo.length}`);
+const ramiInfo = {};
 const ramiRun = (async () => {
   let next = 0, streak = 0, stopped = false; const pending = [];
-  await Promise.all(Array.from({ length: 3 }, async () => {
+  await Promise.all(Array.from({ length: 8 }, async () => {
     while (!stopped && next < ramiTodo.length && !timeUp()) {
       const bc = ramiTodo[next++];
       const raw = await fromRami(bc);
       if (raw) { streak = 0; await keep(bc, raw, 'rami'); } else { streak++; pending.push(bc); }
-      if (streak >= 60) { stopped = true; console.log(`rami: 60 failures in a row at ${next}, stopping this run`); }
+      if (streak >= 40) { stopped = true; console.log(`rami: 40 failures in a row at ${next}, stopping this run`); }
       if (next % 1000 === 0) log(next, ramiTodo.length);
-      await sleep(250);
+      await sleep(60);
     }
   }));
   // failures count as real misses only if the server was still answering afterwards
-  const confirmed = stopped ? pending.slice(0, Math.max(0, pending.length - 60)) : pending;
+  const confirmed = stopped ? pending.slice(0, Math.max(0, pending.length - 40)) : pending;
+  ramiInfo.tried = next; ramiInfo.stopped = stopped;
   for (const bc of confirmed) { misses[bc] = today; stats.miss++; }
 })();
 // Open Food Facts: one request every ~0.7s
@@ -101,6 +104,6 @@ console.log(`photos: ${before} → ${after}`);
 mkdirSync('img', { recursive: true });
 chunks.forEach((c, i) => writeFileSync(`img/${String(i).padStart(3, '0')}.json`, JSON.stringify(c)));
 writeFileSync('img/misses.json', JSON.stringify(misses));
-const index = { updated: new Date().toISOString(), chunks: CHUNKS, count: after, added: { off: stats.off, rami: stats.rami }, misses: Object.keys(misses).length };
+const index = { updated: new Date().toISOString(), chunks: CHUNKS, count: after, added: { off: stats.off, rami: stats.rami }, misses: Object.keys(misses).length, rami: { todo: ramiCodes.filter(fresh).length, ...ramiInfo } };
 writeFileSync('img/index.json', JSON.stringify(index));
 console.log(JSON.stringify(index));
