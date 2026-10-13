@@ -13,6 +13,8 @@ const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/
 const chainKeys = args.chains ? String(args.chains).split(',') : Object.keys(ADAPTERS);
 const maxStores = args.stores ? +args.stores : Infinity; // limit while testing
 const onlineOnly = !!args['online-only'];
+// promotions (incl. club deals): read from a few stores per chain, enough for chain-wide deals without a long run
+const promoStores = args['promo-stores'] != null ? +args['promo-stores'] : 6;
 
 const db = emptyDb({ compact: true });
 const report = { started: new Date().toISOString(), chains: {} };
@@ -33,8 +35,8 @@ for (const key of chainKeys) {
   const t0 = Date.now();
   console.log(`\n▶ ${ad.name}`);
   try {
-    const types = db.compact ? ['PriceFull'] : ['PriceFull', 'PromoFull']; // promotions are not used in compact runs yet
-    const files = await ad.list({ maxStores, types });
+    const types = ['PriceFull'];
+    const files = await ad.list({ maxStores, maxPromoStores: promoStores, types: promoStores > 0 ? ['PriceFull', 'PromoFull'] : ['PriceFull'] });
     console.log(`  ${files.length} files listed (${files.filter((f) => f.type === 'PriceFull').length} stores with prices)`);
     const stores = files.find((f) => f.type === 'Stores');
     let storeInfo = {};
@@ -61,6 +63,17 @@ for (const key of chainKeys) {
           r.files++;
         } catch (e) { r.errors.push(`${f.name}: ${e.message}`); }
       }
+    }
+    // promotions after all prices, so each deal is priced against the chain's cheapest price
+    if (promoStores > 0) {
+      const promoFiles = files.filter((f) => f.type === 'PromoFull');
+      const pick = [...promoFiles.filter((f) => storeIds.includes(f.store) && (['2', '3'].includes(storeInfo[f.store]?.type) || /אונליין|online|אינטרנט/i.test(storeInfo[f.store]?.name || ''))), ...promoFiles].filter((f, i, a) => a.indexOf(f) === i).slice(0, promoStores);
+      for (const f of pick) {
+        try { const p = parsePromos(decodeFile(await ad.download(f))); addPromos(db, key, p); r.promos += p.promos.length; r.files++; }
+        catch (e) { r.errors.push(`${f.name}: ${e.message}`); }
+      }
+      r.promoStores = pick.length;
+      r.deals = Object.values(db.products).filter((p) => p.deals?.[key]).length;
     }
     r.stores = storeIds.length;
     r.heapMB = Math.round(process.memoryUsage().heapUsed / 1048576);

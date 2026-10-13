@@ -40,7 +40,7 @@ export function pickLatest(urls) {
 // The listing site is slow (10–20 s per page), so we stop paging as soon as we have enough stores.
 export const shufersal = {
   key: 'shufersal', name: 'שופרסל', chainId: '7290027600007',
-  async list({ maxStores = Infinity, maxPages = 60, types = ['PriceFull', 'PromoFull'] } = {}) {
+  async list({ maxStores = Infinity, maxPromoStores = Infinity, maxPages = 60, types = ['PriceFull', 'PromoFull'] } = {}) {
     const cats = { PriceFull: 2, PromoFull: 4, Stores: 5 };
     const urls = [];
     for (const [type, cat] of Object.entries(cats)) {
@@ -52,7 +52,7 @@ export const shufersal = {
         if (!found.length) break;
         urls.push(...found);
         for (const f of pickLatest(found)) stores.add(f.store);
-        if (stores.size >= maxStores) break;
+        if (stores.size >= (type === 'PromoFull' ? Math.min(maxStores, maxPromoStores) : maxStores)) break;
       }
     }
     return pickLatest(urls);

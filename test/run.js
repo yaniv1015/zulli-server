@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { gzipSync } from 'node:zlib';
 import { decodeFile, parsePrices, parsePromos, parseStores } from '../src/parse.js';
-import { emptyDb, addPrices, addPromos, addStores, buildSummary } from '../src/normalize.js';
+import { emptyDb, addPrices, addPromos, addStores, buildSummary, dealFor } from '../src/normalize.js';
 import { compareBasket, linePrice } from '../src/compare.js';
 import { pickLatest, parsePublishPrice } from '../src/adapters.js';
 
@@ -96,5 +96,17 @@ assert.deepEqual(cer.map((f) => `${f.type}:${f.store}:${f.stamp}`), ['PriceFull:
 const pp = parsePublishPrice(`<script>const path = './20261012'; const files = [{"name":"PriceFull7290055700007-001-020-20261012-020000.gz","modified":"x"},{"name":"Stores7290055700007-000-20261012-020000.gz"}];</script>`, 'https://prices.carrefour.co.il/');
 assert.deepEqual(pp, ['https://prices.carrefour.co.il/20261012/PriceFull7290055700007-001-020-20261012-020000.gz', 'https://prices.carrefour.co.il/20261012/Stores7290055700007-000-20261012-020000.gz']);
 assert.equal(pickLatest(pp).find((f) => f.type === 'PriceFull').store, '20');
+
+// 6. compact runs keep the best regular deal and the best club deal per chain, packed for the app
+const cdb = emptyDb({ compact: true });
+addPrices(cdb, 'shufersal', 'שופרסל', p1);
+addPromos(cdb, 'shufersal', pr);
+const cs = buildSummary(cdb);
+assert.deepEqual(cs.products[BAMBA].d.shufersal.slice(0, 4), ['m', 3, 15, 0], '3 for 15, open to everyone');
+assert.deepEqual(cs.products[SHAMPOO].dc.shufersal.slice(0, 4), ['p', 1, 20, 1], '20% for club members');
+assert.equal(cs.products[MILK].d, undefined);
+assert.equal(dealFor({ discountedPrice: 30, minQty: 1, clubs: ['0'] }, 10), null, 'not a discount');
+assert.equal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'], end: '2001-01-01' }, 10), null, 'expired');
+assert.equal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'], isGiftItem: true }, 10), null, 'gift');
 
 console.log('all tests passed ✓');

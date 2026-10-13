@@ -48,8 +48,49 @@ export function addPrices(db, chainKey, chainName, parsed) {
   }
 }
 
+/** Turn one promotion into a deal for one product: { kind: 'm' (n units for a total price) | 'p' (percent off), n, price | pct }.
+ *  Returns null for promotions the app cannot price per product (gifts, basket thresholds, odd values). */
+export function dealFor(pr, base, now = new Date()) {
+  if (!(base > 0) || pr.isGiftItem || (pr.minPurchaseAmount > 0)) return null;
+  const day = (s) => String(s || '').slice(0, 10);
+  const today = now.toISOString().slice(0, 10);
+  if (pr.end && day(pr.end) && day(pr.end) < today) return null;
+  if (pr.start && day(pr.start) && day(pr.start) > today) return null;
+  const n = Math.max(1, Math.round(pr.minQty || 1));
+  let unit = null, deal = null;
+  if (pr.discountedPrice > 0) {
+    // DiscountedPrice is usually the total for MinQty units ("3 ב-15"); some chains give the unit price instead
+    if (n > 1 && pr.discountedPrice < base * n * 0.98 && pr.discountedPrice >= base * 0.9) { unit = pr.discountedPrice / n; deal = { kind: 'm', n, price: pr.discountedPrice }; }
+    else if (pr.discountedPrice < base * 0.98) { unit = pr.discountedPrice; deal = { kind: 'm', n: 1, price: pr.discountedPrice }; }
+  } else if (pr.discountRate > 0) {
+    let rate = pr.discountRate; if (rate > 100) rate /= 100; // 2000 = 20%
+    if (rate >= 1 && rate <= 90) { unit = base * (1 - rate / 100); deal = { kind: 'p', n, pct: rate }; }
+  }
+  if (!deal || !(unit > base * 0.15) || !(unit < base * 0.98)) return null;
+  deal.unit = Math.round(unit * 100) / 100;
+  deal.club = pr.clubs.some((c) => String(c) !== '0') ? 1 : 0;
+  deal.end = day(pr.end);
+  deal.desc = String(pr.description || '').trim().slice(0, 60);
+  return deal;
+}
+
 export function addPromos(db, chainKey, parsed) {
-  if (db.compact) return; // promotions are not in the app's file yet
+  if (db.compact) {
+    // compact runs keep, per product and chain, the best deal open to everyone and the best club-only deal
+    for (const pr of parsed.promos) {
+      if (pr.barcodes.length > 400) continue; // store-wide promotions are not per-product deals
+      for (const bc of pr.barcodes) {
+        const p = db.products[productKey(chainKey, { barcode: bc, internal: false })];
+        if (!p || p.prices[chainKey] == null) continue;
+        const d = dealFor(pr, p.prices[chainKey]);
+        if (!d) continue;
+        const slot = ((p.deals ||= {})[chainKey] ||= {});
+        const k = d.club ? 'c' : 'r';
+        if (!slot[k] || d.unit < slot[k].unit) slot[k] = { ...d, desc: own(d.desc) };
+      }
+    }
+    return;
+  }
   const store = parsed.storeId;
   const bucket = (db.promos[chainKey] ||= {});
   for (const pr of parsed.promos) {
@@ -80,6 +121,14 @@ export function buildSummary(db) {
     if (known(p.manufacturer)) row.m = p.manufacturer;
     if (known(p.unit)) row.u = p.unit;
     if (p.weighted) row.w = 1;
+    // deals: { chain: [kind, n, price|pct, club, end, desc] } — r = open to everyone, c = club members
+    if (p.deals) {
+      const pack = (d) => [d.kind, d.n, d.kind === 'm' ? d.price : d.pct, d.club, d.end, d.desc];
+      for (const [chain, slot] of Object.entries(p.deals)) {
+        if (slot.r) (row.d ||= {})[chain] = pack(slot.r);
+        if (slot.c && (!slot.r || slot.c.unit < slot.r.unit)) (row.dc ||= {})[chain] = pack(slot.c);
+      }
+    }
     out[bc] = row;
   }
   // real branches per chain, for the app's location screen: { chain: [{ id, name, city, address }] }
