@@ -1,6 +1,6 @@
 // Probe which public sources return a product photo for Israeli barcodes. Writes data/diag.json.
 import { writeFileSync, mkdirSync } from 'node:fs';
-const BC = ["7290011126469","856591000949","7290000408316","7290110329808","7290008343466","7290110113537","7290019870432","7290119375219","7290017023854","7290101864127","7290003401376","7290119377077","7290000042121","7290000066318","7290004131074"];
+const BC = ["7290110115210","7290110115869","7290110115241","7290110115418","7290110115203","7290000136141"];
 const UA = { 'user-agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/124 Mobile Safari/537.36', 'accept-language': 'he-IL,he;q=0.9' };
 async function get(url, opt = {}) {
   const t0 = Date.now();
