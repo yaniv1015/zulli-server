@@ -109,7 +109,8 @@ function cerberus(key, name, user, chainId) {
       });
       if (!res.ok) throw new Error(`${key} dir ${res.status}`);
       const json = await res.json();
-      return pickLatest((json.aaData || []).map((r) => `${base}/file/d/${r.fname}`));
+      const names = (json.aaData || []).map((r) => r.fname).filter((n) => !chainId || n.includes(chainId));
+      return pickLatest(names.map((n) => `${base}/file/d/${n}`));
     },
     download: (f) => fetchBuffer(f.url, { cookie }),
   };
@@ -153,7 +154,73 @@ export const victory = {
 
 export const osherad = cerberus('osherad', 'אושר עד', 'osherad', ''); // verify username on the Cerberus portal
 
-export const ADAPTERS = { shufersal, rami, yochananof, victory, carrefour, osherad };
+/* ---------- Bina portals (http://<prefix>.binaprojects.com): a JSON file list, and a download page that answers with the real link ---------- */
+function bina(key, name, prefix, chainIds) {
+  const base = `http://${prefix}.binaprojects.com`;
+  let cookie = '';
+  const ids = [].concat(chainIds);
+  return {
+    key, name, chainId: ids[0],
+    async list() {
+      try { const r = await fetch(`${base}/Main.aspx`, { headers: UA, timeout: 60000 }); const set = r.headers.getSetCookie?.() || []; if (set.length) cookie = set.map((c) => c.split(';')[0]).join('; '); await r.text(); } catch {}
+      const names = [];
+      for (const id of ids) for (const t of [1, 4, 5]) { // 1 stores, 4 PriceFull, 5 PromoFull
+        const q = new URLSearchParams({ _: id, wReshet: 'הכל', WFileType: String(t), WDate: '', WStore: '' });
+        const txt = await getText(`${base}/MainIO_Hok.aspx?${q}`, { timeout: 90000, retries: 1, headers: cookie ? { ...UA, cookie } : UA });
+        let rows = []; try { rows = JSON.parse(txt); } catch { continue; }
+        for (const r of rows) if (r.FileNm) names.push(r.FileNm);
+      }
+      return pickLatest(names.map((n) => `${base}/Download.aspx?FileNm=${encodeURIComponent(n)}#${n}`)).map((f) => ({ ...f, name: decodeURIComponent(f.url.split('#')[1] || f.name) }));
+    },
+    async download(f) {
+      const link = f.url.split('#')[0];
+      const txt = (await fetchBuffer(link, { cookie, timeout: 60000, retries: 1 })).toString('utf8');
+      let real = null; try { real = JSON.parse(txt)[0]?.SPath; } catch {}
+      if (!real) throw new Error('bina: no download link');
+      return fetchBuffer(real, { cookie, timeout: 120000, retries: 1 });
+    },
+  };
+}
+
+/* ---------- Wolt Market: a page per day listing the files ---------- */
+export const wolt = {
+  key: 'wolt', name: 'וולט מרקט', chainId: '7290058249350',
+  async list() {
+    const base = 'https://wm-gateway.wolt.com/isr-prices/public/v1/';
+    const urls = [];
+    for (let back = 0; back < 3; back++) {
+      const day = new Date(Date.now() - back * 864e5).toISOString().slice(0, 10);
+      let html = ''; try { html = await getText(`${base}${day}.html`, { timeout: 60000 }); } catch { continue; }
+      for (const m of html.matchAll(/href="([^"]+)"/gi)) urls.push(new URL(m[1], base).href);
+    }
+    return pickLatest(urls);
+  },
+  download: (f) => fetchBuffer(f.url, { timeout: 120000, retries: 1 }),
+};
+
+// more chains on the shared Cerberus portal (user names as published by the chains)
+export const tivtaam = cerberus('tivtaam', 'טיב טעם', 'TivTaam', '7290873255550');
+export const keshet = cerberus('keshet', 'קשת טעמים', 'Keshet', '7290785400000');
+export const stopmarket = cerberus('stopmarket', 'סטופ מרקט', 'Stop_Market', '7290639000004');
+export const freshmarket = cerberus('freshmarket', 'פרש מרקט', 'freshmarket', '7290876100000');
+export const polizer = cerberus('polizer', 'פוליצר', 'politzer', '7291059100008');
+export const dabach = cerberus('dabach', 'סאלח דבאח', 'SalachD', '7290526500006');
+export const doralon = cerberus('doralon', 'דור אלון AM:PM', 'doralon', '7290492000005');
+// chains on Bina portals
+export const kingstore = bina('kingstore', 'קינג סטור', 'kingstore', '7290058108879');
+export const maayan = bina('maayan', 'מעיין 2000', 'maayan2000', '7290058159628');
+export const shefa = bina('shefa', 'שפע ברכת השם', 'shefabirkathashem', '7290058134977');
+export const supersapir = bina('supersapir', 'סופר ספיר', 'supersapir', '7290058156016');
+export const shukhayir = bina('shukhayir', 'שוק העיר', 'shuk-hayir', '7290058148776');
+export const zolbegadol = bina('zolbegadol', 'זול ובגדול', 'zolvebegadol', '7290058173198');
+export const bareket = bina('bareket', 'ברקת', 'superbareket', '7290875100001');
+export const goodpharm = bina('goodpharm', 'גוד פארם', 'goodpharm', '7290058197699');
+export const citymarket = bina('citymarket', 'סיטי מרקט', 'citymarketkiryatgat', ['7290058288526', '7290058266241', '7290058288090']);
+export const meshnat = bina('meshnat', 'משנת יוסף', 'ktshivuk', ['5144744100001', '7290058289400']);
+
+export const ADAPTERS = { shufersal, rami, yochananof, victory, carrefour, osherad,
+  tivtaam, keshet, stopmarket, freshmarket, polizer, dabach, doralon,
+  kingstore, maayan, shefa, supersapir, shukhayir, zolbegadol, bareket, goodpharm, citymarket, meshnat, wolt };
 
 async function withRetry(fn, retries) {
   for (let i = 0; ; i++) {
