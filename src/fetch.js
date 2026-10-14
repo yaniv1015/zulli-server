@@ -39,6 +39,7 @@ function withFallback(sum) {
     const prevCount = Object.values(prev.products).filter((p) => p.p?.[key] != null).length;
     const nowCount = Object.values(sum.products).filter((p) => p.p?.[key] != null).length;
     if (!prevCount || nowCount >= prevCount * 0.7) continue;
+    report.chains[key] ||= { errors: [] };
     report.chains[key].keptPrevious = { prevProducts: prevCount, newProducts: nowCount, storesPriced: priced, prevBranches: before, newBranches: now };
     for (const p of Object.values(sum.products)) { delete p.p[key]; if (p.d) delete p.d[key]; if (p.dc) delete p.dc[key]; }
     for (const [bc, pp] of Object.entries(prev.products)) {
@@ -59,7 +60,7 @@ async function saveOutputs(done = false) {
   if (done) report.finished = new Date().toISOString();
   report.totalProducts = Object.keys(db.products).length;
   await mkdir('data', { recursive: true });
-  await writeFile('data/summary.json', JSON.stringify(done ? withFallback(buildSummary(db)) : buildSummary(db)));
+  await writeFile('data/summary.json', JSON.stringify(withFallback(buildSummary(db)))); // even a run cut short keeps the other chains' previous data
   await writeFile('data/report.json', JSON.stringify(report, null, 2));
 }
 
