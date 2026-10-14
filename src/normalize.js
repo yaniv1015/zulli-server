@@ -10,7 +10,9 @@
 // compact: keep only the cheapest price per chain (and how many stores sell it) instead of a price per store.
 // A full run covers ~800 stores; per-store prices would not fit in memory.
 export function emptyDb({ compact = false } = {}) {
-  return { updated: new Date().toISOString(), compact, chains: {}, products: {}, promos: {} };
+  // compact runs also keep every store's prices as packed [productIndex, agorot] pairs (8 bytes a price),
+  // so the summary can give each chain its usual price and each branch only the prices that differ from it
+  return { updated: new Date().toISOString(), compact, chains: {}, products: {}, promos: {}, keys: [], storeRows: {} };
 }
 
 // Strings cut out of a big XML file keep the whole file alive in memory (V8 "sliced strings").
@@ -34,6 +36,8 @@ export const NOT_A_PRODUCT = /^\s*(עלות\s+)?משלוח|דמי\s+משלוח|�
 
 export function addPrices(db, chainKey, chainName, parsed) {
   db.chains[chainKey] ||= { name: chainName, stores: {} };
+  const rows = db.compact ? new Int32Array(parsed.items.length * 2) : null;
+  let nr = 0;
   for (const it of parsed.items) {
     if (NOT_A_PRODUCT.test(it.name || '')) continue;
     const key = productKey(chainKey, it);
@@ -45,11 +49,53 @@ export function addPrices(db, chainKey, chainName, parsed) {
     // keep the most descriptive name and fill gaps from other chains
     if (it.name && it.name.length > (p.name || '').length) p.name = own(it.name);
     if (!p.manufacturer && it.manufacturer) p.manufacturer = own(it.manufacturer);
+    if (p.i == null) { p.i = db.keys.length; db.keys.push(key); }
+    if (rows && it.price > 0 && it.price < 20000) { rows[nr++] = p.i; rows[nr++] = Math.round(it.price * 100); }
     if (db.compact) {
       if (p.prices[chainKey] == null || it.price < p.prices[chainKey]) p.prices[chainKey] = it.price;
       p.stores[chainKey] = (p.stores[chainKey] || 0) + 1;
     } else (p.prices[chainKey] ||= {})[parsed.storeId] = it.price;
   }
+  if (rows && parsed.storeId != null) (db.storeRows[chainKey] ||= {})[String(parsed.storeId)] = rows.subarray(0, nr);
+}
+
+/** The price most of a chain's stores charge for each product (ties go to the lower price): { chain: Map<index, agorot> } */
+export function usualPrices(db) {
+  const out = {};
+  for (const [chain, stores] of Object.entries(db.storeRows || {})) {
+    const counts = new Map(); // index*2^21 + agorot -> stores
+    for (const rows of Object.values(stores)) for (let j = 0; j < rows.length; j += 2) { const k = rows[j] * 2097152 + rows[j + 1]; counts.set(k, (counts.get(k) || 0) + 1); }
+    const best = new Map(), bestN = new Map();
+    for (const [k, n] of counts) {
+      const i = Math.floor(k / 2097152), a = k % 2097152, bn = bestN.get(i);
+      if (bn == null || n > bn || (n === bn && a < best.get(i))) { best.set(i, a); bestN.set(i, n); }
+    }
+    out[chain] = best;
+  }
+  return out;
+}
+
+/** Same small hash in the app: which branch file a store's prices are in. */
+export const BRANCH_BUCKETS = 64;
+export function branchBucket(chain, storeId) {
+  let h = 5381; const s = `${chain}:${storeId}`;
+  for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  return h % BRANCH_BUCKETS;
+}
+
+/** Per-branch prices that differ from the chain's usual price: [ { "chain:store": { barcode: price } } ] by bucket. */
+export function buildBranches(db, usual = usualPrices(db)) {
+  const buckets = Array.from({ length: BRANCH_BUCKETS }, () => ({}));
+  for (const [chain, stores] of Object.entries(db.storeRows || {})) {
+    const u = usual[chain];
+    for (const [sid, rows] of Object.entries(stores)) {
+      const diff = {};
+      let n = 0;
+      for (let j = 0; j < rows.length; j += 2) { if (u.get(rows[j]) !== rows[j + 1]) { diff[db.keys[rows[j]]] = rows[j + 1] / 100; n++; } }
+      buckets[branchBucket(chain, sid)][`${chain}:${sid}`] = diff;
+    }
+  }
+  return buckets;
 }
 
 /** Turn one promotion into a deal for one product: { kind: 'm' (n units for a total price) | 'p' (percent off), n, price | pct }.
@@ -114,11 +160,14 @@ export function addPromos(db, chainKey, parsed) {
 }
 
 /** Small summary the app can load fast: cheapest price per product per chain. */
-export function buildSummary(db) {
+export function buildSummary(db, usual = usualPrices(db)) {
   const out = {};
   for (const [bc, p] of Object.entries(db.products)) {
     const best = {};
     for (const [chain, stores] of Object.entries(p.prices)) {
+      // the price most branches charge; branch files hold the exceptions (the cheapest branch was misleading for most shoppers)
+      const a = p.i != null ? usual[chain]?.get(p.i) : undefined;
+      if (a != null) { best[chain] = a / 100; continue; }
       const vals = typeof stores === 'number' ? [stores] : Object.values(stores);
       if (vals.length) best[chain] = Math.min(...vals);
     }

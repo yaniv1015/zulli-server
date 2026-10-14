@@ -121,6 +121,20 @@ assert.equal(dealFor({ discountedPrice: 30, minQty: 1, clubs: ['0'] }, 10), null
 assert.equal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'], end: '2001-01-01' }, 10), null, 'expired');
 assert.equal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'], isGiftItem: true }, 10), null, 'gift');
 
+// 6b. the chain price is the one most branches charge; branches that differ keep their own price
+{
+  const bdb = emptyDb({ compact: true });
+  const mk = (store, bamba) => parsePrices(priceXml('7290027600007', store, [[MILK, 'חלב', 'תנובה', '7.10'], [BAMBA, 'במבה', 'אסם', bamba]]));
+  addPrices(bdb, 'shufersal', 'שופרסל', mk('1', '5.90')); addPrices(bdb, 'shufersal', 'שופרסל', mk('2', '5.90')); addPrices(bdb, 'shufersal', 'שופרסל', mk('3', '4.50'));
+  const bs = buildSummary(bdb);
+  assert.equal(bs.products[BAMBA].p.shufersal, 5.9, 'usual price, not the one cheap branch');
+  const { buildBranches, branchBucket } = await import('../src/normalize.js');
+  const br = buildBranches(bdb);
+  assert.deepEqual(br[branchBucket('shufersal', '3')]['shufersal:3'], { [BAMBA]: 4.5 });
+  assert.deepEqual(br[branchBucket('shufersal', '1')]['shufersal:1'], {});
+  assert.equal(branchBucket('rami', '039'), branchBucket('rami', '039'));
+}
+
 // 7. delivery fees, deposits and club fees are not products
 import('../src/normalize.js').then(({ NOT_A_PRODUCT }) => {
   for (const n of ['עלות משלוח', 'משלוח', 'פיקדון בקבוקים', 'חידוש מועדון שוק העיר', 'GOOD PHARM - שקית אל בד גדול']) assert.ok(NOT_A_PRODUCT.test(n), n);

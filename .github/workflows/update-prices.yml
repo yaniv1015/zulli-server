@@ -39,6 +39,6 @@ jobs:
           git checkout --orphan data-tmp
           git rm -rf --cached . > /dev/null
           test -f data/summary.json || exit 0
-          git add -f data/summary.json data/report.json
+          git add -f data/summary.json data/report.json; test -d data/br && git add -f data/br || true
           git commit -m "prices $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -f origin data-tmp:data

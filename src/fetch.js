@@ -7,7 +7,7 @@
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { ADAPTERS } from './adapters.js';
 import { decodeFile, parsePrices, parsePromos, parseStores } from './parse.js';
-import { emptyDb, addStores, addPrices, addPromos, buildSummary } from './normalize.js';
+import { emptyDb, addStores, addPrices, addPromos, buildSummary, usualPrices, buildBranches } from './normalize.js';
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '').split('=')).map(([k, v]) => [k, v ?? true]));
 const chainKeys = args.chains ? String(args.chains).split(',') : Object.keys(ADAPTERS);
@@ -66,7 +66,14 @@ async function saveOutputs(done = false) {
   if (done) report.finished = new Date().toISOString();
   report.totalProducts = Object.keys(db.products).length;
   await mkdir('data', { recursive: true });
-  await writeFile(SUMMARY_PATH, JSON.stringify(withFallback(buildSummary(db)))); // even a run cut short keeps the other chains' previous data
+  const usual = usualPrices(db);
+  await writeFile(SUMMARY_PATH, JSON.stringify(withFallback(buildSummary(db, usual)))); // even a run cut short keeps the other chains' previous data
+  if (done) { // branch prices: data/br/NN.json, each { "chain:store": { barcode: price } } with only the prices that differ from the chain's usual one
+    const dir = SUMMARY_PATH.replace(/[^/]*$/, '') + 'br';
+    await mkdir(dir, { recursive: true });
+    const buckets = buildBranches(db, usual);
+    for (let i = 0; i < buckets.length; i++) await writeFile(`${dir}/${String(i).padStart(2, '0')}.json`, JSON.stringify(buckets[i]));
+  }
   await writeFile(REPORT_PATH, JSON.stringify(report, null, 2));
 }
 
