@@ -51,7 +51,9 @@ export function addPrices(db, chainKey, chainName, parsed) {
 /** Turn one promotion into a deal for one product: { kind: 'm' (n units for a total price) | 'p' (percent off), n, price | pct }.
  *  Returns null for promotions the app cannot price per product (gifts, basket thresholds, odd values). */
 export function dealFor(pr, base, now = new Date()) {
-  if (!(base > 0) || pr.isGiftItem || (pr.minPurchaseAmount > 0)) return null;
+  if (!(base > 0) || pr.isGiftItem || pr.isCoupon || (pr.minPurchaseAmount > 0)) return null;
+  // deals that need a printed coupon or an outside benefit (insurance, credit card voucher) are not shelf prices
+  if (/קופון|הטבת|שובר|ביטוח/.test(pr.description || '')) return null;
   const day = (s) => (String(s || '').match(/^\d{4}-\d{2}-\d{2}/) || [''])[0]; // a bare hour is not a date
   const today = now.toISOString().slice(0, 10);
   if (pr.end && day(pr.end) && day(pr.end) < today) return null;

@@ -106,6 +106,7 @@ export function parsePromos(xml) {
       minPurchaseAmount: num(field(b, ['MinPurchaseAmnt', 'MinPurchaseAmount'])),
       weightUnit: field(b, ['WeightUnit']),
       isGiftItem: bool(field(b, ['IsGiftItem'])),
+      isCoupon: bool(field(b, ['AdditionalIsCoupon', 'IsCoupon'])),
       // ClubId 0 = everyone; other ids are loyalty clubs / credit-card holders
       clubs: clubs.length ? clubs : ['0'],
       barcodes,
