@@ -23,13 +23,13 @@ jobs:
           curl -sSL -o israel.osm.pbf https://download.geofabrik.de/asia/israel-and-palestine-latest.osm.pbf
           git fetch --depth 1 origin data
           git show origin/data:data/summary.json > summary.json
-      - run: python tools/geo.py israel.osm.pbf summary.json data
+      - run: mkdir -p data/geo && (python tools/geo.py israel.osm.pbf summary.json data 2> data/geo/log.txt || echo failed >> data/geo/log.txt); tail -c 3000 data/geo/log.txt
       - name: Publish to the "geo" branch
         run: |
           git config user.name "zulli-bot"
           git config user.email "bot@users.noreply.github.com"
           git checkout --orphan geo-tmp
           git rm -rf --cached . > /dev/null
-          git add -f data/geo data/storegeo.json
+          git add -f data/geo; test -f data/storegeo.json && git add -f data/storegeo.json || true
           git commit -m "geo $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -f origin geo-tmp:geo
