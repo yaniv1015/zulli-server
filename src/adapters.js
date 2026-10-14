@@ -57,6 +57,12 @@ export const shufersal = {
     }
     return pickLatest(urls);
   },
+  // the newest file of one type for one store (the listing can be filtered by store)
+  async listStore(type, storeId) {
+    const cat = { PriceFull: 2, PromoFull: 4, Stores: 5 }[type];
+    const html = await getText(`https://prices.shufersal.co.il/FileObject/UpdateCategory?catID=${cat}&storeId=${storeId}`, { timeout: 120000, retries: 1 });
+    return pickLatest([...html.matchAll(/href="(https?:\/\/[^"]+?\.(?:gz|xml|zip)[^"]*)"/gi)].map((m) => m[1].replace(/&amp;/g, '&'))).find((x) => x.type === type) || null;
+  },
   // download links are signed and expire after about an hour: if one has expired, ask the site for a fresh link for that store
   async download(f) {
     try { return await fetchBuffer(f.url, { timeout: 120000 }); }

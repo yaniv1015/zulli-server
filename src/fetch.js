@@ -17,6 +17,12 @@ const onlineOnly = !!args['online-only'];
 const promoStores = args['promo-stores'] != null ? +args['promo-stores'] : 6;
 
 const db = emptyDb({ compact: true });
+
+// Formats that a chain publishes inside its own files but that shoppers know as a separate chain:
+// their branches get their own key, so the app compares them on their own prices.
+const SPLITS = {
+  shufersal: [{ key: 'yeshhesed', name: 'יש חסד', match: (name) => /^\s*יש חסד/.test(name || '') }],
+};
 const report = { started: new Date().toISOString(), chains: {} };
 
 // results are written after every chain, so a crash late in the run still leaves the chains done so far
@@ -71,8 +77,10 @@ for (const key of chainKeys) {
     let storeInfo = {};
     if (stores) {
       const parsed = parseStores(decodeFile(await ad.download(stores)));
-      addStores(db, key, ad.name, parsed);
       storeInfo = Object.fromEntries(parsed.stores.map((s) => [s.storeId, s]));
+      const own = parsed.stores.filter((s) => !(SPLITS[key] || []).some((sp) => sp.match(s.name)));
+      addStores(db, key, ad.name, { ...parsed, stores: own });
+      for (const sp of SPLITS[key] || []) addStores(db, sp.key, sp.name, { ...parsed, stores: parsed.stores.filter((s) => sp.match(s.name)) });
       r.files++;
     }
     let storeIds = [...new Set(files.filter((f) => f.type === 'PriceFull').map((f) => f.store))];
@@ -81,14 +89,18 @@ for (const key of chainKeys) {
       if (online.length) storeIds = online; // if the chain does not mark online stores, keep all of them
     }
     storeIds = storeIds.slice(0, maxStores);
+    // which chain a store's prices belong to (the chain itself, or a split-off format)
+    const owner = (sid) => (SPLITS[key] || []).find((sp) => sp.match(storeInfo[sid]?.name)) || { key, name: ad.name };
+    for (const sp of SPLITS[key] || []) report.chains[sp.key] = { splitFrom: key, stores: storeIds.filter((sid) => owner(sid).key === sp.key).length, products: 0, promos: 0, errors: [] };
     for (const sid of storeIds) {
       for (const type of types) {
         const f = files.find((x) => x.type === type && x.store === sid);
         if (!f) continue;
         try {
           const xml = decodeFile(await ad.download(f));
-          if (type === 'PriceFull') { const p = parsePrices(xml); addPrices(db, key, ad.name, p); r.products += p.items.length; }
-          else { const p = parsePromos(xml); addPromos(db, key, p); r.promos += p.promos.length; }
+          const o = owner(sid);
+          if (type === 'PriceFull') { const p = parsePrices(xml); addPrices(db, o.key, o.name, p); r.products += p.items.length; if (o.key !== key) report.chains[o.key].products += p.items.length; }
+          else { const p = parsePromos(xml); addPromos(db, o.key, p); r.promos += p.promos.length; }
           r.files++;
         } catch (e) { r.errors.push(`${f.name}: ${e.message}`); }
       }
@@ -97,10 +109,20 @@ for (const key of chainKeys) {
     if (promoStores > 0) {
       const promoFiles = files.filter((f) => f.type === 'PromoFull');
       const pick = [...promoFiles.filter((f) => storeIds.includes(f.store) && (['2', '3'].includes(storeInfo[f.store]?.type) || /אונליין|online|אינטרנט/i.test(storeInfo[f.store]?.name || ''))), ...promoFiles].filter((f, i, a) => a.indexOf(f) === i).slice(0, promoStores);
+      // split-off formats get promotions from a few of their own stores (a store-specific listing when the portal has one)
+      for (const sp of SPLITS[key] || []) {
+        const mine = storeIds.filter((sid) => owner(sid).key === sp.key).slice(0, 3);
+        for (const sid of mine) {
+          let f = promoFiles.find((x) => x.store === sid);
+          if (!f && ad.listStore) { try { f = await ad.listStore('PromoFull', sid); } catch (e) { report.chains[sp.key].errors.push(`promo list ${sid}: ${e.message}`); } }
+          if (f && !pick.includes(f)) pick.push(f);
+        }
+      }
       for (const f of pick) {
-        try { const p = parsePromos(decodeFile(await ad.download(f))); addPromos(db, key, p); r.promos += p.promos.length; r.files++; }
+        try { const p = parsePromos(decodeFile(await ad.download(f))); const o = owner(f.store); addPromos(db, o.key, p); r.promos += p.promos.length; if (o.key !== key) report.chains[o.key].promos += p.promos.length; r.files++; }
         catch (e) { r.errors.push(`${f.name}: ${e.message}`); }
       }
+      for (const sp of SPLITS[key] || []) report.chains[sp.key].deals = Object.values(db.products).filter((p) => p.deals?.[sp.key]).length;
       r.promoStores = pick.length;
       r.deals = Object.values(db.products).filter((p) => p.deals?.[key]).length;
     }
