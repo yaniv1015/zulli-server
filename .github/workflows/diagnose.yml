@@ -34,6 +34,6 @@ jobs:
           git config user.email "bot@users.noreply.github.com"
           git checkout --orphan diag-tmp
           git rm -rf --cached . > /dev/null
-          git add -f data/diag.json; test -f data/new.json && git add -f data/new.json || true
+          ls -la data; git add -f data/diag.json; test -f data/new.json && git add -f data/new.json || true
           git commit -m "diag $(date -u +%Y-%m-%dT%H:%MZ)"
-          git push -f origin diag-tmp:diag
+          git push -f origin diag-tmp:diag || git push -f origin diag-tmp:diag-out
