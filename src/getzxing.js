@@ -1,5 +1,5 @@
 // one-off: fetch the ZXing barcode reader build so the app can ship it as a local file
-const fs=require('fs'),zlib=require('zlib');
+import fs from 'node:fs';import zlib from 'node:zlib';
 (async()=>{
   const out={};
   for(const u of ['https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js','https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js']){
