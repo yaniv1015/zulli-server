@@ -13,14 +13,14 @@ permissions:
 jobs:
   diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: node src/${{ inputs.script || 'diagnose' }}.js
-        timeout-minutes: 18
+        timeout-minutes: 80
         continue-on-error: true
       - name: Publish result to the "diag" branch
         run: |
