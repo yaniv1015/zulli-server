@@ -7,4 +7,4 @@ const child = spawn('node', ['src/fetch.js', `--chains=${chains}`], { env: { ...
 await new Promise((r) => child.on('exit', r));
 try { const s = JSON.parse(readFileSync('/tmp/summary.json', 'utf8')); const d = JSON.parse(readFileSync('data/diag.json', 'utf8'));
   d.summary = { products: Object.keys(s.products).length, bytes: readFileSync('/tmp/summary.json').length, stores: Object.fromEntries(Object.entries(s.stores).map(([k, v]) => [k, v.length])) };
-  writeFileSync('data/diag.json', JSON.stringify(d, null, 1)); } catch (e) { console.log('no summary', e.message); }
+  writeFileSync('data/diag.json', JSON.stringify(d, null, 1)); writeFileSync('data/new.json', readFileSync('/tmp/summary.json')); } catch (e) { console.log('no summary', e.message); }
