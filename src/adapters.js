@@ -164,8 +164,10 @@ function bina(key, name, prefix, chainIds) {
     async list() {
       try { const r = await fetch(`${base}/Main.aspx`, { headers: UA, timeout: 60000 }); const set = r.headers.getSetCookie?.() || []; if (set.length) cookie = set.map((c) => c.split(';')[0]).join('; '); await r.text(); } catch {}
       const names = [];
-      for (const id of ids) for (const t of [1, 4, 5]) { // 1 stores, 4 PriceFull, 5 PromoFull
-        const q = new URLSearchParams({ _: id, wReshet: 'הכל', WFileType: String(t), WDate: '', WStore: '' });
+      // the list needs a date (dd/mm/yyyy): today's files, and yesterday's in case today's are not out yet
+      const days = [0, 1].map((b) => { const d = new Date(Date.now() + 3 * 3600e3 - b * 864e5); return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`; });
+      for (const id of ids) for (const day of days) {
+        const q = new URLSearchParams({ _: id, wReshet: 'הכל', WFileType: '0', WDate: day, WStore: '' });
         const txt = await getText(`${base}/MainIO_Hok.aspx?${q}`, { timeout: 90000, retries: 1, headers: cookie ? { ...UA, cookie } : UA });
         let rows = []; try { rows = JSON.parse(txt); } catch { continue; }
         for (const r of rows) if (r.FileNm) names.push(r.FileNm);
