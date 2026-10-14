@@ -15,6 +15,12 @@ const maxStores = args.stores ? +args.stores : Infinity; // limit while testing
 const onlineOnly = !!args['online-only'];
 // promotions (incl. club deals): read from a few stores per chain, enough for chain-wide deals without a long run
 const promoStores = args['promo-stores'] != null ? +args['promo-stores'] : 6;
+// where to write (a test run writes elsewhere so it never touches the app's data)
+const SUMMARY_PATH = process.env.SUMMARY_PATH || 'data/summary.json';
+const REPORT_PATH = process.env.REPORT_PATH || 'data/report.json';
+// a chain gets this many minutes; then it keeps what it has and the run moves on
+const CHAIN_MINUTES = Number(process.env.CHAIN_MINUTES || 25);
+const progress = async (r, what) => { r.now = what; r.nowAt = new Date().toISOString(); await writeFile(REPORT_PATH, JSON.stringify(report, null, 2)); };
 
 const db = emptyDb({ compact: true });
 
@@ -60,8 +66,8 @@ async function saveOutputs(done = false) {
   if (done) report.finished = new Date().toISOString();
   report.totalProducts = Object.keys(db.products).length;
   await mkdir('data', { recursive: true });
-  await writeFile('data/summary.json', JSON.stringify(withFallback(buildSummary(db)))); // even a run cut short keeps the other chains' previous data
-  await writeFile('data/report.json', JSON.stringify(report, null, 2));
+  await writeFile(SUMMARY_PATH, JSON.stringify(withFallback(buildSummary(db)))); // even a run cut short keeps the other chains' previous data
+  await writeFile(REPORT_PATH, JSON.stringify(report, null, 2));
 }
 
 for (const key of chainKeys) {
@@ -72,6 +78,7 @@ for (const key of chainKeys) {
   console.log(`\n▶ ${ad.name}`);
   try {
     const types = ['PriceFull'];
+    await progress(r, 'list');
     const files = await ad.list({ maxStores, maxPromoStores: promoStores, types: promoStores > 0 ? ['PriceFull', 'PromoFull'] : ['PriceFull'] });
     console.log(`  ${files.length} files listed (${files.filter((f) => f.type === 'PriceFull').length} stores with prices)`);
     const stores = files.find((f) => f.type === 'Stores');
@@ -93,7 +100,10 @@ for (const key of chainKeys) {
     // which chain a store's prices belong to (the chain itself, or a split-off format)
     const owner = (sid) => (SPLITS[key] || []).find((sp) => sp.match(storeInfo[sid]?.name)) || { key, name: ad.name };
     for (const sp of SPLITS[key] || []) report.chains[sp.key] = { splitFrom: key, stores: storeIds.filter((sid) => owner(sid).key === sp.key).length, products: 0, promos: 0, errors: [] };
+    let n = 0, cut = false;
     for (const sid of storeIds) {
+      if (Date.now() - t0 > CHAIN_MINUTES * 60000) { r.errors.push(`time budget reached after ${n} of ${storeIds.length} stores`); cut = true; break; }
+      if (n++ % 10 === 0) await progress(r, `prices store ${sid} (${n}/${storeIds.length})`);
       for (const type of types) {
         const f = files.find((x) => x.type === type && x.store === sid);
         if (!f) continue;
@@ -120,6 +130,8 @@ for (const key of chainKeys) {
         }
       }
       for (const f of pick) {
+        if (Date.now() - t0 > (CHAIN_MINUTES + 5) * 60000) { r.errors.push('time budget reached in promotions'); break; }
+        await progress(r, `promo ${f.name}`);
         try { const p = parsePromos(decodeFile(await ad.download(f))); const o = owner(f.store); addPromos(db, o.key, p); r.promos += p.promos.length; if (o.key !== key) report.chains[o.key].promos += p.promos.length; r.files++; }
         catch (e) { r.errors.push(`${f.name}: ${e.message}`); }
       }
