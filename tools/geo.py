@@ -134,7 +134,7 @@ for i in range(BUCKETS):
 names_by_len = sorted(official, key=len, reverse=True)
 def store_city(s):
     raw = str(s.get('city') or '').strip()
-    if raw.isdigit() and int(raw) in code_name: return ckey(code_name[int(raw)])
+    if raw.isdigit() and int(raw) in code_name and ckey(code_name[int(raw)]) in geo: return ckey(code_name[int(raw)])
     if raw and not raw.isdigit() and ckey(raw) in geo: return ckey(raw)
     for txt in (s.get('name') or '', s.get('address') or '', raw):
         t = ckey(txt)
@@ -158,7 +158,7 @@ for chain, lst in (summary.get('stores') or {}).items():
     for s in lst:
         rep['stores'] += 1
         c = store_city(s)
-        if not c: rep['none'] += 1; continue
+        if not c or 'c' not in geo.get(c, {}): rep['none'] += 1; continue
         sid = str(s.get('id', '')).lstrip('0') or '0'
         p = street_in(c, s.get('address')) or street_in(c, s.get('name'))
         if p: out.setdefault(chain, {})[sid] = [p[0], p[1], 2]; rep['street'] += 1
