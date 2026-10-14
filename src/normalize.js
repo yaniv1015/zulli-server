@@ -40,6 +40,7 @@ export function addPrices(db, chainKey, chainName, parsed) {
   let nr = 0;
   for (const it of parsed.items) {
     if (NOT_A_PRODUCT.test(it.name || '')) continue;
+    if (!(it.price >= 0.1)) continue; // 0.01 / 0 are placeholders in some chains' files, not prices
     const key = productKey(chainKey, it);
     const p = (db.products[key] ||= {
       name: own(it.name), manufacturer: own(it.manufacturer), quantity: it.quantity, unit: own(it.unitQty),
