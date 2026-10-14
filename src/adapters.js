@@ -172,11 +172,11 @@ function bina(key, name, prefix, chainIds) {
         let rows = []; try { rows = JSON.parse(txt); } catch { continue; }
         for (const r of rows) if (r.FileNm) names.push(r.FileNm);
       }
-      return pickLatest(names.map((n) => `${base}/Download.aspx?FileNm=${encodeURIComponent(n)}#${n}`)).map((f) => ({ ...f, name: decodeURIComponent(f.url.split('#')[1] || f.name) }));
+      // pick the newest file per store by its name, then point at the download page
+      return pickLatest([...new Set(names)]).map((f) => ({ ...f, name: f.url, url: `${base}/Download.aspx?FileNm=${encodeURIComponent(f.url)}` }));
     },
     async download(f) {
-      const link = f.url.split('#')[0];
-      const txt = (await fetchBuffer(link, { cookie, timeout: 60000, retries: 1 })).toString('utf8');
+      const txt = (await fetchBuffer(f.url, { cookie, timeout: 60000, retries: 1 })).toString('utf8');
       let real = null; try { real = JSON.parse(txt)[0]?.SPath; } catch {}
       if (!real) throw new Error('bina: no download link');
       return fetchBuffer(real, { cookie, timeout: 120000, retries: 1 });
