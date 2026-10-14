@@ -1,20 +1,22 @@
-// What does Hazi Hinam's price portal look like? Saves the listing page's forms, links and a sample row. Writes data/diag.json.
+// Does Hazi Hinam (chain 7290700100008) also publish on the shared Cerberus portal? Tries likely user names. Writes data/diag.json.
 import { writeFileSync, mkdirSync } from 'node:fs';
-const UA = { 'user-agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/124 Mobile Safari/537.36', 'accept-language': 'he-IL,he;q=0.9' };
+const base = 'https://url.publishedprices.co.il';
+const UA = { 'user-agent': 'Mozilla/5.0 (zulli price fetcher)' };
 const out = {};
-async function get(url) {
-  try { const r = await fetch(url, { headers: UA, redirect: 'follow', signal: AbortSignal.timeout(60000) }); const t = await r.text();
-    return { status: r.status, url: r.url, len: t.length, text: t }; } catch (e) { return { err: String(e).slice(0, 200) }; }
+async function tryUser(user) {
+  let cookie = ''; const keep = (res) => { const set = res.headers.getSetCookie?.() || []; if (set.length) cookie = set.map((c) => c.split(';')[0]).join('; '); };
+  const csrfOf = (h) => (h.match(/name="csrftoken"\s+content="([^"]+)"/) || h.match(/csrftoken"\s*value="([^"]+)"/) || [])[1] || '';
+  let res = await fetch(`${base}/login`, { headers: UA }); keep(res); let csrf = csrfOf(await res.text());
+  res = await fetch(`${base}/login/user`, { method: 'POST', redirect: 'manual', headers: { ...UA, cookie, 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ r: '', username: user, password: '', Submit: 'Sign in', csrftoken: csrf }) });
+  keep(res); const loc = res.headers.get('location') || '';
+  res = await fetch(`${base}/file`, { headers: { ...UA, cookie } }); keep(res); csrf = csrfOf(await res.text()) || csrf;
+  res = await fetch(`${base}/file/json/dir`, { method: 'POST', headers: { ...UA, cookie, 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ sEcho: '1', iDisplayStart: '0', iDisplayLength: '100000', sSearch: '', cd: '/', csrftoken: csrf }) });
+  let files = []; try { files = ((await res.json()).aaData || []).map((r) => r.fname); } catch {}
+  return { redirect: loc, files: files.length, chains: [...new Set(files.map((f) => (f.match(/^[A-Za-z]+(\d{13})/) || [])[1]).filter(Boolean))], sample: files.slice(0, 6) };
 }
-for (const u of ['https://shop.hazi-hinam.co.il/Prices', 'https://shop.hazi-hinam.co.il/Prices?t=1&p=1', 'https://shop.hazi-hinam.co.il/Prices?t=3']) {
-  const r = await get(u); const t = r.text || '';
-  out[u] = { status: r.status, final: r.url, len: r.len, err: r.err,
-    forms: [...t.matchAll(/<form[\s\S]*?<\/form>/gi)].map((m) => m[0].replace(/\s+/g, ' ').slice(0, 1500)).slice(0, 3),
-    selects: [...t.matchAll(/<select[\s\S]*?<\/select>/gi)].map((m) => m[0].replace(/\s+/g, ' ').slice(0, 800)).slice(0, 4),
-    links: [...new Set([...t.matchAll(/href="([^"]+)"/gi)].map((m) => m[1]))].filter((h) => /gz|xml|zip|download|file|Price|p=/i.test(h)).slice(0, 40),
-    rows: [...t.matchAll(/<tr[\s\S]*?<\/tr>/gi)].map((m) => m[0].replace(/\s+/g, ' ').slice(0, 600)).slice(0, 4),
-    head: t.slice(0, 1500) };
+for (const u of ['HaziHinam', 'hazihinam', 'Hazihinam', 'hazi_hinam', 'HaziHinamFresh', 'shukhair', 'ShukHaIr']) {
+  try { out[u] = await tryUser(u); } catch (e) { out[u] = { err: String(e).slice(0, 200) }; }
 }
 mkdirSync('data', { recursive: true });
 writeFileSync('data/diag.json', JSON.stringify(out, null, 1));
-console.log(JSON.stringify(out).slice(0, 3000));
+console.log(JSON.stringify(out));
