@@ -121,4 +121,9 @@ assert.equal(dealFor({ discountedPrice: 30, minQty: 1, clubs: ['0'] }, 10), null
 assert.equal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'], end: '2001-01-01' }, 10), null, 'expired');
 assert.equal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'], isGiftItem: true }, 10), null, 'gift');
 
-console.log('all tests passed ✓');
+// 7. delivery fees, deposits and club fees are not products
+import('../src/normalize.js').then(({ NOT_A_PRODUCT }) => {
+  for (const n of ['עלות משלוח', 'משלוח', 'פיקדון בקבוקים', 'חידוש מועדון שוק העיר', 'GOOD PHARM - שקית אל בד גדול']) assert.ok(NOT_A_PRODUCT.test(n), n);
+  for (const n of ['חלב תנובה 3%', 'שקית חלב 1 ליטר', 'במבה']) assert.ok(!NOT_A_PRODUCT.test(n), n);
+  console.log('all tests passed ✓');
+});

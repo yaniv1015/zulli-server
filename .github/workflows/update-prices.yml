@@ -15,7 +15,7 @@ concurrency:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 200
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,7 +27,7 @@ jobs:
           git fetch --depth 1 origin data || true
           mkdir -p data && (git show origin/data:data/summary.json > data/prev.json || rm -f data/prev.json)
       - name: Fetch price files
-        timeout-minutes: 90
+        timeout-minutes: 170
         env:
           NODE_OPTIONS: --max-old-space-size=6144
         run: node src/fetch.js

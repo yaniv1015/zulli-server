@@ -29,9 +29,13 @@ export function addStores(db, chainKey, chainName, parsed) {
   for (const s of parsed.stores) ch.stores[own(s.storeId)] = { name: own(s.name), city: own(s.city), address: own(s.address), type: own(s.type) };
 }
 
+// lines that some chains list as items but are not products: delivery fees, bottle deposits, bags, coupons, club fees
+export const NOT_A_PRODUCT = /^\s*(עלות\s+)?משלוח|דמי\s+משלוח|פיקדון|פקדון|הנחת\s+קופון|קופון\s+הנחה|חידוש\s+מועדון|דמי\s+מנוי|שקית\s+(קניות|ניילון|אל\s*בד)|^\s*שקית\s*$/;
+
 export function addPrices(db, chainKey, chainName, parsed) {
   db.chains[chainKey] ||= { name: chainName, stores: {} };
   for (const it of parsed.items) {
+    if (NOT_A_PRODUCT.test(it.name || '')) continue;
     const key = productKey(chainKey, it);
     const p = (db.products[key] ||= {
       name: own(it.name), manufacturer: own(it.manufacturer), quantity: it.quantity, unit: own(it.unitQty),
