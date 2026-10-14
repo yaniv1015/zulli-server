@@ -28,7 +28,7 @@ export function productKey(chainKey, item) {
 
 export function addStores(db, chainKey, chainName, parsed) {
   const ch = (db.chains[chainKey] ||= { name: chainName, stores: {} });
-  for (const s of parsed.stores) ch.stores[own(s.storeId)] = { name: own(s.name), city: own(s.city), address: own(s.address), type: own(s.type) };
+  for (const s of parsed.stores) ch.stores[own(String(s.storeId).replace(/^0+(?=\d)/, ''))] = { name: own(s.name), city: own(s.city), address: own(s.address), type: own(s.type) };
 }
 
 // lines that some chains list as items but are not products: delivery fees, bottle deposits, bags, coupons, club fees
@@ -92,7 +92,8 @@ export function buildBranches(db, usual = usualPrices(db)) {
       const diff = {};
       let n = 0;
       for (let j = 0; j < rows.length; j += 2) { if (u.get(rows[j]) !== rows[j + 1]) { diff[db.keys[rows[j]]] = rows[j + 1] / 100; n++; } }
-      buckets[branchBucket(chain, sid)][`${chain}:${sid}`] = diff;
+      const id = String(sid).replace(/^0+(?=\d)/, ''); // the same branch is '039' in one file and '39' in another
+      buckets[branchBucket(chain, id)][`${chain}:${id}`] = diff;
     }
   }
   return buckets;
