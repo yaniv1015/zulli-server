@@ -82,7 +82,11 @@ for (const key of chainKeys) {
   const t0 = Date.now();
   console.log(`\n▶ ${ad.name}`);
   try {
-    const files = (await ad.list({ maxStores, maxPromoStores: Infinity, types: ['PromoFull'] })).filter((f) => f.type === 'PromoFull');
+    // Shufersal's full listing times out; its listing filtered by store is quick, so each branch is listed on its own
+    const perStore = key === 'shufersal' && ad.listStore;
+    const known = perStore ? Object.entries(storeChain).filter(([k]) => k.startsWith(key + ':')).map(([k]) => k.split(':')[1]) : [];
+    const files = perStore ? known.map((sid) => ({ type: 'PromoFull', store: sid, lazy: true, name: `PromoFull ${sid}` }))
+      : (await ad.list({ maxStores, maxPromoStores: Infinity, types: ['PromoFull'] })).filter((f) => f.type === 'PromoFull');
     r.listSeconds = Math.round((Date.now() - t0) / 1000);
     const t1 = Date.now(); // the time budget is for reading the files, not for listing them (Shufersal's listing alone is slow)
     const budget = Number(process.env[`CHAIN_MINUTES_${key}`] || CHAIN_MINUTES) * 60000;
@@ -95,7 +99,9 @@ for (const key of chainKeys) {
       const sid = String(f.store).replace(/^0+(?=\d)/, '');
       const chain = storeChain[`${key}:${sid}`] || key;
       try {
-        const parsed = parsePromos(decodeFile(await ad.download(f)));
+        const file = f.lazy ? await ad.listStore('PromoFull', sid) : f;
+        if (!file) { r.noFile = (r.noFile || 0) + 1; return; }
+        const parsed = parsePromos(decodeFile(await ad.download(file)));
         r.files++;
         const o = diffFor(chain, sid, parsed);
         r.stores++;
