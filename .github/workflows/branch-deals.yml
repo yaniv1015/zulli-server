@@ -41,7 +41,7 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=6144
           CHAIN_MINUTES: '11'
           CHAIN_MINUTES_shufersal: '40'
-          PARALLEL: '6'
+          PARALLEL: '4'
           PARALLEL_shufersal: '2'   # its deal files are very large
         run: |
           mkdir -p data/bd

@@ -44,8 +44,6 @@ async function pool(items, n, fn) {
 // the chain-wide lists (x / xc) and indices into the table (o).
 //   bd/i/<chain>.json = { b: [barcodes with a chain-wide regular deal], bc: [... club deal], t: [[barcode, deal], ...] }
 //   bd/NN.json  = { "chain:store": { x?: base64 bitmap over b, xc?: bitmap over bc, o?: "i,j,k" (base36 indices into t) } }
-async function writeOut() {
-await mkdir(OUT, { recursive: true });
 const idx = {};
 const listOf = (chain) => idx[chain] ||= (() => {
   const b = [], bc = [];
@@ -53,9 +51,9 @@ const listOf = (chain) => idx[chain] ||= (() => {
   return { b, bc, t: [], _t: new Map(), _b: new Map(b.map((x, i) => [x, i])), _bc: new Map(bc.map((x, i) => [x, i])) };
 })();
 const bitmap = (codes, pos, n) => { const bytes = new Uint8Array(Math.ceil(n / 8)); for (const c of codes) { const i = pos.get(c); if (i != null) bytes[i >> 3] |= 1 << (i & 7); } return Buffer.from(bytes).toString('base64'); };
-const buckets = Array.from({ length: BRANCH_BUCKETS }, () => ({}));
-for (const [k, v] of Object.entries(out)) {
-  const [chain, sid] = k.split(':'); const L = listOf(chain); const e = {};
+/** one store's differences, compacted right away (keeping the barcode lists of every store ran out of memory) */
+function compact(chain, v) {
+  const L = listOf(chain); const e = {};
   if (v.x) e.x = bitmap(v.x, L._b, L.b.length);
   if (v.xc) e.xc = bitmap(v.xc, L._bc, L.bc.length);
   const own = [...Object.entries(v.d || {}), ...Object.entries(v.c || {})].map(([code, deal]) => {
@@ -64,16 +62,18 @@ for (const [k, v] of Object.entries(out)) {
     return i;
   }).sort((a, b) => a - b);
   if (own.length) e.o = own.map((i) => i.toString(36)).join(',');
-  buckets[branchBucket(chain, sid)][k] = e;
+  return e;
 }
-for (let i = 0; i < buckets.length; i++) await writeFile(`${OUT}/${String(i).padStart(2, '0')}.json`, JSON.stringify(buckets[i]));
-// one index file per chain, so the app downloads only the chains whose branches it looks at
-await mkdir(`${OUT}/i`, { recursive: true });
-for (const [c, L] of Object.entries(idx)) await writeFile(`${OUT}/i/${c}.json`, JSON.stringify({ b: L.b, bc: L.bc, t: L.t }));
-await writeFile(`${OUT}/report.json`, JSON.stringify(report, null, 2));
+async function writeOut() {
+  await mkdir(`${OUT}/i`, { recursive: true });
+  const buckets = Array.from({ length: BRANCH_BUCKETS }, () => ({}));
+  for (const [k, e] of Object.entries(out)) { const [chain, sid] = k.split(':'); buckets[branchBucket(chain, sid)][k] = e; }
+  for (let i = 0; i < buckets.length; i++) await writeFile(`${OUT}/${String(i).padStart(2, '0')}.json`, JSON.stringify(buckets[i]));
+  // one index file per chain, so the app downloads only the chains whose branches it looks at
+  for (const [c, L] of Object.entries(idx)) await writeFile(`${OUT}/i/${c}.json`, JSON.stringify({ b: L.b, bc: L.bc, t: L.t }));
+  await writeFile(`${OUT}/report.json`, JSON.stringify(report, null, 2));
 }
 
-// Shufersal last: its deal files are the largest, so the other chains are saved first
 const chainKeys = args.chains ? String(args.chains).split(',') : [...Object.keys(ADAPTERS).filter((k) => k !== 'shufersal'), 'shufersal'];
 for (const key of chainKeys) {
   const ad = ADAPTERS[key];
@@ -99,7 +99,7 @@ for (const key of chainKeys) {
         r.files++;
         const o = diffFor(chain, sid, parsed);
         r.stores++;
-        if (Object.keys(o).length) { out[`${chain}:${sid}`] = o; r.withDiff++; }
+        if (Object.keys(o).length) { out[`${chain}:${sid}`] = compact(chain, o); r.withDiff++; }
       } catch (e) { if (r.errors.length < 20) r.errors.push(`${f.name}: ${e.message}`); }
     });
     console.log(`✓ ${ad.name}: ${r.stores}/${r.listed} stores read, ${r.withDiff} with branch-only deals, ${Math.round((Date.now() - t0) / 1000)}s`);
