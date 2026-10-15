@@ -38,7 +38,7 @@ jobs:
       - name: Read every branch's deal file
         timeout-minutes: 310
         env:
-          NODE_OPTIONS: --max-old-space-size=6144
+          NODE_OPTIONS: --max-old-space-size=12288
           CHAIN_MINUTES: '11'
           CHAIN_MINUTES_shufersal: '40'
           PARALLEL: '4'
