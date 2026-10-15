@@ -40,7 +40,8 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=6144
           CHAIN_MINUTES: '11'
-          PARALLEL: '4'
+          CHAIN_MINUTES_shufersal: '40'
+          PARALLEL: '6'
         run: node src/branchdeals.js ${{ inputs.chains && format('--chains={0}', inputs.chains) || '' }}
       - name: Publish to the "bd" branch
         if: success() || failure()

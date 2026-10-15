@@ -48,12 +48,15 @@ for (const key of chainKeys) {
   console.log(`\n▶ ${ad.name}`);
   try {
     const files = (await ad.list({ maxStores, maxPromoStores: Infinity, types: ['PromoFull'] })).filter((f) => f.type === 'PromoFull');
+    r.listSeconds = Math.round((Date.now() - t0) / 1000);
+    const t1 = Date.now(); // the time budget is for reading the files, not for listing them (Shufersal's listing alone is slow)
+    const budget = Number(process.env[`CHAIN_MINUTES_${key}`] || CHAIN_MINUTES) * 60000;
     const seen = new Set();
     const todo = files.filter((f) => { const s = String(f.store).replace(/^0+(?=\d)/, ''); if (seen.has(s)) return false; seen.add(s); return true; }).slice(0, maxStores);
     r.listed = todo.length;
     console.log(`  ${todo.length} store deal files`);
     await pool(todo, PARALLEL, async (f) => {
-      if (Date.now() - t0 > CHAIN_MINUTES * 60000) { if (!r.cut) r.errors.push('time budget reached'); r.cut = true; return; }
+      if (Date.now() - t1 > budget) { if (!r.cut) r.errors.push('time budget reached'); r.cut = true; return; }
       const sid = String(f.store).replace(/^0+(?=\d)/, '');
       const chain = storeChain[`${key}:${sid}`] || key;
       try {
@@ -70,7 +73,7 @@ for (const key of chainKeys) {
 
 // Compact files: chain-wide deal lists and a table of branch deals per chain in idx.json; per store, bitmaps over
 // the chain-wide lists (x / xc) and indices into the table (o).
-//   bd/idx.json = { chain: { b: [barcodes with a chain-wide regular deal], bc: [... club deal], t: [[barcode, deal], ...] } }
+//   bd/i/<chain>.json = { b: [barcodes with a chain-wide regular deal], bc: [... club deal], t: [[barcode, deal], ...] }
 //   bd/NN.json  = { "chain:store": { x?: base64 bitmap over b, xc?: bitmap over bc, o?: "i,j,k" (base36 indices into t) } }
 await mkdir(OUT, { recursive: true });
 const idx = {};
@@ -94,7 +97,9 @@ for (const [k, v] of Object.entries(out)) {
   buckets[branchBucket(chain, sid)][k] = e;
 }
 for (let i = 0; i < buckets.length; i++) await writeFile(`${OUT}/${String(i).padStart(2, '0')}.json`, JSON.stringify(buckets[i]));
-await writeFile(`${OUT}/idx.json`, JSON.stringify(Object.fromEntries(Object.entries(idx).map(([c, L]) => [c, { b: L.b, bc: L.bc, t: L.t }]))));
+// one index file per chain, so the app downloads only the chains whose branches it looks at
+await mkdir(`${OUT}/i`, { recursive: true });
+for (const [c, L] of Object.entries(idx)) await writeFile(`${OUT}/i/${c}.json`, JSON.stringify({ b: L.b, bc: L.bc, t: L.t }));
 report.finished = new Date().toISOString();
 report.basedOn = summary.updated;
 await writeFile(`${OUT}/report.json`, JSON.stringify(report, null, 2));
