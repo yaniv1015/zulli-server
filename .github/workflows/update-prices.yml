@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: prices
@@ -27,6 +28,7 @@ jobs:
           git fetch --depth 1 origin data || true
           mkdir -p data && (git show origin/data:data/summary.json > data/prev.json || rm -f data/prev.json)
       - name: Fetch price files
+        id: fetch
         timeout-minutes: 170
         env:
           NODE_OPTIONS: --max-old-space-size=6144
@@ -42,3 +44,9 @@ jobs:
           git add -f data/summary.json data/report.json; test -d data/br && git add -f data/br || true
           git commit -m "prices $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -f origin data-tmp:data
+      - name: Tell the owner if something went wrong
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_OUTCOME: ${{ steps.fetch.outcome }}
+        run: node tools/health.js || true
