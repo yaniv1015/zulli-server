@@ -1,0 +1,55 @@
+name: Branch deals
+
+# Deals that run only in some branches (a city, a region): reads every store's deal file and keeps what differs
+# from the chain-wide deals of the latest price run. Output: data/bd/NN.json on the "bd" branch.
+on:
+  schedule:
+    - cron: '53 3 * * *'   # daily, after the night's price runs
+  workflow_dispatch:
+    inputs:
+      chains:
+        description: 'only these chains (comma separated), empty = all'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: branch-deals
+  cancel-in-progress: false
+
+jobs:
+  deals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node test/run.js
+      - name: The latest prices (base price of every product in every branch)
+        run: |
+          git fetch --depth 1 origin data
+          mkdir -p data && git show origin/data:data/summary.json > data/summary.json
+          git archive origin/data data/br | tar -x
+          ls data/br | wc -l
+      - name: Read every branch's deal file
+        timeout-minutes: 310
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+          CHAIN_MINUTES: '11'
+          PARALLEL: '4'
+        run: node src/branchdeals.js ${{ inputs.chains && format('--chains={0}', inputs.chains) || '' }}
+      - name: Publish to the "bd" branch
+        if: success() || failure()
+        run: |
+          test -f data/bd/report.json || exit 0
+          git config user.name "zulli-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git checkout --orphan bd-tmp
+          git rm -rf --cached . > /dev/null
+          git add -f data/bd
+          git commit -m "branch deals $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -f origin bd-tmp:bd

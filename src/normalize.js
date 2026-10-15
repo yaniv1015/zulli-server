@@ -195,3 +195,36 @@ export function buildSummary(db, usual = usualPrices(db)) {
   }
   return { updated: db.updated, products: out, stores };
 }
+
+/** Branch-only deals (see src/branchdeals.js): for one store's deal file, what differs from the chain-wide deals in the summary.
+ *  Returns (chain, storeId, parsedPromos) => { d?, c?, x?, xc? } */
+export function branchDealDiff(summary, br) {
+  const pack = (d) => [d.kind, d.n, d.kind === 'm' ? d.price : d.pct, d.club, d.end, d.desc];
+  const same = (a, b) => a && b && a[0] === b[0] && a[1] === b[1] && Math.abs(a[2] - b[2]) < 0.005;
+  const cd = {};
+  const chainDeals = (chain) => cd[chain] ||= { d: Object.keys(summary.products).filter((bc) => summary.products[bc].d?.[chain]), dc: Object.keys(summary.products).filter((bc) => summary.products[bc].dc?.[chain]) };
+  return (chain, sid, parsed) => {
+    const own = br[`${chain}:${sid}`] || {};
+    const best = { r: {}, c: {} };
+    for (const pr of parsed.promos) {
+      if (pr.barcodes.length > 400) continue; // store-wide promotions are not per-product deals
+      for (const bc of pr.barcodes) {
+        const base = own[bc] ?? summary.products[bc]?.p?.[chain];
+        if (base == null) continue;
+        const d = dealFor(pr, base);
+        if (!d) continue;
+        const k = d.club ? 'c' : 'r';
+        if (!best[k][bc] || d.unit < best[k][bc].unit) best[k][bc] = d;
+      }
+    }
+    const o = {};
+    for (const [k, field, miss] of [['r', 'd', 'x'], ['c', 'dc', 'xc']]) {
+      const add = {};
+      for (const [bc, d] of Object.entries(best[k])) { const p = pack(d); if (!same(p, summary.products[bc]?.[field]?.[chain])) add[bc] = p; }
+      const lacking = chainDeals(chain)[field].filter((bc) => !best[k][bc]);
+      if (Object.keys(add).length) o[k === 'r' ? 'd' : 'c'] = add;
+      if (lacking.length) o[miss] = lacking;
+    }
+    return o;
+  };
+}

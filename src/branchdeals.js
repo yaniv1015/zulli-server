@@ -1,0 +1,80 @@
+// Deals per branch.
+// Chains publish a deal file for every store, and some deals run only in some stores (one city, one region).
+// The price run reads deals from a few stores per chain and treats them as chain-wide. This run reads every
+// store's deal file and keeps, per store, only what differs from the chain-wide deal:
+//
+//   data/bd/NN.json = { "chain:store": { d: { barcode: deal }, c: { barcode: clubDeal }, x: [barcode], xc: [barcode] } }
+//     d / c   a deal in this store that the chain-wide data does not have (or has with other terms)
+//     x / xc  the chain-wide deal (regular / club) is not offered in this store
+//   deal = [kind, n, price|pct, club, end, desc], as in summary.json
+//   NN = the same bucket as data/br/NN.json (branchBucket)
+//
+// Inputs: data/summary.json and data/br/*.json from the latest price run (the base price of every product per store).
+// Usage: node src/branchdeals.js [--chains=keshet,tivtaam] [--stores=20]
+import { mkdir, writeFile, readFile, readdir } from 'node:fs/promises';
+import { ADAPTERS } from './adapters.js';
+import { decodeFile, parsePromos } from './parse.js';
+import { branchDealDiff, branchBucket, BRANCH_BUCKETS } from './normalize.js';
+
+const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '').split('=')).map(([k, v]) => [k, v ?? true]));
+const DATA = process.env.DATA_DIR || 'data';
+const OUT = process.env.BD_DIR || `${DATA}/bd`;
+const CHAIN_MINUTES = Number(process.env.CHAIN_MINUTES || 30);
+const PARALLEL = Number(process.env.PARALLEL || 4);
+const maxStores = args.stores ? +args.stores : Infinity;
+
+const summary = JSON.parse(await readFile(`${DATA}/summary.json`, 'utf8'));
+const br = {};
+try { for (const f of await readdir(`${DATA}/br`)) if (f.endsWith('.json')) Object.assign(br, JSON.parse(await readFile(`${DATA}/br/${f}`, 'utf8'))); } catch {}
+
+// split-off formats (their stores are listed inside another chain's files)
+const SPLIT_OF = { yeshhesed: 'shufersal' };
+const storeChain = {};
+for (const [chain, list] of Object.entries(summary.stores || {})) for (const s of list || []) storeChain[`${SPLIT_OF[chain] || chain}:${String(s.id).replace(/^0+(?=\d)/, '')}`] = chain;
+
+const out = {};
+const report = { started: new Date().toISOString(), chains: {} };
+const diffFor = branchDealDiff(summary, br);
+
+async function pool(items, n, fn) {
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length) await fn(items[i++]); }));
+}
+
+const chainKeys = args.chains ? String(args.chains).split(',') : Object.keys(ADAPTERS);
+for (const key of chainKeys) {
+  const ad = ADAPTERS[key];
+  const r = (report.chains[key] = { files: 0, stores: 0, withDiff: 0, errors: [] });
+  if (!ad) { r.errors.push('unknown chain'); continue; }
+  const t0 = Date.now();
+  console.log(`\n▶ ${ad.name}`);
+  try {
+    const files = (await ad.list({ maxStores, maxPromoStores: Infinity, types: ['PromoFull'] })).filter((f) => f.type === 'PromoFull');
+    const seen = new Set();
+    const todo = files.filter((f) => { const s = String(f.store).replace(/^0+(?=\d)/, ''); if (seen.has(s)) return false; seen.add(s); return true; }).slice(0, maxStores);
+    r.listed = todo.length;
+    console.log(`  ${todo.length} store deal files`);
+    await pool(todo, PARALLEL, async (f) => {
+      if (Date.now() - t0 > CHAIN_MINUTES * 60000) { if (!r.cut) r.errors.push('time budget reached'); r.cut = true; return; }
+      const sid = String(f.store).replace(/^0+(?=\d)/, '');
+      const chain = storeChain[`${key}:${sid}`] || key;
+      try {
+        const parsed = parsePromos(decodeFile(await ad.download(f)));
+        r.files++;
+        const o = diffFor(chain, sid, parsed);
+        r.stores++;
+        if (Object.keys(o).length) { out[`${chain}:${sid}`] = o; r.withDiff++; }
+      } catch (e) { if (r.errors.length < 20) r.errors.push(`${f.name}: ${e.message}`); }
+    });
+    console.log(`✓ ${ad.name}: ${r.stores}/${r.listed} stores read, ${r.withDiff} with branch-only deals, ${Math.round((Date.now() - t0) / 1000)}s`);
+  } catch (e) { r.errors.push(e.message); console.warn(`✗ ${ad.name}: ${e.message}`); }
+}
+
+await mkdir(OUT, { recursive: true });
+const buckets = Array.from({ length: BRANCH_BUCKETS }, () => ({}));
+for (const [k, v] of Object.entries(out)) { const [chain, sid] = k.split(':'); buckets[branchBucket(chain, sid)][k] = v; }
+for (let i = 0; i < buckets.length; i++) await writeFile(`${OUT}/${String(i).padStart(2, '0')}.json`, JSON.stringify(buckets[i]));
+report.finished = new Date().toISOString();
+report.basedOn = summary.updated;
+await writeFile(`${OUT}/report.json`, JSON.stringify(report, null, 2));
+console.log(`Done: ${Object.keys(out).length} stores with branch-only deals → ${OUT}/`);

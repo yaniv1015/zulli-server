@@ -135,6 +135,22 @@ assert.equal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'], isGiftItem: 
   assert.equal(branchBucket('rami', '039'), branchBucket('rami', '039'));
 }
 
+// 6c. branch-only deals: a deal one store has that the chain-wide data lacks, and a chain-wide deal a store lacks
+{
+  const { branchDealDiff } = await import('../src/normalize.js');
+  const summary = { products: { '111': { p: { keshet: 10 }, d: { keshet: ['m', 2, 15, 0, '', 'chain'] } }, '222': { p: { keshet: 20 } }, '333': { p: { keshet: 8 } } } };
+  const br = { 'keshet:2': { '222': 18 } };
+  const f = branchDealDiff(summary, br);
+  const promo = (o) => ({ minQty: 1, clubs: ['0'], barcodes: [], ...o });
+  // store 1 has the chain deal on 111 and nothing else: no difference
+  assert.deepEqual(f('keshet', '1', { promos: [promo({ discountedPrice: 15, minQty: 2, barcodes: ['111'] })] }), {});
+  // store 2 lacks the chain deal on 111, and has its own 50% on 222 (priced against its own 18), and a club deal on 333
+  const o = f('keshet', '2', { promos: [promo({ discountRate: 50, barcodes: ['222'] }), promo({ discountedPrice: 5, clubs: ['3'], barcodes: ['333'] })] });
+  assert.deepEqual(o.x, ['111'], 'chain deal missing in store 2');
+  assert.deepEqual(o.d['222'].slice(0, 3), ['p', 1, 50]);
+  assert.deepEqual(o.c['333'].slice(0, 4), ['m', 1, 5, 1]);
+}
+
 // 7. delivery fees, deposits and club fees are not products
 import('../src/normalize.js').then(({ NOT_A_PRODUCT }) => {
   for (const n of ['עלות משלוח', 'משלוח', 'פיקדון בקבוקים', 'חידוש מועדון שוק העיר', 'GOOD PHARM - שקית אל בד גדול']) assert.ok(NOT_A_PRODUCT.test(n), n);
