@@ -46,11 +46,11 @@ jobs:
         run: |
           mkdir -p data/bd
           set -o pipefail
-          node src/branchdeals.js ${{ inputs.chains && format('--chains={0}', inputs.chains) || '' }} 2>&1 | tee data/bd/log.txt
+          node --trace-uncaught src/branchdeals.js ${{ inputs.chains && format('--chains={0}', inputs.chains) || '' }} 2>&1 | tee data/bd/log.txt
       - name: Publish to the "bd" branch
         if: success() || failure()
         run: |
-          test -f data/bd/report.json || exit 0
+          test -d data/bd || exit 0
           git config user.name "zulli-bot"
           git config user.email "bot@users.noreply.github.com"
           git checkout --orphan bd-tmp

@@ -19,6 +19,7 @@ const DATA = process.env.DATA_DIR || 'data';
 const OUT = process.env.BD_DIR || `${DATA}/bd`;
 const CHAIN_MINUTES = Number(process.env.CHAIN_MINUTES || 30);
 const PARALLEL = Number(process.env.PARALLEL || 4);
+process.on('unhandledRejection', (e) => console.error('unhandled', e));
 const maxStores = args.stores ? +args.stores : Infinity;
 
 const summary = JSON.parse(await readFile(`${DATA}/summary.json`, 'utf8'));
@@ -72,7 +73,8 @@ for (const [c, L] of Object.entries(idx)) await writeFile(`${OUT}/i/${c}.json`, 
 await writeFile(`${OUT}/report.json`, JSON.stringify(report, null, 2));
 }
 
-const chainKeys = args.chains ? String(args.chains).split(',') : Object.keys(ADAPTERS);
+// Shufersal last: its deal files are the largest, so the other chains are saved first
+const chainKeys = args.chains ? String(args.chains).split(',') : [...Object.keys(ADAPTERS).filter((k) => k !== 'shufersal'), 'shufersal'];
 for (const key of chainKeys) {
   const ad = ADAPTERS[key];
   const r = (report.chains[key] = { files: 0, stores: 0, withDiff: 0, errors: [] });
