@@ -31,7 +31,7 @@ const storeChain = {};
 for (const [chain, list] of Object.entries(summary.stores || {})) for (const s of list || []) storeChain[`${SPLIT_OF[chain] || chain}:${String(s.id).replace(/^0+(?=\d)/, '')}`] = chain;
 
 const out = {};
-const report = { started: new Date().toISOString(), chains: {} };
+const report = { started: new Date().toISOString(), basedOn: summary.updated, chains: {} };
 const diffFor = branchDealDiff(summary, br);
 
 async function pool(items, n, fn) {
@@ -39,42 +39,11 @@ async function pool(items, n, fn) {
   await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length) await fn(items[i++]); }));
 }
 
-const chainKeys = args.chains ? String(args.chains).split(',') : Object.keys(ADAPTERS);
-for (const key of chainKeys) {
-  const ad = ADAPTERS[key];
-  const r = (report.chains[key] = { files: 0, stores: 0, withDiff: 0, errors: [] });
-  if (!ad) { r.errors.push('unknown chain'); continue; }
-  const t0 = Date.now();
-  console.log(`\n▶ ${ad.name}`);
-  try {
-    const files = (await ad.list({ maxStores, maxPromoStores: Infinity, types: ['PromoFull'] })).filter((f) => f.type === 'PromoFull');
-    r.listSeconds = Math.round((Date.now() - t0) / 1000);
-    const t1 = Date.now(); // the time budget is for reading the files, not for listing them (Shufersal's listing alone is slow)
-    const budget = Number(process.env[`CHAIN_MINUTES_${key}`] || CHAIN_MINUTES) * 60000;
-    const seen = new Set();
-    const todo = files.filter((f) => { const s = String(f.store).replace(/^0+(?=\d)/, ''); if (seen.has(s)) return false; seen.add(s); return true; }).slice(0, maxStores);
-    r.listed = todo.length;
-    console.log(`  ${todo.length} store deal files`);
-    await pool(todo, PARALLEL, async (f) => {
-      if (Date.now() - t1 > budget) { if (!r.cut) r.errors.push('time budget reached'); r.cut = true; return; }
-      const sid = String(f.store).replace(/^0+(?=\d)/, '');
-      const chain = storeChain[`${key}:${sid}`] || key;
-      try {
-        const parsed = parsePromos(decodeFile(await ad.download(f)));
-        r.files++;
-        const o = diffFor(chain, sid, parsed);
-        r.stores++;
-        if (Object.keys(o).length) { out[`${chain}:${sid}`] = o; r.withDiff++; }
-      } catch (e) { if (r.errors.length < 20) r.errors.push(`${f.name}: ${e.message}`); }
-    });
-    console.log(`✓ ${ad.name}: ${r.stores}/${r.listed} stores read, ${r.withDiff} with branch-only deals, ${Math.round((Date.now() - t0) / 1000)}s`);
-  } catch (e) { r.errors.push(e.message); console.warn(`✗ ${ad.name}: ${e.message}`); }
-}
-
 // Compact files: chain-wide deal lists and a table of branch deals per chain in idx.json; per store, bitmaps over
 // the chain-wide lists (x / xc) and indices into the table (o).
 //   bd/i/<chain>.json = { b: [barcodes with a chain-wide regular deal], bc: [... club deal], t: [[barcode, deal], ...] }
 //   bd/NN.json  = { "chain:store": { x?: base64 bitmap over b, xc?: bitmap over bc, o?: "i,j,k" (base36 indices into t) } }
+async function writeOut() {
 await mkdir(OUT, { recursive: true });
 const idx = {};
 const listOf = (chain) => idx[chain] ||= (() => {
@@ -100,7 +69,44 @@ for (let i = 0; i < buckets.length; i++) await writeFile(`${OUT}/${String(i).pad
 // one index file per chain, so the app downloads only the chains whose branches it looks at
 await mkdir(`${OUT}/i`, { recursive: true });
 for (const [c, L] of Object.entries(idx)) await writeFile(`${OUT}/i/${c}.json`, JSON.stringify({ b: L.b, bc: L.bc, t: L.t }));
+await writeFile(`${OUT}/report.json`, JSON.stringify(report, null, 2));
+}
+
+const chainKeys = args.chains ? String(args.chains).split(',') : Object.keys(ADAPTERS);
+for (const key of chainKeys) {
+  const ad = ADAPTERS[key];
+  const r = (report.chains[key] = { files: 0, stores: 0, withDiff: 0, errors: [] });
+  if (!ad) { r.errors.push('unknown chain'); continue; }
+  const t0 = Date.now();
+  console.log(`\n▶ ${ad.name}`);
+  try {
+    const files = (await ad.list({ maxStores, maxPromoStores: Infinity, types: ['PromoFull'] })).filter((f) => f.type === 'PromoFull');
+    r.listSeconds = Math.round((Date.now() - t0) / 1000);
+    const t1 = Date.now(); // the time budget is for reading the files, not for listing them (Shufersal's listing alone is slow)
+    const budget = Number(process.env[`CHAIN_MINUTES_${key}`] || CHAIN_MINUTES) * 60000;
+    const seen = new Set();
+    const todo = files.filter((f) => { const s = String(f.store).replace(/^0+(?=\d)/, ''); if (seen.has(s)) return false; seen.add(s); return true; }).slice(0, maxStores);
+    r.listed = todo.length;
+    console.log(`  ${todo.length} store deal files`);
+    await pool(todo, Number(process.env[`PARALLEL_${key}`] || PARALLEL), async (f) => {
+      if (Date.now() - t1 > budget) { if (!r.cut) r.errors.push('time budget reached'); r.cut = true; return; }
+      const sid = String(f.store).replace(/^0+(?=\d)/, '');
+      const chain = storeChain[`${key}:${sid}`] || key;
+      try {
+        const parsed = parsePromos(decodeFile(await ad.download(f)));
+        r.files++;
+        const o = diffFor(chain, sid, parsed);
+        r.stores++;
+        if (Object.keys(o).length) { out[`${chain}:${sid}`] = o; r.withDiff++; }
+      } catch (e) { if (r.errors.length < 20) r.errors.push(`${f.name}: ${e.message}`); }
+    });
+    console.log(`✓ ${ad.name}: ${r.stores}/${r.listed} stores read, ${r.withDiff} with branch-only deals, ${Math.round((Date.now() - t0) / 1000)}s`);
+  } catch (e) { r.errors.push(e.message); console.warn(`✗ ${ad.name}: ${e.message}`); }
+  r.heapMB = Math.round(process.memoryUsage().heapUsed / 1048576);
+  await writeOut(); // after every chain, so a crash late in the run keeps the chains done so far
+}
+
 report.finished = new Date().toISOString();
 report.basedOn = summary.updated;
-await writeFile(`${OUT}/report.json`, JSON.stringify(report, null, 2));
+await writeOut();
 console.log(`Done: ${Object.keys(out).length} stores with branch-only deals → ${OUT}/`);

@@ -42,7 +42,11 @@ jobs:
           CHAIN_MINUTES: '11'
           CHAIN_MINUTES_shufersal: '40'
           PARALLEL: '6'
-        run: node src/branchdeals.js ${{ inputs.chains && format('--chains={0}', inputs.chains) || '' }}
+          PARALLEL_shufersal: '2'   # its deal files are very large
+        run: |
+          mkdir -p data/bd
+          set -o pipefail
+          node src/branchdeals.js ${{ inputs.chains && format('--chains={0}', inputs.chains) || '' }} 2>&1 | tee data/bd/log.txt
       - name: Publish to the "bd" branch
         if: success() || failure()
         run: |
