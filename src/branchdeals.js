@@ -3,11 +3,9 @@
 // The price run reads deals from a few stores per chain and treats them as chain-wide. This run reads every
 // store's deal file and keeps, per store, only what differs from the chain-wide deal:
 //
-//   data/bd/NN.json = { "chain:store": { d: { barcode: deal }, c: { barcode: clubDeal }, x: [barcode], xc: [barcode] } }
-//     d / c   a deal in this store that the chain-wide data does not have (or has with other terms)
-//     x / xc  the chain-wide deal (regular / club) is not offered in this store
-//   deal = [kind, n, price|pct, club, end, desc], as in summary.json
-//   NN = the same bucket as data/br/NN.json (branchBucket)
+//   per store: the deals this store has that the chain-wide data does not (or has with other terms),
+//   and the chain-wide deals (regular / club) this store does not offer. File format: see the end of this file.
+//   deal = [kind, n, price|pct, club, end, desc], as in summary.json; NN = the same bucket as data/br/NN.json
 //
 // Inputs: data/summary.json and data/br/*.json from the latest price run (the base price of every product per store).
 // Usage: node src/branchdeals.js [--chains=keshet,tivtaam] [--stores=20]
@@ -70,10 +68,33 @@ for (const key of chainKeys) {
   } catch (e) { r.errors.push(e.message); console.warn(`✗ ${ad.name}: ${e.message}`); }
 }
 
+// Compact files: chain-wide deal lists and a table of branch deals per chain in idx.json; per store, bitmaps over
+// the chain-wide lists (x / xc) and indices into the table (o).
+//   bd/idx.json = { chain: { b: [barcodes with a chain-wide regular deal], bc: [... club deal], t: [[barcode, deal], ...] } }
+//   bd/NN.json  = { "chain:store": { x?: base64 bitmap over b, xc?: bitmap over bc, o?: "i,j,k" (base36 indices into t) } }
 await mkdir(OUT, { recursive: true });
+const idx = {};
+const listOf = (chain) => idx[chain] ||= (() => {
+  const b = [], bc = [];
+  for (const [code, row] of Object.entries(summary.products)) { if (row.d?.[chain]) b.push(code); if (row.dc?.[chain]) bc.push(code); }
+  return { b, bc, t: [], _t: new Map(), _b: new Map(b.map((x, i) => [x, i])), _bc: new Map(bc.map((x, i) => [x, i])) };
+})();
+const bitmap = (codes, pos, n) => { const bytes = new Uint8Array(Math.ceil(n / 8)); for (const c of codes) { const i = pos.get(c); if (i != null) bytes[i >> 3] |= 1 << (i & 7); } return Buffer.from(bytes).toString('base64'); };
 const buckets = Array.from({ length: BRANCH_BUCKETS }, () => ({}));
-for (const [k, v] of Object.entries(out)) { const [chain, sid] = k.split(':'); buckets[branchBucket(chain, sid)][k] = v; }
+for (const [k, v] of Object.entries(out)) {
+  const [chain, sid] = k.split(':'); const L = listOf(chain); const e = {};
+  if (v.x) e.x = bitmap(v.x, L._b, L.b.length);
+  if (v.xc) e.xc = bitmap(v.xc, L._bc, L.bc.length);
+  const own = [...Object.entries(v.d || {}), ...Object.entries(v.c || {})].map(([code, deal]) => {
+    const key = code + '|' + JSON.stringify(deal); let i = L._t.get(key);
+    if (i == null) { i = L.t.length; L.t.push([code, deal]); L._t.set(key, i); }
+    return i;
+  }).sort((a, b) => a - b);
+  if (own.length) e.o = own.map((i) => i.toString(36)).join(',');
+  buckets[branchBucket(chain, sid)][k] = e;
+}
 for (let i = 0; i < buckets.length; i++) await writeFile(`${OUT}/${String(i).padStart(2, '0')}.json`, JSON.stringify(buckets[i]));
+await writeFile(`${OUT}/idx.json`, JSON.stringify(Object.fromEntries(Object.entries(idx).map(([c, L]) => [c, { b: L.b, bc: L.bc, t: L.t }]))));
 report.finished = new Date().toISOString();
 report.basedOn = summary.updated;
 await writeFile(`${OUT}/report.json`, JSON.stringify(report, null, 2));
