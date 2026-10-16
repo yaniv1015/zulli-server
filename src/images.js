@@ -2,7 +2,8 @@
 //
 // The app cannot load images from other websites, so thumbnails are shipped next to it as data:
 //   img/NN.json = { "<barcode>": "<base64 webp>" }, NN = chunkOf(barcode), plus img/index.json.
-// Sources, in order: Open Food Facts (open database, CC BY-SA), then Rami Levy's product image server.
+// Sources: the Open Food Facts family of open databases (food, beauty, pet food, other products; CC BY-SA),
+// then Rami Levy's product image server.
 // Retailer photos belong to the retailer; get permission before a public launch.
 //
 // Usage: node src/images.js [path/to/summary.json] [minChains for Open Food Facts]
@@ -23,9 +24,11 @@ async function get(url, ms = 15000) {
     const buf = Buffer.from(await r.arrayBuffer()); return { type, buf };
   } catch { return null; }
 }
-async function fromOff(bc) {
-  const r = await get(`https://world.openfoodfacts.org/api/v2/product/${bc}.json?fields=image_front_small_url`);
-  if (!r) return null; let url = null; try { url = JSON.parse(r.buf.toString()).product?.image_front_small_url; } catch {}
+// the same open API on four sites: a product missing from one is looked up on the next
+const OPEN_HOSTS = ['world.openfoodfacts.org', 'world.openbeautyfacts.org', 'world.openpetfoodfacts.org', 'world.openproductsfacts.org'];
+async function fromOpen(host, bc) {
+  const r = await get(`https://${host}/api/v2/product/${bc}.json?fields=image_front_small_url,image_small_url`);
+  if (!r) return null; let url = null; try { const p = JSON.parse(r.buf.toString()).product; url = p?.image_front_small_url || p?.image_small_url; } catch {}
   if (!url) return null; const im = await get(url); return im && im.type.startsWith('image/') ? im.buf : null;
 }
 async function fromRami(bc) {
@@ -54,6 +57,9 @@ const chunks = Array.from({ length: CHUNKS }, (_, i) => {
   const f = `${PREV}/${String(i).padStart(3, '0')}.json`; try { return existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : {}; } catch { return {}; }
 });
 let misses = {}; try { misses = JSON.parse(readFileSync(`${PREV}/misses.json`, 'utf8')); } catch {}
+// misses recorded before the beauty, pet and products databases were added are tried again once
+let prevIndex = {}; try { prevIndex = JSON.parse(readFileSync(`${PREV}/index.json`, 'utf8')); } catch {}
+if (prevIndex.openHosts !== 4) for (const [bc, p] of real) if (p.p?.rami == null) delete misses[bc];
 const today = Math.floor(Date.now() / 864e5);
 const have = (bc) => chunks[chunkOf(bc)][bc] != null;
 const fresh = (bc) => !have(bc) && !(misses[bc] && today - misses[bc] < 30);
@@ -93,17 +99,29 @@ const ramiRun = (async () => {
   ramiInfo.tried = next; ramiInfo.stopped = stopped;
   for (const bc of confirmed) { misses[bc] = today; stats.miss++; }
 })();
-// Open Food Facts: one request every ~0.7s
+// Open databases: each site gets one request every ~0.7s (their published limit is about 100 a minute);
+// a barcode one site does not have goes on to the next site's queue, and is a miss only after all four
 const offTodo = offCodes.filter(fresh);
-const offRun = (async () => {
-  for (const bc of offTodo) { if (timeUp()) break; const s = Date.now(); await keep(bc, await fromOff(bc), 'off'); await sleep(Math.max(0, 700 - (Date.now() - s))); }
-})();
+const queues = OPEN_HOSTS.map(() => []); queues[0].push(...offTodo); const done = new Set();
+const offRun = Promise.all(OPEN_HOSTS.map(async (host, h) => {
+  for (;;) {
+    if (timeUp()) break;
+    const bc = queues[h].shift();
+    if (bc === undefined) { if (h === 0 || [...Array(h).keys()].every((i) => done.has(i))) break; await sleep(500); continue; }
+    const s = Date.now(); const raw = await fromOpen(host, bc);
+    if (raw) await keep(bc, raw, 'off');
+    else if (h + 1 < OPEN_HOSTS.length) queues[h + 1].push(bc);
+    else await keep(bc, null, 'off');
+    await sleep(Math.max(0, 700 - (Date.now() - s)));
+  }
+  done.add(h);
+}));
 await Promise.all([ramiRun, offRun]);
 const after = chunks.reduce((n, c) => n + Object.keys(c).length, 0);
 console.log(`photos: ${before} → ${after}`);
 mkdirSync('img', { recursive: true });
 chunks.forEach((c, i) => writeFileSync(`img/${String(i).padStart(3, '0')}.json`, JSON.stringify(c)));
 writeFileSync('img/misses.json', JSON.stringify(misses));
-const index = { updated: new Date().toISOString(), chunks: CHUNKS, count: after, added: { off: stats.off, rami: stats.rami }, misses: Object.keys(misses).length, rami: { todo: ramiCodes.filter(fresh).length, ...ramiInfo } };
+const index = { updated: new Date().toISOString(), openHosts: 4, chunks: CHUNKS, count: after, added: { off: stats.off, rami: stats.rami }, misses: Object.keys(misses).length, rami: { todo: ramiCodes.filter(fresh).length, ...ramiInfo } };
 writeFileSync('img/index.json', JSON.stringify(index));
 console.log(JSON.stringify(index));

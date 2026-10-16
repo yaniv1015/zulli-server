@@ -5,7 +5,7 @@ on:
     inputs:
       min_chains:
         description: only products sold in at least this many chains
-        default: '3'
+        default: '2'
   schedule:
     - cron: '23 * * * *'   # hourly short runs; each adds photos and keeps the old ones
 
@@ -36,7 +36,7 @@ jobs:
           mkdir -p prev && (git archive origin/images img | tar -x -C prev) || true
       - name: Build images
         env:
-          MIN_CHAINS: ${{ inputs.min_chains || '3' }}
+          MIN_CHAINS: ${{ inputs.min_chains || '2' }}
         run: |
           printf '%s' "$MIN_CHAINS" | grep -Eq '^[0-9]{1,2}$' || { echo "min_chains must be a number"; exit 1; }
           node src/images.js data/summary.json "$MIN_CHAINS"
