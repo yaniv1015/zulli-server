@@ -45,19 +45,21 @@ jobs:
           PARALLEL: '4'
           PARALLEL_shufersal: '2'   # its deal files are very large
         run: |
-          mkdir -p data/bd
           set -o pipefail
           # the chain list comes from the person who started the run: passed as data, never pasted into the command
           ARGS=""
           if [ -n "$CHAINS" ]; then
             if ! printf '%s' "$CHAINS" | grep -Eq '^[a-z0-9]+(,[a-z0-9]+)*$'; then echo "bad chains list"; exit 1; fi
             ARGS="--chains=$CHAINS"
+            # a partial run merges into the last published output instead of replacing it
+            git fetch --depth 1 origin bd && mkdir -p prev && git archive FETCH_HEAD data/bd | tar -x -C prev && export PREV_DIR=prev/data/bd || true
           fi
+          mkdir -p data/bd
           node --trace-uncaught src/branchdeals.js $ARGS 2>&1 | tee data/bd/log.txt
       - name: Publish to the "bd" branch
         if: success() || failure()
         run: |
-          test -d data/bd || exit 0
+          test -f data/bd/report.json || exit 0
           git config user.name "zulli-bot"
           git config user.email "bot@users.noreply.github.com"
           git checkout --orphan bd-tmp

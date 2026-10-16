@@ -64,9 +64,23 @@ function compact(chain, v) {
   if (own.length) e.o = own.map((i) => i.toString(36)).join(',');
   return e;
 }
+// A run over some chains only (--chains=…) keeps the other chains' branch deals: PREV_DIR holds the last published output.
+const PREV_DIR = process.env.PREV_DIR || '';
+const rerun = new Set(args.chains ? String(args.chains).split(',').flatMap((k) => k === 'shufersal' ? [k, 'yeshhesed'] : [k]) : []);
+async function readJSON(f) { try { return JSON.parse(await readFile(f, 'utf8')); } catch { return null; } }
 async function writeOut() {
   await mkdir(`${OUT}/i`, { recursive: true });
   const buckets = Array.from({ length: BRANCH_BUCKETS }, () => ({}));
+  if (PREV_DIR && rerun.size) {
+    for (let i = 0; i < BRANCH_BUCKETS; i++) {
+      const old = await readJSON(`${PREV_DIR}/${String(i).padStart(2, '0')}.json`) || {};
+      for (const [k, e] of Object.entries(old)) if (!rerun.has(k.split(':')[0])) buckets[i][k] = e;
+    }
+    for (const f of await readdir(`${PREV_DIR}/i`).catch(() => [])) {
+      const c = f.replace(/\.json$/, '');
+      if (!rerun.has(c) && !idx[c]) await writeFile(`${OUT}/i/${f}`, await readFile(`${PREV_DIR}/i/${f}`));
+    }
+  }
   for (const [k, e] of Object.entries(out)) { const [chain, sid] = k.split(':'); buckets[branchBucket(chain, sid)][k] = e; }
   for (let i = 0; i < buckets.length; i++) await writeFile(`${OUT}/${String(i).padStart(2, '0')}.json`, JSON.stringify(buckets[i]));
   // one index file per chain, so the app downloads only the chains whose branches it looks at
