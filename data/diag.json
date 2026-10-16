@@ -1,0 +1,211 @@
+{
+ "chain": "shukhayir",
+ "stores": {
+  "5": {
+   "file": "PromoFull7290058148776-000-005-20261016-054900.GZ",
+   "promos": 1060,
+   "raw": [
+    "<Promotion>\r\n      <PromotionUpdateTime>2026-10-16T05:50:19.528</PromotionUpdateTime>\r\n      <AllowMultipleDiscounts>0</AllowMultipleDiscounts>\r\n      <PromotionID>201361361</PromotionID>\r\n      <PromotionDescription>מוע-קולון ג'ל כביסה 4 ליטר 19.90מעל100מו</PromotionDescription>\r\n      <PromotionStartDateTime>2026-10-04T00:00:00.000</PromotionStartDateTime>\r\n      <PromotionEndDateTime>2026-10-24T00:00:00.000</PromotionEndDateTime>\r\n      <PromotionStartHour />\r\n      <PromotionEndHour />\r\n      <PromotionDays />\r\n      <RedemptionLimit>3</RedemptionLimit>\r\n      <MinNoOfItemOffered />\r\n      <ClubID>(\"קבוצה 100=3\" | \"סימפלי קלאב=3\")</ClubID>\r\n      <IsGiftItem>1.0000</IsGiftItem>\r\n      <AdditionalIsCoupon>0</AdditionalIsCoupon>\r\n      <AdditionalRestrictions />\r\n      <Remarks />\r\n      <Groups>\r\n        <Group>\r\n          <GroupID>001</GroupID>\r\n          <MinPurchaseAmount>100.00</MinPurchaseAmount>\r\n          <DiscountType />\r\n          <PromotionItems>\r\n            <PromotionItem>\r\n              <ItemCode>7290112002167</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>50.13</DiscountRate>\r\n              <DiscountedPrice>19.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>4.98</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n            <PromotionItem>\r\n              <ItemCode>7290112002136</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>50.13</DiscountRate>\r\n              <DiscountedPrice>19.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>4.98</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n            <PromotionItem>\r\n              <ItemCode>7290112002143</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>50.13</DiscountRate>\r\n              <DiscountedPrice>19.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>4.98</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n          </PromotionItems>\r\n        </Group>\r\n      </Groups>\r\n    </Promotion>",
+    "<Promotion>\r\n      <PromotionUpdateTime>2026-10-16T05:50:20.929</PromotionUpdateTime>\r\n      <AllowMultipleDiscounts>0</AllowMultipleDiscounts>\r\n      <PromotionID>201356887</PromotionID>\r\n      <PromotionDescription>קולון קאפסולות 60 יחידות 49.90 ש\"ח</PromotionDescription>\r\n      <PromotionStartDateTime>2026-10-05T00:00:00.000</PromotionStartDateTime>\r\n      <PromotionEndDateTime>2026-10-31T00:00:00.000</PromotionEndDateTime>\r\n      <PromotionStartHour />\r\n      <PromotionEndHour />\r\n      <PromotionDays />\r\n      <RedemptionLimit />\r\n      <MinNoOfItemOffered />\r\n      <ClubID>0</ClubID>\r\n      <IsGiftItem>1.0000</IsGiftItem>\r\n      <AdditionalIsCoupon>0</AdditionalIsCoupon>\r\n      <AdditionalRestrictions />\r\n      <Remarks />\r\n      <Groups>\r\n        <Group>\r\n          <GroupID>001</GroupID>\r\n          <MinPurchaseAmount />\r\n          <DiscountType />\r\n          <PromotionItems>\r\n            <PromotionItem>\r\n              <ItemCode>7290112003188</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>5.67</DiscountRate>\r\n              <DiscountedPrice>49.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>0.83</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n          </PromotionItems>\r\n        </Group>\r\n      </Groups>\r\n    </Promotion>",
+    "<Promotion>\r\n      <PromotionUpdateTime>2026-10-16T05:50:20.929</PromotionUpdateTime>\r\n      <AllowMultipleDiscounts>0</AllowMultipleDiscounts>\r\n      <PromotionID>201356886</PromotionID>\r\n      <PromotionDescription>קולון ג'ל קאפס 28 יחידות 29.90 ש\"ח</PromotionDescription>\r\n      <PromotionStartDateTime>2026-10-05T00:00:00.000</PromotionStartDateTime>\r\n      <PromotionEndDateTime>2026-10-31T00:00:00.000</PromotionEndDateTime>\r\n      <PromotionStartHour />\r\n      <PromotionEndHour />\r\n      <PromotionDays />\r\n      <RedemptionLimit />\r\n      <MinNoOfItemOffered />\r\n      <ClubID>0</ClubID>\r\n      <IsGiftItem>1.0000</IsGiftItem>\r\n      <AdditionalIsCoupon>0</AdditionalIsCoupon>\r\n      <AdditionalRestrictions />\r\n      <Remarks />\r\n      <Groups>\r\n        <Group>\r\n          <GroupID>001</GroupID>\r\n          <MinPurchaseAmount />\r\n          <DiscountType />\r\n          <PromotionItems>\r\n            <PromotionItem>\r\n              <ItemCode>7290108201864</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>14.33</DiscountRate>\r\n              <DiscountedPrice>29.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>1.07</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n          </PromotionItems>\r\n        </Group>\r\n      </Groups>\r\n    </Promotion>",
+    "<Promotion>\r\n      <PromotionUpdateTime>2026-10-16T05:50:20.929</PromotionUpdateTime>\r\n      <AllowMultipleDiscounts>0</AllowMultipleDiscounts>\r\n      <PromotionID>201356883</PromotionID>\r\n      <PromotionDescription>קולון ג'ל 2.5 ליטר 2 ב 39.90 ש\"ח</PromotionDescription>\r\n      <PromotionStartDateTime>2026-10-05T00:00:00.000</PromotionStartDateTime>\r\n      <PromotionEndDateTime>2026-10-31T00:00:00.000</PromotionEndDateTime>\r\n      <PromotionStartHour />\r\n      <PromotionEndHour />\r\n      <PromotionDays />\r\n      <RedemptionLimit>3</RedemptionLimit>\r\n      <MinNoOfItemOffered />\r\n      <ClubID>0</ClubID>\r\n      <IsGiftItem>2.0000</IsGiftItem>\r\n      <AdditionalIsCoupon>0</AdditionalIsCoupon>\r\n      <AdditionalRestrictions />\r\n      <Remarks />\r\n      <Groups>\r\n        <Group>\r\n          <GroupID>001</GroupID>\r\n          <MinPurchaseAmount />\r\n          <DiscountType />\r\n          <PromotionItems>\r\n            <PromotionItem>\r\n              <ItemCode>7290112002099</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>10</RewardType>\r\n              <MinQty>2.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate />\r\n              <DiscountedPrice>39.90</DiscountedPrice>\r\n              <DiscountedPricePerMida />\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n          </PromotionItems>\r\n        </Group>\r\n      </Groups>\r\n    </Promotion>",
+    "<Promotion>\r\n      <PromotionUpdateTime>2026-10-16T05:50:20.929</PromotionUpdateTime>\r\n      <AllowMultipleDiscounts>0</AllowMultipleDiscounts>\r\n      <PromotionID>201356881</PromotionID>\r\n      <PromotionDescription>קולון אבקת כביסה 5 ק\"ג ב 39.90 ש\"ח</PromotionDescription>\r\n      <PromotionStartDateTime>2026-10-05T00:00:00.000</PromotionStartDateTime>\r\n      <PromotionEndDateTime>2026-10-31T00:00:00.000</PromotionEndDateTime>\r\n      <PromotionStartHour />\r\n      <PromotionEndHour />\r\n      <PromotionDays />\r\n      <RedemptionLimit />\r\n      <MinNoOfItemOffered />\r\n      <ClubID>0</ClubID>\r\n      <IsGiftItem>1.0000</IsGiftItem>\r\n      <AdditionalIsCoupon>0</AdditionalIsCoupon>\r\n      <AdditionalRestrictions />\r\n      <Remarks />\r\n      <Groups>\r\n        <Group>\r\n          <GroupID>001</GroupID>\r\n          <MinPurchaseAmount />\r\n          <DiscountType />\r\n          <PromotionItems>\r\n            <PromotionItem>\r\n              <ItemCode>7290011607197</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>13.07</DiscountRate>\r\n              <DiscountedPrice>39.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>7.98</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n          </PromotionItems>\r\n        </Group>\r\n      </Groups>\r\n    </Promotion>"
+   ],
+   "parsed": [
+    {
+     "id": "201361361",
+     "description": "מוע-קולון ג'ל כביסה 4 ליטר 19.90מעל100מו",
+     "start": "2026-10-04 00:00:00.000",
+     "end": "2026-10-24 00:00:00.000",
+     "rewardType": "3",
+     "minQty": 1,
+     "maxQty": null,
+     "discountedPrice": 19.9,
+     "discountedPricePerMida": 4.98,
+     "discountRate": 50.13,
+     "minPurchaseAmount": 100,
+     "weightUnit": "",
+     "isGiftItem": false,
+     "isCoupon": false,
+     "clubs": [
+      "100"
+     ],
+     "barcodes": 3
+    },
+    {
+     "id": "201356887",
+     "description": "קולון קאפסולות 60 יחידות 49.90 ש\"ח",
+     "start": "2026-10-05 00:00:00.000",
+     "end": "2026-10-31 00:00:00.000",
+     "rewardType": "3",
+     "minQty": 1,
+     "maxQty": null,
+     "discountedPrice": 49.9,
+     "discountedPricePerMida": 0.83,
+     "discountRate": 5.67,
+     "minPurchaseAmount": null,
+     "weightUnit": "",
+     "isGiftItem": false,
+     "isCoupon": false,
+     "clubs": [
+      "0"
+     ],
+     "barcodes": 1
+    },
+    {
+     "id": "201356886",
+     "description": "קולון ג'ל קאפס 28 יחידות 29.90 ש\"ח",
+     "start": "2026-10-05 00:00:00.000",
+     "end": "2026-10-31 00:00:00.000",
+     "rewardType": "3",
+     "minQty": 1,
+     "maxQty": null,
+     "discountedPrice": 29.9,
+     "discountedPricePerMida": 1.07,
+     "discountRate": 14.33,
+     "minPurchaseAmount": null,
+     "weightUnit": "",
+     "isGiftItem": false,
+     "isCoupon": false,
+     "clubs": [
+      "0"
+     ],
+     "barcodes": 1
+    },
+    {
+     "id": "201356883",
+     "description": "קולון ג'ל 2.5 ליטר 2 ב 39.90 ש\"ח",
+     "start": "2026-10-05 00:00:00.000",
+     "end": "2026-10-31 00:00:00.000",
+     "rewardType": "10",
+     "minQty": 2,
+     "maxQty": null,
+     "discountedPrice": 39.9,
+     "discountedPricePerMida": null,
+     "discountRate": null,
+     "minPurchaseAmount": null,
+     "weightUnit": "",
+     "isGiftItem": false,
+     "isCoupon": false,
+     "clubs": [
+      "0"
+     ],
+     "barcodes": 1
+    },
+    {
+     "id": "201356881",
+     "description": "קולון אבקת כביסה 5 ק\"ג ב 39.90 ש\"ח",
+     "start": "2026-10-05 00:00:00.000",
+     "end": "2026-10-31 00:00:00.000",
+     "rewardType": "3",
+     "minQty": 1,
+     "maxQty": null,
+     "discountedPrice": 39.9,
+     "discountedPricePerMida": 7.98,
+     "discountRate": 13.07,
+     "minPurchaseAmount": null,
+     "weightUnit": "",
+     "isGiftItem": false,
+     "isCoupon": false,
+     "clubs": [
+      "0"
+     ],
+     "barcodes": 1
+    }
+   ]
+  },
+  "6": {
+   "file": "PromoFull7290058148776-000-006-20261016-054900.GZ",
+   "promos": 1006,
+   "raw": [
+    "<Promotion>\r\n      <PromotionUpdateTime>2026-10-16T05:50:23.767</PromotionUpdateTime>\r\n      <AllowMultipleDiscounts>0</AllowMultipleDiscounts>\r\n      <PromotionID>201361361</PromotionID>\r\n      <PromotionDescription>מוע-קולון ג'ל כביסה 4 ליטר 19.90מעל100מו</PromotionDescription>\r\n      <PromotionStartDateTime>2026-10-04T00:00:00.000</PromotionStartDateTime>\r\n      <PromotionEndDateTime>2026-10-24T00:00:00.000</PromotionEndDateTime>\r\n      <PromotionStartHour />\r\n      <PromotionEndHour />\r\n      <PromotionDays />\r\n      <RedemptionLimit>3</RedemptionLimit>\r\n      <MinNoOfItemOffered />\r\n      <ClubID>(\"קבוצה 100=3\" | \"סימפלי קלאב=3\")</ClubID>\r\n      <IsGiftItem>1.0000</IsGiftItem>\r\n      <AdditionalIsCoupon>0</AdditionalIsCoupon>\r\n      <AdditionalRestrictions />\r\n      <Remarks />\r\n      <Groups>\r\n        <Group>\r\n          <GroupID>001</GroupID>\r\n          <MinPurchaseAmount>100.00</MinPurchaseAmount>\r\n          <DiscountType />\r\n          <PromotionItems>\r\n            <PromotionItem>\r\n              <ItemCode>7290112002167</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>51.34</DiscountRate>\r\n              <DiscountedPrice>19.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>4.98</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n            <PromotionItem>\r\n              <ItemCode>7290112002136</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>51.34</DiscountRate>\r\n              <DiscountedPrice>19.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>4.98</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n            <PromotionItem>\r\n              <ItemCode>7290112002143</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>51.34</DiscountRate>\r\n              <DiscountedPrice>19.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>4.98</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n          </PromotionItems>\r\n        </Group>\r\n      </Groups>\r\n    </Promotion>",
+    "<Promotion>\r\n      <PromotionUpdateTime>2026-10-16T05:50:25.305</PromotionUpdateTime>\r\n      <AllowMultipleDiscounts>0</AllowMultipleDiscounts>\r\n      <PromotionID>201356887</PromotionID>\r\n      <PromotionDescription>קולון קאפסולות 60 יחידות 49.90 ש\"ח</PromotionDescription>\r\n      <PromotionStartDateTime>2026-10-05T00:00:00.000</PromotionStartDateTime>\r\n      <PromotionEndDateTime>2026-10-31T00:00:00.000</PromotionEndDateTime>\r\n      <PromotionStartHour />\r\n      <PromotionEndHour />\r\n      <PromotionDays />\r\n      <RedemptionLimit />\r\n      <MinNoOfItemOffered />\r\n      <ClubID>0</ClubID>\r\n      <IsGiftItem>1.0000</IsGiftItem>\r\n      <AdditionalIsCoupon>0</AdditionalIsCoupon>\r\n      <AdditionalRestrictions />\r\n      <Remarks />\r\n      <Groups>\r\n        <Group>\r\n          <GroupID>001</GroupID>\r\n          <MinPurchaseAmount />\r\n          <DiscountType />\r\n          <PromotionItems>\r\n            <PromotionItem>\r\n              <ItemCode>7290112003188</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>18.06</DiscountRate>\r\n              <DiscountedPrice>49.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>0.83</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n          </PromotionItems>\r\n        </Group>\r\n      </Groups>\r\n    </Promotion>",
+    "<Promotion>\r\n      <PromotionUpdateTime>2026-10-16T05:50:25.305</PromotionUpdateTime>\r\n      <AllowMultipleDiscounts>0</AllowMultipleDiscounts>\r\n      <PromotionID>201356884</PromotionID>\r\n      <PromotionDescription>קולון ג'ל 2.5 ליטר 21.90 ש\"ח</PromotionDescription>\r\n      <PromotionStartDateTime>2026-10-05T00:00:00.000</PromotionStartDateTime>\r\n      <PromotionEndDateTime>2026-10-31T00:00:00.000</PromotionEndDateTime>\r\n      <PromotionStartHour />\r\n      <PromotionEndHour />\r\n      <PromotionDays />\r\n      <RedemptionLimit>3</RedemptionLimit>\r\n      <MinNoOfItemOffered />\r\n      <ClubID>0</ClubID>\r\n      <IsGiftItem>1.0000</IsGiftItem>\r\n      <AdditionalIsCoupon>0</AdditionalIsCoupon>\r\n      <AdditionalRestrictions />\r\n      <Remarks />\r\n      <Groups>\r\n        <Group>\r\n          <GroupID>001</GroupID>\r\n          <MinPurchaseAmount />\r\n          <DiscountType />\r\n          <PromotionItems>\r\n            <PromotionItem>\r\n              <ItemCode>7290112002105</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>26.76</DiscountRate>\r\n              <DiscountedPrice>21.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>8.76</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n            <PromotionItem>\r\n              <ItemCode>7290112002129</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>26.76</DiscountRate>\r\n              <DiscountedPrice>21.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>8.76</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n          </PromotionItems>\r\n        </Group>\r\n      </Groups>\r\n    </Promotion>",
+    "<Promotion>\r\n      <PromotionUpdateTime>2026-10-16T05:50:25.305</PromotionUpdateTime>\r\n      <AllowMultipleDiscounts>0</AllowMultipleDiscounts>\r\n      <PromotionID>201356882</PromotionID>\r\n      <PromotionDescription>קולון אבקת כביסה 5 ק\"ג ב 41.90 ש\"ח</PromotionDescription>\r\n      <PromotionStartDateTime>2026-10-05T00:00:00.000</PromotionStartDateTime>\r\n      <PromotionEndDateTime>2026-10-31T00:00:00.000</PromotionEndDateTime>\r\n      <PromotionStartHour />\r\n      <PromotionEndHour />\r\n      <PromotionDays />\r\n      <RedemptionLimit />\r\n      <MinNoOfItemOffered />\r\n      <ClubID>0</ClubID>\r\n      <IsGiftItem>1.0000</IsGiftItem>\r\n      <AdditionalIsCoupon>0</AdditionalIsCoupon>\r\n      <AdditionalRestrictions />\r\n      <Remarks />\r\n      <Groups>\r\n        <Group>\r\n          <GroupID>001</GroupID>\r\n          <MinPurchaseAmount />\r\n          <DiscountType />\r\n          <PromotionItems>\r\n            <PromotionItem>\r\n              <ItemCode>7290011607197</ItemCode>\r\n              <ItemType>1</ItemType>\r\n              <RewardType>3</RewardType>\r\n              <MinQty>1.0000</MinQty>\r\n              <MaxQty />\r\n              <DiscountRate>12.53</DiscountRate>\r\n              <DiscountedPrice>41.90</DiscountedPrice>\r\n              <DiscountedPricePerMida>8.38</DiscountedPricePerMida>\r\n              <bIsWeighted>0</bIsWeighted>\r\n            </PromotionItem>\r\n          </PromotionItems>\r\n        </Group>\r\n      </Groups>\r\n    </Promotion>"
+   ],
+   "parsed": [
+    {
+     "id": "201361361",
+     "description": "מוע-קולון ג'ל כביסה 4 ליטר 19.90מעל100מו",
+     "start": "2026-10-04 00:00:00.000",
+     "end": "2026-10-24 00:00:00.000",
+     "rewardType": "3",
+     "minQty": 1,
+     "maxQty": null,
+     "discountedPrice": 19.9,
+     "discountedPricePerMida": 4.98,
+     "discountRate": 51.34,
+     "minPurchaseAmount": 100,
+     "weightUnit": "",
+     "isGiftItem": false,
+     "isCoupon": false,
+     "clubs": [
+      "100"
+     ],
+     "barcodes": 3
+    },
+    {
+     "id": "201356887",
+     "description": "קולון קאפסולות 60 יחידות 49.90 ש\"ח",
+     "start": "2026-10-05 00:00:00.000",
+     "end": "2026-10-31 00:00:00.000",
+     "rewardType": "3",
+     "minQty": 1,
+     "maxQty": null,
+     "discountedPrice": 49.9,
+     "discountedPricePerMida": 0.83,
+     "discountRate": 18.06,
+     "minPurchaseAmount": null,
+     "weightUnit": "",
+     "isGiftItem": false,
+     "isCoupon": false,
+     "clubs": [
+      "0"
+     ],
+     "barcodes": 1
+    },
+    {
+     "id": "201356884",
+     "description": "קולון ג'ל 2.5 ליטר 21.90 ש\"ח",
+     "start": "2026-10-05 00:00:00.000",
+     "end": "2026-10-31 00:00:00.000",
+     "rewardType": "3",
+     "minQty": 1,
+     "maxQty": null,
+     "discountedPrice": 21.9,
+     "discountedPricePerMida": 8.76,
+     "discountRate": 26.76,
+     "minPurchaseAmount": null,
+     "weightUnit": "",
+     "isGiftItem": false,
+     "isCoupon": false,
+     "clubs": [
+      "0"
+     ],
+     "barcodes": 2
+    },
+    {
+     "id": "201356882",
+     "description": "קולון אבקת כביסה 5 ק\"ג ב 41.90 ש\"ח",
+     "start": "2026-10-05 00:00:00.000",
+     "end": "2026-10-31 00:00:00.000",
+     "rewardType": "3",
+     "minQty": 1,
+     "maxQty": null,
+     "discountedPrice": 41.9,
+     "discountedPricePerMida": 8.38,
+     "discountRate": 12.53,
+     "minPurchaseAmount": null,
+     "weightUnit": "",
+     "isGiftItem": false,
+     "isCoupon": false,
+     "clubs": [
+      "0"
+     ],
+     "barcodes": 1
+    }
+   ]
+  }
+ },
+ "started": "2026-10-16T14:28:59.244Z"
+}
