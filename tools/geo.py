@@ -202,8 +202,9 @@ for chain, lst in (summary.get('stores') or {}).items():
             continue
         sid = str(s.get('id', '')).lstrip('0') or '0'
         p = street_in(c, s.get('address')) or street_in(c, s.get('name'))
-        if p: out.setdefault(chain, {})[sid] = [p[0], p[1], 2]; rep['street'] += 1
-        else: out.setdefault(chain, {})[sid] = [geo[c]['c'][0], geo[c]['c'][1], 1]; rep['city'] += 1
+        # 4th value: the settlement's official name, for branches whose file gives no city
+        if p: out.setdefault(chain, {})[sid] = [p[0], p[1], 2, official.get(c, '')]; rep['street'] += 1
+        else: out.setdefault(chain, {})[sid] = [geo[c]['c'][0], geo[c]['c'][1], 1, official.get(c, '')]; rep['city'] += 1
 with open(os.path.join(OUT, 'storegeo.json'), 'w') as f: json.dump(out, f, separators=(',', ':'))
 rep.update(cities=len(geo), streets=sum(len(g['s']) for g in geo.values()))
 with open(os.path.join(OUT, 'geo', 'report.json'), 'w') as f: json.dump(rep, f)
