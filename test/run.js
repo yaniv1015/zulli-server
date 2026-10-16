@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { gzipSync } from 'node:zlib';
 import { decodeFile, parsePrices, parsePromos, parseStores } from '../src/parse.js';
-import { emptyDb, addPrices, addPromos, addStores, buildSummary, dealFor } from '../src/normalize.js';
+import { emptyDb, addPrices, addPromos, addStores, buildSummary, dealFor, packDeal } from '../src/normalize.js';
 import { compareBasket, linePrice } from '../src/compare.js';
 import { pickLatest, parsePublishPrice } from '../src/adapters.js';
 
@@ -120,6 +120,12 @@ assert.equal(cs.products[MILK].d, undefined);
 assert.equal(dealFor({ discountedPrice: 30, minQty: 1, clubs: ['0'] }, 10), null, 'not a discount');
 assert.equal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'], end: '2001-01-01' }, 10), null, 'expired');
 assert.equal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'], isGiftItem: true }, 10), null, 'gift');
+{ // a club deal on a basket over 100 ₪, 3 units per shopper (שוק העיר, קולון ג'ל 4 ליטר 19.90)
+  const d = dealFor({ discountedPrice: 19.9, minQty: 1, clubs: ['100'], minPurchaseAmount: 100, limit: 3, description: 'מוע-קולון' }, 39.9);
+  assert.equal(d.price, 19.9); assert.equal(d.club, 1); assert.equal(d.min, 100); assert.equal(d.lim, 3);
+  assert.deepEqual(packDeal(d).slice(6), [100, 3], 'packed with its minimum and limit');
+  assert.equal(packDeal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'] }, 10)).length, 6, 'plain deals stay 6 long');
+}
 
 // 6b. the chain price is the one most branches charge; branches that differ keep their own price
 {

@@ -103,6 +103,8 @@ export function parsePromos(xml) {
       rewardType: field(b, ['RewardType']),
       minQty: num(field(b, ['MinQty'])) ?? 1,
       maxQty: num(field(b, ['MaxQty'])),
+      // how many units one shopper gets at the deal price ("מוגבל ל-3 מימושים")
+      limit: num(field(b, ['RedemptionLimit'])),
       discountedPrice: num(field(b, ['DiscountedPrice'])),
       discountedPricePerMida: num(field(b, ['DiscountedPricePerMida'])),
       discountRate: num(field(b, ['DiscountRate'])),

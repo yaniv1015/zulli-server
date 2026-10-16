@@ -101,9 +101,11 @@ export function buildBranches(db, usual = usualPrices(db)) {
 }
 
 /** Turn one promotion into a deal for one product: { kind: 'm' (n units for a total price) | 'p' (percent off), n, price | pct }.
- *  Returns null for promotions the app cannot price per product (gifts, basket thresholds, odd values). */
+ *  Returns null for promotions the app cannot price per product (gifts, odd values).
+ *  A deal that needs a minimum basket ("בקנייה מעל 100 ₪") keeps that minimum in deal.min; the app applies it only to a big enough basket. */
 export function dealFor(pr, base, now = new Date()) {
-  if (!(base > 0) || pr.isGiftItem || pr.isCoupon || (pr.minPurchaseAmount > 0)) return null;
+  if (!(base > 0) || pr.isGiftItem || pr.isCoupon) return null;
+  if (pr.minPurchaseAmount > 2000) return null; // not a shopping basket
   // deals that need a printed coupon or an outside benefit (insurance, credit card voucher) are not shelf prices
   if (/קופון|הטבת|שובר|ביטוח/.test(pr.description || '')) return null;
   const day = (s) => (String(s || '').match(/^\d{4}-\d{2}-\d{2}/) || [''])[0]; // a bare hour is not a date
@@ -125,6 +127,8 @@ export function dealFor(pr, base, now = new Date()) {
   deal.club = pr.clubs.some((c) => String(c) !== '0') ? 1 : 0;
   deal.end = day(pr.end);
   deal.desc = String(pr.description || '').trim().slice(0, 60);
+  if (pr.minPurchaseAmount > 0) deal.min = Math.round(pr.minPurchaseAmount);
+  if (pr.limit >= 1 && pr.limit < 100) deal.lim = Math.round(pr.limit);
   return deal;
 }
 
@@ -161,6 +165,13 @@ export function addPromos(db, chainKey, parsed) {
   }
 }
 
+/** deal → [kind, n, price|pct, club, end, desc] (+ [min basket ₪, unit limit] when the deal has them) */
+export const packDeal = (d) => {
+  const a = [d.kind, d.n, d.kind === 'm' ? d.price : d.pct, d.club, d.end, d.desc];
+  if (d.min || d.lim) a.push(d.min || 0, d.lim || 0);
+  return a;
+};
+
 /** Small summary the app can load fast: cheapest price per product per chain. */
 export function buildSummary(db, usual = usualPrices(db)) {
   const out = {};
@@ -180,7 +191,7 @@ export function buildSummary(db, usual = usualPrices(db)) {
     if (p.weighted) row.w = 1;
     // deals: { chain: [kind, n, price|pct, club, end, desc] } — r = open to everyone, c = club members
     if (p.deals) {
-      const pack = (d) => [d.kind, d.n, d.kind === 'm' ? d.price : d.pct, d.club, d.end, d.desc];
+      const pack = packDeal;
       for (const [chain, slot] of Object.entries(p.deals)) {
         if (slot.r) (row.d ||= {})[chain] = pack(slot.r);
         if (slot.c && (!slot.r || slot.c.unit < slot.r.unit)) (row.dc ||= {})[chain] = pack(slot.c);
@@ -199,8 +210,8 @@ export function buildSummary(db, usual = usualPrices(db)) {
 /** Branch-only deals (see src/branchdeals.js): for one store's deal file, what differs from the chain-wide deals in the summary.
  *  Returns (chain, storeId, parsedPromos) => { d?, c?, x?, xc? } */
 export function branchDealDiff(summary, br) {
-  const pack = (d) => [d.kind, d.n, d.kind === 'm' ? d.price : d.pct, d.club, d.end, d.desc];
-  const same = (a, b) => a && b && a[0] === b[0] && a[1] === b[1] && Math.abs(a[2] - b[2]) < 0.005;
+  const pack = packDeal;
+  const same = (a, b) => a && b && a[0] === b[0] && a[1] === b[1] && Math.abs(a[2] - b[2]) < 0.005 && (a[6] || 0) === (b[6] || 0) && (a[7] || 0) === (b[7] || 0);
   const cd = {};
   const chainDeals = (chain) => cd[chain] ||= { d: Object.keys(summary.products).filter((bc) => summary.products[bc].d?.[chain]), dc: Object.keys(summary.products).filter((bc) => summary.products[bc].dc?.[chain]) };
   return (chain, sid, parsed) => {
