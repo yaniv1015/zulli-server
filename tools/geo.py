@@ -30,6 +30,10 @@ def ckey(x):  # same as the app's addrKey
     x = str(x or '').replace('קריית', 'קרית')
     return re.sub(r"[\s\-–'\"״׳()]", '', x)
 
+def words(x):  # the official list writes "קריית" and hyphens; branch names write "קרית" and spaces
+    x = str(x or '').replace('קריית', 'קרית')
+    return re.sub(r"\s+", ' ', re.sub(r"[\-–'\"״׳(),.*]", ' ', x)).strip()
+
 PREFIX = re.compile(r"^(רחוב|רח['׳]?|שדרות|שד['׳]?|סמטת|סמ['׳]|כיכר|ככר|מעלה|משעול)\s+")
 def skey(x):
     x = re.sub(r'\s+', ' ', str(x or '')).strip()
@@ -57,6 +61,7 @@ print('settlements', len(official), file=sys.stderr)
 # ---- OSM: settlement areas, settlement points, named streets
 wkbf = osmium.geom.WKBFactory()
 areas, places, ways = [], [], []
+NBH = {}  # neighbourhood name -> points (a branch named after a neighbourhood that exists once in the country)
 RANK = {}  # settlement size from OSM: city 4, town 3, village 2, hamlet 1 ("סגולה פתח תקווה" is Petah Tikva, not Moshav Segula)
 
 def heb(tags):
@@ -73,6 +78,9 @@ class H(osmium.SimpleHandler):
             areas.append((ckey(n), g, t.get('boundary') == 'administrative'))
     def node(self, n):
         p = n.tags.get('place')
+        if p in ('neighbourhood', 'suburb', 'quarter'):
+            name = heb(n.tags)
+            if name: NBH.setdefault(words(name), []).append((n.location.lat, n.location.lon))
         # settlements only: a neighbourhood that shares a settlement's name (Ashkelon's "מגדל") must not move that settlement
         if p in ('city', 'town', 'village', 'hamlet', 'isolated_dwelling'):
             name = heb(n.tags)
@@ -136,9 +144,6 @@ for i in range(BUCKETS):
 
 # ---- branches
 names_by_len = sorted(official, key=len, reverse=True)
-def words(x):  # the official list writes "קריית" and hyphens; branch names write "קרית" and spaces
-    x = str(x or '').replace('קריית', 'קרית')
-    return re.sub(r"\s+", ' ', re.sub(r"[\-–'\"״׳(),.*]", ' ', x)).strip()
 names_words = sorted({(words(n), k) for k, n in official.items() if len(words(n).replace(' ', '')) >= 3}, key=lambda x: len(x[0]), reverse=True)
 # short names people use for settlements whose official name is longer
 ALIASES = [(words(a), ckey(b)) for a, b in [('מודיעין עלית', 'מודיעין עילית'), ('מודיעין', 'מודיעין-מכבים-רעות'), ('ת"א', 'תל אביב - יפו'), ('תל אביב', 'תל אביב - יפו'), ('ב"ש', 'באר שבע'), ('פתח תקוה', 'פתח תקווה'), ('טבעון', 'קריית טבעון'), ('טירת הכרמל', 'טירת כרמל'), ('גבעת עדה', 'בנימינה-גבעת עדה'), ('מוצקין', 'קריית מוצקין'), ('יפו', 'תל אביב - יפו'), ('קדימה', 'קדימה-צורן'), ('קאסם', 'כפר קאסם')]]
@@ -186,7 +191,15 @@ for chain, lst in (summary.get('stores') or {}).items():
         rep['stores'] += 1
         if NOT_A_SHOP.search(str(s.get('name') or '')): rep['notShop'] = rep.get('notShop', 0) + 1; continue
         c = store_city(s)
-        if not c or 'c' not in geo.get(c, {}): rep['none'] += 1; continue
+        if not c or 'c' not in geo.get(c, {}):
+            nb = None
+            t = ' ' + words(CHAIN_WORDS.sub(' ', str(s.get('name') or ''))) + ' '
+            for w, pts in NBH.items():
+                if len(w) >= 4 and len(pts) == 1 and ' ' + w + ' ' in t and (not nb or len(w) > len(nb[0])): nb = (w, pts[0])
+            if nb:
+                out.setdefault(chain, {})[str(s.get('id', '')).lstrip('0') or '0'] = [round(nb[1][0], 5), round(nb[1][1], 5), 1]; rep['neighbourhood'] = rep.get('neighbourhood', 0) + 1
+            else: rep['none'] += 1
+            continue
         sid = str(s.get('id', '')).lstrip('0') or '0'
         p = street_in(c, s.get('address')) or street_in(c, s.get('name'))
         if p: out.setdefault(chain, {})[sid] = [p[0], p[1], 2]; rep['street'] += 1
