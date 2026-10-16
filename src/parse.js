@@ -3,10 +3,13 @@
 // names or casing, so every lookup accepts several aliases.
 import { gunzipSync, inflateRawSync } from 'node:zlib';
 
+// a price file is at most a few hundred MB uncompressed; a tiny file that inflates past this is broken or hostile ("zip bomb")
+export const MAX_INFLATED = 600 * 1024 * 1024;
+
 /** Decompress a downloaded file (gzip, or zip with a single entry) and decode text. */
 export function decodeFile(buf) {
   let data = buf;
-  if (data[0] === 0x1f && data[1] === 0x8b) data = gunzipSync(data);
+  if (data[0] === 0x1f && data[1] === 0x8b) data = gunzipSync(data, { maxOutputLength: MAX_INFLATED });
   else if (data[0] === 0x50 && data[1] === 0x4b) data = unzipFirstEntry(data);
   if (data[0] === 0xff && data[1] === 0xfe) return data.subarray(2).toString('utf16le');
   if (data[0] === 0xef && data[1] === 0xbb && data[2] === 0xbf) return data.subarray(3).toString('utf8');
@@ -23,7 +26,7 @@ function unzipFirstEntry(buf) {
   const start = 30 + nameLen + extraLen;
   const body = buf.subarray(start, compSize ? start + compSize : undefined);
   if (method === 0) return body;
-  if (method === 8) return inflateRawSync(body);
+  if (method === 8) return inflateRawSync(body, { maxOutputLength: MAX_INFLATED });
   throw new Error('unsupported zip method ' + method);
 }
 

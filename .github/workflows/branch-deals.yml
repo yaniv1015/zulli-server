@@ -40,13 +40,20 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=12288
           CHAIN_MINUTES: '11'
+          CHAINS: ${{ inputs.chains }}
           CHAIN_MINUTES_shufersal: '40'
           PARALLEL: '4'
           PARALLEL_shufersal: '2'   # its deal files are very large
         run: |
           mkdir -p data/bd
           set -o pipefail
-          node --trace-uncaught src/branchdeals.js ${{ inputs.chains && format('--chains={0}', inputs.chains) || '' }} 2>&1 | tee data/bd/log.txt
+          # the chain list comes from the person who started the run: passed as data, never pasted into the command
+          ARGS=""
+          if [ -n "$CHAINS" ]; then
+            if ! printf '%s' "$CHAINS" | grep -Eq '^[a-z0-9]+(,[a-z0-9]+)*$'; then echo "bad chains list"; exit 1; fi
+            ARGS="--chains=$CHAINS"
+          fi
+          node --trace-uncaught src/branchdeals.js $ARGS 2>&1 | tee data/bd/log.txt
       - name: Publish to the "bd" branch
         if: success() || failure()
         run: |

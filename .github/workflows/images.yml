@@ -34,7 +34,12 @@ jobs:
         run: |
           git fetch --depth 1 origin images || true
           mkdir -p prev && (git archive origin/images img | tar -x -C prev) || true
-      - run: node src/images.js data/summary.json ${{ inputs.min_chains || '3' }}
+      - name: Build images
+        env:
+          MIN_CHAINS: ${{ inputs.min_chains || '3' }}
+        run: |
+          printf '%s' "$MIN_CHAINS" | grep -Eq '^[0-9]{1,2}$' || { echo "min_chains must be a number"; exit 1; }
+          node src/images.js data/summary.json "$MIN_CHAINS"
       - name: Publish to the "images" branch
         run: |
           git config user.name "zulli-bot"

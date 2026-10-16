@@ -19,7 +19,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node src/${{ inputs.script || 'diagnose' }}.js
+      - name: Run the chosen script
+        env:
+          SCRIPT: ${{ inputs.script || 'diagnose' }}
+        # only a plain script name from src/ (no paths, no shell)
+        run: |
+          printf '%s' "$SCRIPT" | grep -Eq '^[a-z0-9_-]+$' || { echo "bad script name"; exit 1; }
+          test -f "src/$SCRIPT.js" || { echo "no such script"; exit 1; }
+          node "src/$SCRIPT.js"
         timeout-minutes: 80
         continue-on-error: true
       - uses: actions/upload-artifact@v4
