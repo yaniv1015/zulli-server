@@ -135,22 +135,28 @@ for i in range(BUCKETS):
 names_by_len = sorted(official, key=len, reverse=True)
 def words(x):  # the official list writes "קריית" and hyphens; branch names write "קרית" and spaces
     x = str(x or '').replace('קריית', 'קרית')
-    return re.sub(r"\s+", ' ', re.sub(r"[\-–'\"״׳(),.]", ' ', x)).strip()
+    return re.sub(r"\s+", ' ', re.sub(r"[\-–'\"״׳(),.*]", ' ', x)).strip()
 names_words = sorted({(words(n), k) for k, n in official.items() if len(words(n).replace(' ', '')) >= 3}, key=lambda x: len(x[0]), reverse=True)
 # short names people use for settlements whose official name is longer
-ALIASES = [(words(a), ckey(b)) for a, b in [('מודיעין עלית', 'מודיעין עילית'), ('מודיעין', 'מודיעין-מכבים-רעות'), ('ת"א', 'תל אביב - יפו'), ('תל אביב', 'תל אביב - יפו'), ('ב"ש', 'באר שבע'), ('פתח תקוה', 'פתח תקווה'), ('טבעון', 'קריית טבעון')]]
+ALIASES = [(words(a), ckey(b)) for a, b in [('מודיעין עלית', 'מודיעין עילית'), ('מודיעין', 'מודיעין-מכבים-רעות'), ('ת"א', 'תל אביב - יפו'), ('תל אביב', 'תל אביב - יפו'), ('ב"ש', 'באר שבע'), ('פתח תקוה', 'פתח תקווה'), ('טבעון', 'קריית טבעון'), ('טירת הכרמל', 'טירת כרמל'), ('גבעת עדה', 'בנימינה-גבעת עדה')]]
+CHAIN_WORDS = re.compile(r'סופר ספיר|שוק העיר|סאלח דבאח|דבאח|קשת טעמים|טיב טעם|רמי לוי|אושר עד|יוחננוף|ויקטורי|קרפור|שופרסל|סיטי מרקט|גוד פארם|ברקת|מעיין 2000|שפע ברכת השם|זול ובגדול|פרש מרקט|סטופ מרקט|פוליצר|יש חסד|קינג סטור|נטו חיסכון|משנת יוסף|וולט')
 NOT_A_SHOP = re.compile(r'מסעדה|קיטשן|קיטשיון|מטבח מרכזי')
 def store_city(s):
     raw = str(s.get('city') or '').strip()
     if raw.isdigit() and int(raw) in code_name and ckey(code_name[int(raw)]) in geo: return ckey(code_name[int(raw)])
     if raw and not raw.isdigit() and ckey(raw) in geo: return ckey(raw)
-    # a settlement named inside the branch name or address, as whole words ("אור ים" is not "אורים")
-    for txt in (s.get('name') or '', s.get('address') or '', raw):
-        t = ' ' + words(txt) + ' '
-        for alias, k in ALIASES:
-            if ' ' + alias + ' ' in t and k in geo: return k
-        for w, k in names_words:
-            if ' ' + w + ' ' in t and k in geo: return k
+    # a settlement named inside the branch name or address, as whole words ("אור ים" is not "אורים"),
+    # without the chain's own name ("סופר ספיר" is not Moshav Sapir); the first one named wins ("רמלה נאות שמיר" is Ramla);
+    # in an address, a name followed by a house number is a street ("תל אביב 11")
+    for i, txt in enumerate((s.get('name') or '', s.get('address') or '', raw)):
+        t = ' ' + words(CHAIN_WORDS.sub(' ', str(txt))) + ' '
+        best = None
+        for w, k in ALIASES + names_words:
+            j = t.find(' ' + w + ' ')
+            if j < 0 or k not in geo: continue
+            if i == 1 and re.match(r'\d', t[j + len(w) + 2:]): continue
+            if best is None or j < best[0] or (j == best[0] and len(w) > best[1]): best = (j, len(w), k)
+        if best: return best[2]
     return None
 
 def street_in(city, address):
