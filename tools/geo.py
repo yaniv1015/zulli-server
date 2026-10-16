@@ -72,7 +72,8 @@ class H(osmium.SimpleHandler):
             areas.append((ckey(n), g, t.get('boundary') == 'administrative'))
     def node(self, n):
         p = n.tags.get('place')
-        if p in ('city', 'town', 'village', 'hamlet', 'isolated_dwelling', 'neighbourhood'):
+        # settlements only: a neighbourhood that shares a settlement's name (Ashkelon's "מגדל") must not move that settlement
+        if p in ('city', 'town', 'village', 'hamlet', 'isolated_dwelling'):
             name = heb(n.tags)
             if name and ckey(name) in official: places.append((ckey(name), n.location.lat, n.location.lon))
     def way(self, w):
@@ -132,6 +133,7 @@ for i in range(BUCKETS):
 
 # ---- branches
 names_by_len = sorted(official, key=len, reverse=True)
+NOT_A_SHOP = re.compile(r'מסעדה|קיטשן|קיטשיון|מטבח מרכזי')
 def store_city(s):
     raw = str(s.get('city') or '').strip()
     if raw.isdigit() and int(raw) in code_name and ckey(code_name[int(raw)]) in geo: return ckey(code_name[int(raw)])
@@ -157,6 +159,7 @@ out, rep = {}, {'stores': 0, 'street': 0, 'city': 0, 'none': 0}
 for chain, lst in (summary.get('stores') or {}).items():
     for s in lst:
         rep['stores'] += 1
+        if NOT_A_SHOP.search(str(s.get('name') or '')): rep['notShop'] = rep.get('notShop', 0) + 1; continue
         c = store_city(s)
         if not c or 'c' not in geo.get(c, {}): rep['none'] += 1; continue
         sid = str(s.get('id', '')).lstrip('0') or '0'
