@@ -57,6 +57,7 @@ print('settlements', len(official), file=sys.stderr)
 # ---- OSM: settlement areas, settlement points, named streets
 wkbf = osmium.geom.WKBFactory()
 areas, places, ways = [], [], []
+RANK = {}  # settlement size from OSM: city 4, town 3, village 2, hamlet 1 ("סגולה פתח תקווה" is Petah Tikva, not Moshav Segula)
 
 def heb(tags):
     return tags.get('name:he') or tags.get('name')
@@ -75,7 +76,9 @@ class H(osmium.SimpleHandler):
         # settlements only: a neighbourhood that shares a settlement's name (Ashkelon's "מגדל") must not move that settlement
         if p in ('city', 'town', 'village', 'hamlet', 'isolated_dwelling'):
             name = heb(n.tags)
-            if name and ckey(name) in official: places.append((ckey(name), n.location.lat, n.location.lon))
+            if name and ckey(name) in official:
+                places.append((ckey(name), n.location.lat, n.location.lon))
+                RANK[ckey(name)] = max(RANK.get(ckey(name), 0), {'city': 4, 'town': 3, 'village': 2, 'hamlet': 1}.get(p, 0))
     def way(self, w):
         if 'highway' not in w.tags: return
         name = heb(w.tags)
@@ -138,8 +141,9 @@ def words(x):  # the official list writes "קריית" and hyphens; branch names
     return re.sub(r"\s+", ' ', re.sub(r"[\-–'\"״׳(),.*]", ' ', x)).strip()
 names_words = sorted({(words(n), k) for k, n in official.items() if len(words(n).replace(' ', '')) >= 3}, key=lambda x: len(x[0]), reverse=True)
 # short names people use for settlements whose official name is longer
-ALIASES = [(words(a), ckey(b)) for a, b in [('מודיעין עלית', 'מודיעין עילית'), ('מודיעין', 'מודיעין-מכבים-רעות'), ('ת"א', 'תל אביב - יפו'), ('תל אביב', 'תל אביב - יפו'), ('ב"ש', 'באר שבע'), ('פתח תקוה', 'פתח תקווה'), ('טבעון', 'קריית טבעון'), ('טירת הכרמל', 'טירת כרמל'), ('גבעת עדה', 'בנימינה-גבעת עדה')]]
+ALIASES = [(words(a), ckey(b)) for a, b in [('מודיעין עלית', 'מודיעין עילית'), ('מודיעין', 'מודיעין-מכבים-רעות'), ('ת"א', 'תל אביב - יפו'), ('תל אביב', 'תל אביב - יפו'), ('ב"ש', 'באר שבע'), ('פתח תקוה', 'פתח תקווה'), ('טבעון', 'קריית טבעון'), ('טירת הכרמל', 'טירת כרמל'), ('גבעת עדה', 'בנימינה-גבעת עדה'), ('מוצקין', 'קריית מוצקין'), ('יפו', 'תל אביב - יפו')]]
 CHAIN_WORDS = re.compile(r'סופר ספיר|שוק העיר|סאלח דבאח|דבאח|קשת טעמים|טיב טעם|רמי לוי|אושר עד|יוחננוף|ויקטורי|קרפור|שופרסל|סיטי מרקט|גוד פארם|ברקת|מעיין 2000|שפע ברכת השם|זול ובגדול|פרש מרקט|סטופ מרקט|פוליצר|יש חסד|קינג סטור|נטו חיסכון|משנת יוסף|וולט')
+STREET_WORDS = re.compile(r"(?:^|\s)(?:רחוב|רח'|שדרות|שד'|אזור התעשי[יה]+|אזור תעשי[יה]+|א\.ת\.?)(?=\s|$)")  # "רחוב" is also a moshav, "אזור" a town
 NOT_A_SHOP = re.compile(r'מסעדה|קיטשן|קיטשיון|מטבח מרכזי')
 def store_city(s):
     raw = str(s.get('city') or '').strip()
@@ -149,14 +153,15 @@ def store_city(s):
     # without the chain's own name ("סופר ספיר" is not Moshav Sapir); the first one named wins ("רמלה נאות שמיר" is Ramla);
     # in an address, a name followed by a house number is a street ("תל אביב 11")
     for i, txt in enumerate((s.get('name') or '', s.get('address') or '', raw)):
-        t = ' ' + words(CHAIN_WORDS.sub(' ', str(txt))) + ' '
+        t = ' ' + words(STREET_WORDS.sub(' ', CHAIN_WORDS.sub(' ', str(txt)))) + ' '
         best = None
         for w, k in ALIASES + names_words:
             j = t.find(' ' + w + ' ')
             if j < 0 or k not in geo: continue
             if i == 1 and re.match(r'\d', t[j + len(w) + 2:]): continue
-            if best is None or j < best[0] or (j == best[0] and len(w) > best[1]): best = (j, len(w), k)
-        if best: return best[2]
+            rk = 5 if (w, k) in ALIASES else RANK.get(k, 0)
+            if best is None or (rk, -j, len(w)) > best[0]: best = ((rk, -j, len(w)), k)
+        if best: return best[1]
     return None
 
 def street_in(city, address):
