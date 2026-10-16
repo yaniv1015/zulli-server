@@ -126,7 +126,13 @@ for (const key of chainKeys) {
     // promotions after all prices, so each deal is priced against the chain's cheapest price
     if (promoStores > 0) {
       const promoFiles = files.filter((f) => f.type === 'PromoFull');
-      const pick = [...promoFiles.filter((f) => storeIds.includes(f.store) && (['2', '3'].includes(storeInfo[f.store]?.type) || /אונליין|online|אינטרנט/i.test(storeInfo[f.store]?.name || ''))), ...promoFiles].filter((f, i, a) => a.indexOf(f) === i).slice(0, promoStores);
+      // online stores and physical branches in turn: some chains (שוק העיר) run online-only deals in their online stores
+      // and club deals only in their branches, so reading online stores alone missed the branch deals
+      const isOnline = (f) => ['2', '3'].includes(storeInfo[f.store]?.type) || /אונליין|online|אינטרנט/i.test(storeInfo[f.store]?.name || '');
+      const known = promoFiles.filter((f) => storeIds.includes(f.store));
+      const on = known.filter(isOnline), off = known.filter((f) => !isOnline(f));
+      const mixed = []; for (let i = 0; i < Math.max(on.length, off.length); i++) { if (on[i]) mixed.push(on[i]); if (off[i]) mixed.push(off[i]); }
+      const pick = [...mixed, ...promoFiles].filter((f, i, a) => a.indexOf(f) === i).slice(0, promoStores);
       // split-off formats get promotions from a few of their own stores (a store-specific listing when the portal has one)
       for (const sp of SPLITS[key] || []) {
         const mine = storeIds.filter((sid) => owner(sid).key === sp.key).slice(0, 3);
