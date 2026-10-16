@@ -1,0 +1,3 @@
+settlements 1316
+areas 1306 places 1151 named ways 113385
+{"stores": 1457, "street": 1029, "city": 363, "none": 53, "neighbourhood": 8, "notShop": 4, "cities": 1150, "streets": 41642}
