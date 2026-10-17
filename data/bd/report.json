@@ -1,0 +1,226 @@
+{
+  "started": "2026-10-17T08:04:05.817Z",
+  "basedOn": "2026-10-17T04:37:48.066Z",
+  "chains": {
+    "rami": {
+      "files": 98,
+      "stores": 98,
+      "withDiff": 98,
+      "errors": [],
+      "listSeconds": 3,
+      "listed": 98,
+      "heapMB": 1421
+    },
+    "yochananof": {
+      "files": 47,
+      "stores": 47,
+      "withDiff": 47,
+      "errors": [],
+      "listSeconds": 1,
+      "listed": 47,
+      "heapMB": 1767
+    },
+    "victory": {
+      "files": 0,
+      "stores": 0,
+      "withDiff": 0,
+      "errors": [
+        "ויקטורי: השרת שלהם לא עונה מחוץ לישראל (fetch failed)"
+      ],
+      "heapMB": 1771
+    },
+    "carrefour": {
+      "files": 140,
+      "stores": 140,
+      "withDiff": 140,
+      "errors": [],
+      "listSeconds": 1,
+      "listed": 140,
+      "heapMB": 2872
+    },
+    "osherad": {
+      "files": 21,
+      "stores": 21,
+      "withDiff": 21,
+      "errors": [],
+      "listSeconds": 2,
+      "listed": 21,
+      "heapMB": 2986
+    },
+    "tivtaam": {
+      "files": 54,
+      "stores": 54,
+      "withDiff": 54,
+      "errors": [],
+      "listSeconds": 1,
+      "listed": 54,
+      "heapMB": 3300
+    },
+    "keshet": {
+      "files": 27,
+      "stores": 27,
+      "withDiff": 27,
+      "errors": [],
+      "listSeconds": 1,
+      "listed": 27,
+      "heapMB": 3634
+    },
+    "stopmarket": {
+      "files": 10,
+      "stores": 10,
+      "withDiff": 10,
+      "errors": [],
+      "listSeconds": 1,
+      "listed": 10,
+      "heapMB": 3948
+    },
+    "freshmarket": {
+      "files": 45,
+      "stores": 45,
+      "withDiff": 45,
+      "errors": [],
+      "listSeconds": 1,
+      "listed": 45,
+      "heapMB": 4366
+    },
+    "polizer": {
+      "files": 8,
+      "stores": 8,
+      "withDiff": 8,
+      "errors": [],
+      "listSeconds": 1,
+      "listed": 8,
+      "heapMB": 4422
+    },
+    "dabach": {
+      "files": 6,
+      "stores": 6,
+      "withDiff": 6,
+      "errors": [],
+      "listSeconds": 1,
+      "listed": 6,
+      "heapMB": 3798
+    },
+    "doralon": {
+      "files": 157,
+      "stores": 157,
+      "withDiff": 157,
+      "errors": [],
+      "listSeconds": 2,
+      "listed": 157,
+      "heapMB": 5258
+    },
+    "kingstore": {
+      "files": 29,
+      "stores": 29,
+      "withDiff": 29,
+      "errors": [],
+      "listSeconds": 2,
+      "listed": 29,
+      "heapMB": 5350
+    },
+    "maayan": {
+      "files": 38,
+      "stores": 38,
+      "withDiff": 38,
+      "errors": [],
+      "listSeconds": 2,
+      "listed": 38,
+      "heapMB": 5420
+    },
+    "shefa": {
+      "files": 22,
+      "stores": 22,
+      "withDiff": 22,
+      "errors": [],
+      "listSeconds": 2,
+      "listed": 22,
+      "heapMB": 5479
+    },
+    "supersapir": {
+      "files": 71,
+      "stores": 71,
+      "withDiff": 71,
+      "errors": [],
+      "listSeconds": 2,
+      "listed": 71,
+      "heapMB": 5699
+    },
+    "shukhayir": {
+      "files": 26,
+      "stores": 26,
+      "withDiff": 26,
+      "errors": [],
+      "listSeconds": 2,
+      "listed": 26,
+      "heapMB": 5806
+    },
+    "zolbegadol": {
+      "files": 35,
+      "stores": 35,
+      "withDiff": 35,
+      "errors": [],
+      "listSeconds": 2,
+      "listed": 35,
+      "heapMB": 5896
+    },
+    "bareket": {
+      "files": 15,
+      "stores": 15,
+      "withDiff": 15,
+      "errors": [],
+      "listSeconds": 1,
+      "listed": 15,
+      "heapMB": 5974
+    },
+    "goodpharm": {
+      "files": 82,
+      "stores": 82,
+      "withDiff": 82,
+      "errors": [],
+      "listSeconds": 2,
+      "listed": 82,
+      "heapMB": 6168
+    },
+    "citymarket": {
+      "files": 31,
+      "stores": 31,
+      "withDiff": 31,
+      "errors": [],
+      "listSeconds": 3,
+      "listed": 31,
+      "heapMB": 6201
+    },
+    "meshnat": {
+      "files": 4,
+      "stores": 4,
+      "withDiff": 4,
+      "errors": [],
+      "listSeconds": 2,
+      "listed": 4,
+      "heapMB": 6234
+    },
+    "wolt": {
+      "files": 34,
+      "stores": 34,
+      "withDiff": 34,
+      "errors": [],
+      "listSeconds": 1,
+      "listed": 34,
+      "heapMB": 6280
+    },
+    "shufersal": {
+      "files": 96,
+      "stores": 96,
+      "withDiff": 96,
+      "errors": [
+        "time budget reached"
+      ],
+      "listSeconds": 0,
+      "listed": 417,
+      "cut": true,
+      "heapMB": 7002
+    }
+  },
+  "finished": "2026-10-17T08:47:19.579Z"
+}
