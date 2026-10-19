@@ -610,6 +610,7 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 .rank{color:var(--muted);font-family:var(--body);font-weight:700;font-size:.9em}
 
 /* ---- opening splash: the icon drops in, the arrow falls like a price, the name and promise follow ---- */
+.th .tvart{width:88%;height:88%}
 .splash{position:fixed;inset:0;z-index:9999;background:#0B0B0F;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .45s ease,visibility .45s;font-family:var(--body)}
 .splash.out{opacity:0;visibility:hidden}
 .splash .sic{width:116px;height:116px;border-radius:28px;background:#D7FF1F;display:grid;place-items:center;animation:spIn .7s cubic-bezier(.2,1.4,.4,1) both;position:relative}
@@ -897,7 +898,12 @@ const goodBrand=b=>!!b&&/[א-תa-z]/i.test(b)&&!/[,/]/.test(b)&&String(b).trim()
 /* product photos: img/NNN.json chunks shipped next to the app ({barcode: base64 webp}); emoji until a photo arrives */
 const TH={index:null,chunks:new Map(),ready:fetch('img/index.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{TH.index=j;return j}).catch(()=>null)};
 const thChunk=bc=>Number(String(bc).slice(-4))%(TH.index?.chunks||128);
-const thumb=(v,emo,cls='')=>`<span class="th ${cls}"${v&&v.bc&&/^\d{8,14}$/.test(v.bc)?` data-th="${v.bc}"`:''} aria-hidden="true">${emo}</span>`;
+/* TVs: until a real photo arrives, a drawing of a screen with its size, clearly a drawing and not a product photo */
+const TV_RX=/(?<!שידת |כורסאת |כורסת |מעמד ל?|זרוע ל?)(?:טלוויזי|טלויזי|טלביזי)|מסך\s*(?:טלו?וויז?יי?ה\s*)?\d{2}|smart tv/i;
+function tvInch(n){n=String(n);let m=n.match(/(\d{2})\s*(?:אינץ|inch|["”“])|["”“]\s*(\d{2})/i);if(m){const x=m[1]||m[2];if(+x>=19&&+x<=100)return x}
+  for(const x of n.matchAll(/(?<![\d.A-Za-z-])(\d{2})(?![\d.%A-Za-z])/g))if(+x[1]>=24&&+x[1]<=100)return x[1];return ''}
+function tvArt(v){const inch=tvInch(v.n);return `<svg viewBox="0 0 64 52" class="tvart"><rect x="3" y="4" width="58" height="36" rx="3" fill="#0B0B0F"/><rect x="6" y="7" width="52" height="30" rx="1.5" fill="url(#tvg)"/><defs><linearGradient id="tvg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2E6BFF"/><stop offset="1" stop-color="#D7FF1F"/></linearGradient></defs><path d="M26 40h12l3 7H23z" fill="#0B0B0F"/>${inch?`<text x="32" y="27" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" font-family="sans-serif">${inch}″</text>`:''}</svg>`}
+const thumb=(v,emo,cls='')=>`<span class="th ${cls}"${v&&v.bc&&/^\d{8,14}$/.test(v.bc)?` data-th="${v.bc}"`:''} aria-hidden="true">${v&&v.n&&TV_RX.test(v.n)&&!/שידת|כורסא|קרם/.test(v.n)?tvArt(v):emo}</span>`;
 function loadChunk(n){if(!TH.chunks.has(n))TH.chunks.set(n,fetch(`img/${String(n).padStart(3,'0')}.json`).then(r=>r.ok?r.json():{}).catch(()=>({})));return TH.chunks.get(n)}
 let _thQ=0;function hydrateThumbs(){_thQ=0;TH.ready.then(ix=>{if(!ix)return;const els=[...document.querySelectorAll('[data-th]:not([data-thd])')];const by=new Map();
   for(const el of els){el.dataset.thd=1;const n=thChunk(el.dataset.th);(by.get(n)||by.set(n,[]).get(n)).push(el)}
