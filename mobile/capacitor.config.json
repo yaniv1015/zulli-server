@@ -1,0 +1,7 @@
+{
+  "appId": "il.zulli.app",
+  "appName": "זול לי",
+  "webDir": "www",
+  "android": { "allowMixedContent": false },
+  "server": { "androidScheme": "https" }
+}

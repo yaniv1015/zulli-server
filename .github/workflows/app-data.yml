@@ -1,0 +1,36 @@
+name: App data (GitHub Pages)
+
+# Publishes the files the app reads to the gh-pages branch (served by GitHub Pages),
+# after every price, branch-deal, location or photo run.
+on:
+  workflow_dispatch: {}
+  workflow_run:
+    workflows: ["Update prices", "Branch deals", "Street and branch locations", "Product photos"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: app-data
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch the data branches
+        run: git fetch --depth 1 origin data bd geo images
+      - name: Build the app data
+        run: bash tools/build_app_data.sh site
+      - name: Publish to gh-pages
+        run: |
+          cd site
+          git init -q -b gh-pages
+          git config user.name "zulli-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add -A
+          git commit -q -m "app data $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages

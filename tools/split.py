@@ -45,5 +45,3 @@ for c, prods in local.items():
 with open(os.path.join(out, 'prices.json'), 'w') as f: json.dump(core, f, ensure_ascii=False, separators=(',', ':'))
 print('prices.json', os.path.getsize(os.path.join(out, 'prices.json')) // 1024, 'KB ·', len(core['products']), 'products')
 for c, m in sorted(core['chainFiles'].items(), key=lambda x: -x[1]['kb']): print(f'  {c}: {m["products"]} products, {m["kb"]} KB')
-# a tiny file the app checks to know whether a newer price file was published (so phones keep their copy until then)
-with open(os.path.join(out, 'version.json'), 'w') as f: json.dump({'updated': core['updated']}, f)
