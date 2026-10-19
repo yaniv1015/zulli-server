@@ -611,6 +611,34 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 
 /* ---- opening splash: the icon drops in, the arrow falls like a price, the name and promise follow ---- */
 .th .tvart{width:88%;height:88%}
+/* ---- deal stories ---- */
+.stories{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none;width:0;min-width:100%;box-sizing:border-box}
+.storycard{min-width:0;overflow:hidden}
+.stories::-webkit-scrollbar{display:none}
+.story{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;width:74px;background:none;border:0;padding:0;color:var(--ink);font:inherit}
+.story .ring{width:70px;height:70px;border-radius:50%;padding:3px;background:conic-gradient(#D7FF1F,#FF4B2B,#D7FF1F)}
+.story.seen .ring{background:var(--line)}
+.story .inner{width:100%;height:100%;border-radius:50%;background:var(--surface);border:3px solid var(--surface);display:grid;place-items:center;overflow:hidden;font-size:1.9rem;box-sizing:border-box}
+.story .inner .th{width:100%;height:100%;border-radius:50%;font-size:1.8rem}
+.story small{font-size:.74rem;line-height:1.15;text-align:center;max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.story .cnt{position:absolute}
+.sview{position:fixed;inset:0;z-index:9000;background:#0B0B0F;color:#fff;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) 14px calc(18px + env(safe-area-inset-bottom,0px));user-select:none;-webkit-user-select:none}
+.sview .bars{display:flex;gap:4px}
+.sview .bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.28);overflow:hidden}
+.sview .bars i b{display:block;height:100%;width:0;background:#fff}
+.sview .bars i.done b{width:100%}
+.sview .svhead{display:flex;align-items:center;gap:10px;margin-top:12px}
+.sview .svhead .x{margin-inline-start:auto;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:1.2rem}
+.sview .sbody{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;position:relative}
+.sview .sbody .th{width:min(62vw,260px);height:min(62vw,260px);border-radius:28px;background:#fff;font-size:5rem}
+.sview .pct{background:#FF4B2B;color:#fff;font-weight:900;font-size:1.6rem;border-radius:14px;padding:4px 14px}
+.sview .nm{font-size:1.25rem;font-weight:800;line-height:1.3;max-width:520px}
+.sview .pr{font-size:1.1rem;color:#C9C9D1}.sview .pr b{color:#D7FF1F;font-size:2rem;font-weight:900}
+.sview .tapzone{position:absolute;top:0;bottom:0;width:38%;background:none;border:0;padding:0}
+.sview .tapzone.next{inset-inline-end:0}.sview .tapzone.prev{inset-inline-start:0}
+.sview .sact{display:flex;gap:10px;justify-content:center}
+.sview .sact .btn{min-height:48px}
+@media (prefers-reduced-motion:reduce){.sview .bars i b{transition:none!important}}
 .sheet.full{max-height:none;height:100%;border-radius:0}
 .welcome{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:6px 0 4px}
 .welcome .wicon{width:84px;height:84px;border-radius:20px}
@@ -2198,7 +2226,8 @@ function shelfOf(it){const v=it.v?VB[it.v]:null;const cat=TYPES[it.t]?.[2];
   if(it.t!=='other'&&cat&&CAT_SHELF[cat]){/* a known kind; snacks and sweets typed as pantry get their own shelf */
     if(cat==='pantry'&&SHELVES.find(x=>x[0]==='snacks')[2].test(name))return 'snacks';
     if(cat==='home'&&SHELVES.find(x=>x[0]==='care')[2].test(name))return 'care';return CAT_SHELF[cat]}
-  for(const [id,,rx] of SHELVES)if(rx.test(name))return id;
+  /* the specific shelves are checked first: "שמן גזר" sunscreen is pharmacy, not carrots */
+  for(const id of ['care','baby','home','snacks','drink','dairy','meat','bakery','pantry','produce']){const rx=SHELVES[SHELF_IX[id]][2];if(rx.test(name))return id}
   return 'other'}
 const SHELF_IX=Object.fromEntries(SHELVES.map((a,i)=>[a[0],i]));
 const shelfName=id=>(SHELVES.find(a=>a[0]===id)||SHELVES[SHELVES.length-1])[1];
@@ -3435,8 +3464,46 @@ function promoSection(){
         <span class="row2" style="gap:4px"><span class="pill mega">−${r.pct}%</span>${r.pr.club?`<span class="pill ${member?'good':'y'}">${member?'✓ ':''}${esc(c.club)}</span>`:''}${r.pr.kind==='multi'?`<span class="pill">בקניית ${r.pr.n}</span>`:''}<button class="btn sm dadd" type="button" data-dv="${r.v.id}" data-q="${r.pr.n||1}" aria-label="הוסף ${esc(vLabel(r.v))}">+ הוסף</button></span></div></li>`}).join('')||`<li class="empty">${F==='club'&&mineC.length?'אין כרגע מבצעי מועדון של 40% ומעלה במועדונים שסימנת':'אין כרגע מבצעים בסינון הזה'}</li>`}</ul>
     ${rows.length>pick.length?'<button class="btn ghost" type="button" id="pmore">הצג עוד</button>':''}</section>`;
 }
+/* ================= deal stories: the best deals of each department, in circles like stories ================= */
+function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)return [];
+  const best=new Map();for(const r of dealRows(fol,20)){const k=r.v.id;if(!best.has(k)||best.get(k).pct<r.pct)best.set(k,r)}
+  const all=[...best.values()].filter(r=>!r.pr.club||state.clubs.includes(r.cid)).sort((a,b)=>b.pct-a.pct);
+  const by={};for(const r of all){const a=shelfOf({t:r.v.t,v:r.v.id});(by[a]||=[]).push(r)}
+  const groups=[{id:'top',e:'🔥',n:'הכי שווים',rows:all.slice(0,15)}];
+  for(const [id,name] of SHELVES){const rows=(by[id]||[]).slice(0,15);if(rows.length>=2)groups.push({id,e:name.split(' ')[0],n:name.split(' ').slice(1).join(' ').replace(/,.*$/,''),rows})}
+  return groups.filter(g=>g.rows.length)}
+const storyKey=g=>g.rows.map(r=>r.key).join('~').slice(0,400);
+function storiesHtml(){const G=storyGroups();if(!G.length)return'';const seen=state.storySeen||{};
+  return `<div class="stories" role="list" aria-label="מבצעים לפי קטגוריה">${G.map((g,i)=>`<button type="button" class="story${seen[g.id]===storyKey(g)?' seen':''}" data-story="${i}" role="listitem" aria-label="${esc(g.n)}: ${g.rows.length} מבצעים"><span class="ring"><span class="inner">${g.id==='top'?'🔥':thumb(g.rows[0].v,g.e)}</span></span><small>${esc(g.n)}</small></button>`).join('')}</div>`}
+function openStories(start){const G=storyGroups();if(!G[start])return;let gi=start,si=0,timer=0,t0=0,paused=false,left=0;const DUR=5000;
+  const root=document.createElement('div');root.className='sview';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.appendChild(root);
+  const prevFocus=document.activeElement;
+  const close=()=>{clearTimeout(timer);markSeen();root.remove();document.removeEventListener('keydown',key);update();prevFocus?.focus?.()};
+  const markSeen=()=>{(state.storySeen||={})[G[gi].id]=storyKey(G[gi]);save()};
+  const go=(d)=>{clearTimeout(timer);si+=d;if(si>=G[gi].rows.length){markSeen();gi++;si=0;if(gi>=G.length){gi--;return close()}}if(si<0){if(gi>0){gi--;si=G[gi].rows.length-1}else si=0}draw()};
+  const run=(ms)=>{clearTimeout(timer);t0=Date.now();left=ms;const bar=root.querySelector('.bars i.cur b');if(bar){bar.style.transition='none';bar.style.width=(100*(1-ms/DUR))+'%';bar.offsetWidth;bar.style.transition=`width ${ms}ms linear`;bar.style.width='100%'}timer=setTimeout(()=>go(1),ms)};
+  const pause=()=>{if(paused)return;paused=true;clearTimeout(timer);left=Math.max(0,left-(Date.now()-t0));const bar=root.querySelector('.bars i.cur b');if(bar){const w=getComputedStyle(bar).width;bar.style.transition='none';bar.style.width=w}};
+  const resume=()=>{if(!paused)return;paused=false;run(left||DUR)};
+  const key=e=>{if(e.key==='Escape')close();else if(e.key==='ArrowLeft')go(1);else if(e.key==='ArrowRight')go(-1)};document.addEventListener('keydown',key);
+  const draw=()=>{const g=G[gi],r=g.rows[si],c=CHB[r.cid];const left=r.pr.end?Math.ceil((new Date(r.pr.end)-Date.now())/864e5):null;
+    root.innerHTML=`<div class="bars" aria-hidden="true">${g.rows.map((_,i)=>`<i class="${i<si?'done':i===si?'cur':''}"><b></b></i>`).join('')}</div>
+      <div class="svhead"><span class="av" style="--sc:var(${c.c})">${c.ab}</span><div><b>${esc(g.e+' '+g.n)}</b><br><small style="color:#C9C9D1">${esc(c.name)}${r.pr.club?' · '+esc(c.club):''}</small></div><button class="x" type="button" aria-label="סגור">✕</button></div>
+      <div class="sbody">${thumb(r.v,TYPES[r.v.t][1])}<span class="pct">−${r.pct}%</span><div class="nm">${esc(vLabel(r.v))}${r.v.s?` <small style="color:#C9C9D1">${esc(r.v.s)}</small>`:''}</div>
+        <div class="pr"><s>${fmt(r.p)}</s> &nbsp;<b>${fmt(r.unit)}</b>${r.pr.kind==='multi'?` ליח׳ · ${esc(r.pr.label)}`:''}</div>
+        <small style="color:#A9A9B3">${left!=null&&left>=0?(left===0?'נגמר היום':`עוד ${nOf(left,'יום אחד','ימים')}`):''}${r.pr.club?' · למועדון':''}</small>
+        <button class="tapzone prev" type="button" aria-label="הקודם"></button><button class="tapzone next" type="button" aria-label="הבא"></button></div>
+      <div class="sact"><button class="btn y" type="button" id="stAdd">➕ הוסף לרשימה</button><button class="btn ghost" type="button" id="stCheck" style="color:#fff;border-color:#3A3A44">🏷️ איפה עוד?</button></div>`;
+    root.querySelector('.x').onclick=close;
+    root.querySelector('.tapzone.next').onclick=()=>go(1);root.querySelector('.tapzone.prev').onclick=()=>go(-1);
+    const body=root.querySelector('.sbody');body.onpointerdown=()=>{pause()};body.onpointerup=()=>{resume()};body.onpointerleave=()=>{resume()};
+    root.querySelector('#stAdd').onclick=()=>{addItems([{t:r.v.t,v:r.v.id,q:r.pr.kind==='multi'?r.pr.n:1}]);save();toast(`${vLabel(r.v)} נוסף לרשימה`);go(1)};
+    root.querySelector('#stCheck').onclick=()=>{close();openPriceCheck(r.v)};
+    let sy=null;root.ontouchstart=e=>{sy=e.touches[0].clientY};root.ontouchend=e=>{if(sy!=null&&e.changedTouches[0].clientY-sy>90)close();sy=null};
+    paused=false;run(DUR);root.querySelector('.x').focus()};
+  draw()}
 function renderDealsReal(){
-  $('screen').innerHTML=promoSection();
+  $('screen').innerHTML=(()=>{const st=storiesHtml();return st?`<section class="card storycard" style="padding-bottom:6px"><h2 style="margin:0 0 6px">🔥 מבצעים לפי קטגוריה</h2>${st}</section>`:''})()+promoSection();
+  $('screen').querySelectorAll('[data-story]').forEach(b=>b.onclick=()=>openStories(+b.dataset.story));
   $('screen').querySelectorAll('[data-dv]').forEach(b=>b.onclick=()=>{const v=VB[b.dataset.dv];const q=+b.dataset.q||1;addItems([{t:v.t,v:v.id,q}]);update();toast(`${vLabel(v)}${q>1?' ×'+q:''} נוסף לרשימה`)});
   if($('pmore'))$('pmore').onclick=()=>{state.promoN=(state.promoN||20)+20;renderDealsReal()};
   if($('pclubs'))$('pclubs').onclick=openClubs;
