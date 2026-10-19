@@ -622,21 +622,26 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 .story .inner .th{width:100%;height:100%;border-radius:50%;font-size:1.8rem}
 .story small{font-size:.74rem;line-height:1.15;text-align:center;max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .story .cnt{position:absolute}
-.sview{position:fixed;inset:0;z-index:9000;background:#0B0B0F;color:#fff;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) 14px calc(18px + env(safe-area-inset-bottom,0px));user-select:none;-webkit-user-select:none}
+.sview{position:fixed;inset:0;z-index:9000;background:#0B0B0F;color:#fff;display:flex;flex-direction:column;user-select:none;-webkit-user-select:none;overflow:hidden}
 .sview .bars{display:flex;gap:4px}
-.sview .bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.28);overflow:hidden}
-.sview .bars i b{display:block;height:100%;width:0;background:#fff}
+.sview .bars i{flex:1;height:3px;border-radius:2px;background:rgba(11,11,15,.18);overflow:hidden}
+.sview .bars i b{display:block;height:100%;width:0;background:#0B0B0F}
 .sview .bars i.done b{width:100%}
-.sview .svhead{display:flex;align-items:center;gap:10px;margin-top:12px}
-.sview .svhead .x{margin-inline-start:auto;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:1.2rem}
-.sview .sbody{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;position:relative}
-.sview .sbody .th{width:min(62vw,260px);height:min(62vw,260px);border-radius:28px;background:#fff;font-size:5rem}
-.sview .pct{background:#FF4B2B;color:#fff;font-weight:900;font-size:1.6rem;border-radius:14px;padding:4px 14px}
+.sview .svhead{display:flex;align-items:center;gap:10px;margin-top:12px;color:#0B0B0F}.sview .svhead small{color:#3A3A44}
+.sview .svhead .x{margin-inline-start:auto;width:44px;height:44px;border-radius:50%;border:0;background:rgba(11,11,15,.12);color:#0B0B0F;font-size:1.2rem}
+.sview .svhero{position:relative;height:56vh;min-height:300px;flex:none;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 0;background:radial-gradient(120% 90% at 50% 40%,#F6FFD6 0%,#E4FF72 55%,#D7FF1F 100%);border-radius:0 0 36px 36px;display:flex;flex-direction:column}
+.sview .svstage{flex:1;display:grid;place-items:center;min-height:0;padding:6px 0 30px}
+.sview .svstage .th{width:min(78vw,340px);height:min(40vh,340px);background:transparent;border-radius:0;font-size:7rem}
+.sview .svstage .th,.sview .svstage .th.has{background:transparent;border:0}
+.sview .svstage .th img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+.sview .sinfo{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;text-align:center;padding:34px 18px 8px;min-height:0}
+
+.sview .pct{position:absolute;bottom:-24px;left:50%;transform:translateX(-50%);z-index:2;background:#FF4B2B;color:#fff;font-weight:900;font-size:1.7rem;border-radius:16px;padding:6px 18px;box-shadow:0 8px 20px rgba(255,75,43,.35);white-space:nowrap}
 .sview .nm{font-size:1.25rem;font-weight:800;line-height:1.3;max-width:520px}
 .sview .pr{font-size:1.1rem;color:#C9C9D1}.sview .pr b{color:#D7FF1F;font-size:2rem;font-weight:900}
-.sview .tapzone{position:absolute;top:0;bottom:0;width:38%;background:none;border:0;padding:0}
+.sview .tapzone{position:absolute;top:70px;bottom:0;width:38%;background:none;border:0;padding:0;z-index:1;appearance:none;-webkit-tap-highlight-color:transparent;outline:none;box-shadow:none}
 .sview .tapzone.next{inset-inline-end:0}.sview .tapzone.prev{inset-inline-start:0}
-.sview .sact{display:flex;gap:10px;justify-content:center}
+.sview .sact{display:flex;gap:10px;justify-content:center;padding:0 14px calc(18px + env(safe-area-inset-bottom,0px))}
 .sview .sact .btn{min-height:48px}
 @media (prefers-reduced-motion:reduce){.sview .bars i b{transition:none!important}}
 .sheet.full{max-height:none;height:100%;border-radius:0}
@@ -3467,7 +3472,11 @@ function promoSection(){
 /* ================= deal stories: the best deals of each department, in circles like stories ================= */
 function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)return [];
   const best=new Map();for(const r of dealRows(fol,20)){const k=r.v.id;if(!best.has(k)||best.get(k).pct<r.pct)best.set(k,r)}
-  const all=[...best.values()].filter(r=>!r.pr.club||state.clubs.includes(r.cid)).sort((a,b)=>b.pct-a.pct);
+  const promo=new Set(),names=new Set();
+  const all=[...best.values()].filter(r=>!r.pr.club||state.clubs.includes(r.cid)).sort((a,b)=>b.pct-a.pct).filter(r=>{
+    /* one story per promotion ("10 ב-9.90" on many plates is one deal) and per product name (the same item under several barcodes) */
+    const pk=r.cid+'|'+norm(String(r.pr.label||'')).replace(/\s+/g,' ').trim(),nk=norm(vLabel(r.v)).replace(/[^\p{L}\p{N}]+/gu,' ').trim().split(' ').slice(0,3).join(' ');
+    if(promo.has(pk)||names.has(nk))return false;promo.add(pk);names.add(nk);return true});
   const by={};for(const r of all){const a=shelfOf({t:r.v.t,v:r.v.id});(by[a]||=[]).push(r)}
   const groups=[{id:'top',e:'🔥',n:'הכי שווים',rows:all.slice(0,15)}];
   for(const [id,name] of SHELVES){const rows=(by[id]||[]).slice(0,15);if(rows.length>=2)groups.push({id,e:name.split(' ')[0],n:name.split(' ').slice(1).join(' ').replace(/,.*$/,''),rows})}
@@ -3486,16 +3495,17 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
   const resume=()=>{if(!paused)return;paused=false;run(left||DUR)};
   const key=e=>{if(e.key==='Escape')close();else if(e.key==='ArrowLeft')go(1);else if(e.key==='ArrowRight')go(-1)};document.addEventListener('keydown',key);
   const draw=()=>{const g=G[gi],r=g.rows[si],c=CHB[r.cid];const left=r.pr.end?Math.ceil((new Date(r.pr.end)-Date.now())/864e5):null;
-    root.innerHTML=`<div class="bars" aria-hidden="true">${g.rows.map((_,i)=>`<i class="${i<si?'done':i===si?'cur':''}"><b></b></i>`).join('')}</div>
-      <div class="svhead"><span class="av" style="--sc:var(${c.c})">${c.ab}</span><div><b>${esc(g.e+' '+g.n)}</b><br><small style="color:#C9C9D1">${esc(c.name)}${r.pr.club?' · '+esc(c.club):''}</small></div><button class="x" type="button" aria-label="סגור">✕</button></div>
-      <div class="sbody">${thumb(r.v,TYPES[r.v.t][1])}<span class="pct">−${r.pct}%</span><div class="nm">${esc(vLabel(r.v))}${r.v.s?` <small style="color:#C9C9D1">${esc(r.v.s)}</small>`:''}</div>
-        <div class="pr"><s>${fmt(r.p)}</s> &nbsp;<b>${fmt(r.unit)}</b>${r.pr.kind==='multi'?` ליח׳ · ${esc(r.pr.label)}`:''}</div>
-        <small style="color:#A9A9B3">${left!=null&&left>=0?(left===0?'נגמר היום':`עוד ${nOf(left,'יום אחד','ימים')}`):''}${r.pr.club?' · למועדון':''}</small>
-        <button class="tapzone prev" type="button" aria-label="הקודם"></button><button class="tapzone next" type="button" aria-label="הבא"></button></div>
+    root.innerHTML=`<div class="svhero"><div class="bars" aria-hidden="true">${g.rows.map((_,i)=>`<i class="${i<si?'done':i===si?'cur':''}"><b></b></i>`).join('')}</div>
+      <div class="svhead"><span class="av" style="--sc:var(${c.c})">${c.ab}</span><div><b>${esc(g.e+' '+g.n)}</b><br><small>${esc(c.name)}${r.pr.club?' · '+esc(c.club):''}</small></div><button class="x" type="button" aria-label="סגור">✕</button></div>
+      <div class="svstage">${thumb(r.v,TYPES[r.v.t][1])}</div><span class="pct">−${r.pct}%</span>
+      <button class="tapzone prev" type="button" aria-label="הקודם"></button><button class="tapzone next" type="button" aria-label="הבא"></button></div>
+      <div class="sinfo"><div class="nm">${esc(vLabel(r.v))}${r.v.s?` <small style="color:#C9C9D1">${esc(r.v.s)}</small>`:''}</div>
+        <div class="pr"><b>${fmt(r.unit)}</b>${r.pr.kind==='multi'?' ליח׳':''} &nbsp;<s>${fmt(r.p)}</s></div>${r.pr.kind==='multi'?`<small style="color:#C9C9D1">${esc(r.pr.label)}</small>`:''}
+        <small style="color:#A9A9B3">${left!=null&&left>=0?(left===0?'נגמר היום':`עוד ${nOf(left,'יום אחד','ימים')}`):''}${r.pr.club?' · למועדון':''}</small></div>
       <div class="sact"><button class="btn y" type="button" id="stAdd">➕ הוסף לרשימה</button><button class="btn ghost" type="button" id="stCheck" style="color:#fff;border-color:#3A3A44">🏷️ איפה עוד?</button></div>`;
     root.querySelector('.x').onclick=close;
     root.querySelector('.tapzone.next').onclick=()=>go(1);root.querySelector('.tapzone.prev').onclick=()=>go(-1);
-    const body=root.querySelector('.sbody');body.onpointerdown=()=>{pause()};body.onpointerup=()=>{resume()};body.onpointerleave=()=>{resume()};
+    const body=root.querySelector('.svhero');body.onpointerdown=()=>{pause()};body.onpointerup=()=>{resume()};body.onpointerleave=()=>{resume()};
     root.querySelector('#stAdd').onclick=()=>{addItems([{t:r.v.t,v:r.v.id,q:r.pr.kind==='multi'?r.pr.n:1}]);save();toast(`${vLabel(r.v)} נוסף לרשימה`);go(1)};
     root.querySelector('#stCheck').onclick=()=>{close();openPriceCheck(r.v)};
     let sy=null;root.ontouchstart=e=>{sy=e.touches[0].clientY};root.ontouchend=e=>{if(sy!=null&&e.changedTouches[0].clientY-sy>90)close();sy=null};
