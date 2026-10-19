@@ -611,6 +611,11 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 
 /* ---- opening splash: the icon drops in, the arrow falls like a price, the name and promise follow ---- */
 .th .tvart{width:88%;height:88%}
+.sheet.full{max-height:none;height:100%;border-radius:0}
+.welcome{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:6px 0 4px}
+.welcome .wicon{width:84px;height:84px;border-radius:20px}
+.welcome .wt{font-size:1.6rem;font-weight:900}
+.welcome .wl{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:6px;text-align:start;align-self:stretch;background:var(--bg);border-radius:14px;padding:12px 14px}
 .splash{position:fixed;inset:0;z-index:9999;background:#0B0B0F;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .45s ease,visibility .45s;font-family:var(--body)}
 .splash.out{opacity:0;visibility:hidden}
 .splash .sic{width:116px;height:116px;border-radius:28px;background:#D7FF1F;display:grid;place-items:center;animation:spIn .7s cubic-bezier(.2,1.4,.4,1) both;position:relative}
@@ -2035,9 +2040,12 @@ const phoneOk=x=>/^05\d{8}$/.test(String(x||'').replace(/[\s\-]/g,''));
 const phoneFmt=x=>{const d=String(x||'').replace(/\D/g,'');return d.length===10?d.slice(0,3)+'-'+d.slice(3):x};
 const emailOk=x=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(x||'').trim());
 const nameOk=x=>String(x||'').trim().split(/\s+/).filter(w=>w.length>=2).length>=2;
-async function openRegister(after){const P=state.profile;const ce=await claudeEmail();const d={name:P.name||'',email:P.email||ce||'',phone:P.phone||''};
+async function openRegister(after,welcome){const P=state.profile;const ce=await claudeEmail();const d={name:P.name||'',email:P.email||ce||'',phone:P.phone||''};
   const draw=body=>{const verified=ce&&d.email.trim().toLowerCase()===ce.toLowerCase();
-    body.innerHTML=`<p class="sub">כל השדות חובה. הפרטים נשמרים אצלך ומשמשים להזמנות ולחשבוניות.</p>
+    body.innerHTML=`${welcome?`<div class="welcome"><svg viewBox="0 0 1024 1024" class="wicon" aria-hidden="true"><rect width="1024" height="1024" rx="236" fill="#D7FF1F"/><path d="M392 196h240a28 28 0 0 1 28 28v330h132a22 22 0 0 1 16 37L528 868a22 22 0 0 1-32 0L216 591a22 22 0 0 1 16-37h132V224a28 28 0 0 1 28-28z" fill="#0B0B0F"/><circle cx="512" cy="300" r="46" fill="#FF4B2B"/></svg>
+        <b class="wt">ברוך הבא למוזיל</b><span class="sub">אותה קנייה. פחות כסף.</span>
+        <ul class="wl"><li>🛒 משווים את הרשימה שלך ב-24 רשתות</li><li>📍 מחירי הסניף הקרוב אליך, כולל מבצעים</li><li>🔔 התראה כשמוצר שאתה קונה יורד במחיר</li></ul></div>
+        <p class="sub">כמה פרטים, ואנחנו מתחילים. הכתובת קובעת אילו סניפים נשווה בשבילך.</p>`:`<p class="sub">כל השדות חובה. הפרטים נשמרים אצלך ומשמשים להזמנות ולחשבוניות.</p>`}
       <label class="f">שם מלא<input type="text" id="rName" value="${esc(d.name)}" autocomplete="name" placeholder="שם פרטי ושם משפחה"></label>
       <label class="f">אימייל<input type="email" id="rEmail" value="${esc(d.email)}" autocomplete="email" dir="ltr" placeholder="name@example.com"></label>
       <small class="sub" id="rEmailSt">${verified?'✅ מאומת: זה המייל של חשבון Claude שלך':''}</small>
@@ -2046,11 +2054,13 @@ async function openRegister(after){const P=state.profile;const ce=await claudeEm
       <div class="addrcard ${addrOk()?'':'missing'}"><div class="grow"><small class="sub">כתובת מגורים</small><br><b>${addrOk()?esc(addrLine()):'עוד לא נבחרה כתובת מהרשימה הרשמית'}</b></div><button class="btn sm ${addrOk()?'ghost':'y'}" type="button" id="rAddr">${addrOk()?'שנה':'בחר כתובת'}</button></div>
       <label class="row2 sub" style="flex-wrap:nowrap"><input type="checkbox" id="rTerms" ${P.registered?'checked':''} style="width:22px;height:22px"> קראתי ואני מסכים ל<button class="link" type="button" data-legal="terms">תנאי השימוש</button> ול<button class="link" type="button" data-legal="privacy">מדיניות הפרטיות</button></label>
       <div id="rErr" class="unk" hidden></div>
-      <button class="btn y big" type="button" id="rSave">${P.registered?'שמור פרטים':'✓ סיום הרשמה'}</button>`;
+      <button class="btn y big" type="button" id="rSave">${P.registered?'שמור פרטים':welcome?'🚀 בואו נתחיל':'✓ סיום הרשמה'}</button>
+      ${welcome?'<button class="link" type="button" id="rSkip" style="align-self:center">אירשם אחר כך</button>':''}`;
+    if($('rSkip'))$('rSkip').onclick=()=>{closeSheet();toast('אפשר להירשם בכל זמן מלשונית החשבון')};
     const grab=()=>{d.name=$('rName').value.trim();d.email=$('rEmail').value.trim();d.phone=$('rPhone').value.trim()};
     $('rEmail').oninput=()=>{grab();const v=ce&&d.email.toLowerCase()===ce.toLowerCase();$('rEmailSt').textContent=v?'✅ מאומת: זה המייל של חשבון Claude שלך':''};
-    $('rAddr').onclick=()=>{grab();Object.assign(P,{name:d.name,email:d.email,phone:d.phone});save();_afterAddr=()=>openRegister(after);openLocation()};
-    body.querySelectorAll('[data-legal]').forEach(b=>b.onclick=()=>{grab();Object.assign(P,{name:d.name,email:d.email,phone:d.phone});save();const [t,h]=LEGAL[b.dataset.legal];openSheet(t,h+'<button class="btn" type="button" id="legBack">חזרה להרשמה</button>',()=>{$('legBack').onclick=()=>openRegister(after)})});
+    $('rAddr').onclick=()=>{grab();Object.assign(P,{name:d.name,email:d.email,phone:d.phone});save();_afterAddr=()=>openRegister(after,welcome);openLocation()};
+    body.querySelectorAll('[data-legal]').forEach(b=>b.onclick=()=>{grab();Object.assign(P,{name:d.name,email:d.email,phone:d.phone});save();const [t,h]=LEGAL[b.dataset.legal];openSheet(t,h+'<button class="btn" type="button" id="legBack">חזרה להרשמה</button>',()=>{$('legBack').onclick=()=>openRegister(after,welcome)})});
     $('rSave').onclick=()=>{grab();const errs=[];const mark=(id,bad)=>$(id).classList.toggle('need',bad);
       mark('rName',!nameOk(d.name));if(!nameOk(d.name))errs.push('שם מלא: שם פרטי ושם משפחה');
       mark('rEmail',!emailOk(d.email));if(!emailOk(d.email))errs.push('כתובת מייל תקינה');
@@ -2060,7 +2070,10 @@ async function openRegister(after){const P=state.profile;const ce=await claudeEm
       if(errs.length){const e=$('rErr');e.hidden=false;e.innerHTML='חסר: '+errs.map(esc).join(' · ');return}
       const was=!!P.registered;Object.assign(P,{name:d.name,email:d.email,phone:phoneFmt(d.phone),emailVerified:!!(ce&&d.email.toLowerCase()===ce.toLowerCase()),registered:true,regTs:P.regTs||Date.now()});
       update();toast(`✅ ${was?'הפרטים נשמרו':'נרשמת בהצלחה'} · ${P.name}`);if(after)after();else closeSheet()}};
-  openSheet(state.profile.registered?'👤 הפרטים שלי':'📝 הרשמה למוזיל','',draw)}
+  openSheet(state.profile.registered?'👤 הפרטים שלי':welcome?'הרשמה':'📝 הרשמה למוזיל','',draw);
+  if(welcome)document.querySelector('#sheetRoot .sheet')?.classList.add('full')}
+/* the first time the app opens: after the splash, the welcome and sign-up page; every later time the app opens as usual */
+function firstRun(){let seen=false;try{seen=!!localStorage.getItem('mozilSeen')}catch(e){}if(seen||state.firstRunDone||state.profile.registered)return;state.firstRunDone=Date.now();try{localStorage.setItem('mozilSeen','1')}catch(e){}save();openRegister(null,true)}
 function newOccasion(){const EM=['🧺','🎉','🍕','🏕️','🍷','🎄','🕎','🌙','🍖','🥗','🏖️','💼','🐶','🎁'];let e='🧺';
   openSheet('➕ קטגוריה חדשה',`<label class="f">שם הקטגוריה<input type="text" id="noName" placeholder="למשל: ערב סרט, ארוחת חג, קמפינג" maxlength="30"></label>
     <label class="f">לכמה אנשים בדרך כלל?<input type="text" id="noPeople" inputmode="numeric" value="4"></label>
@@ -3699,7 +3712,7 @@ function chainLogos(){if(chainLogos.done)return;chainLogos.done=true;const css=[
     next(0)}}
 /* the splash leaves once the prices are in (at least ~1.6 s, at most ~5 s, or at a tap); while it waits it counts what is being compared */
 (function splash(){const el=document.getElementById('splash');if(!el)return;const t0=Date.now();let shown=0;
-  const bye=()=>{if(el.classList.contains('out'))return;el.classList.add('out');setTimeout(()=>el.remove(),500)};
+  const bye=()=>{if(el.classList.contains('out'))return;el.classList.add('out');setTimeout(()=>el.remove(),500);setTimeout(()=>{try{firstRun()}catch(e){}},250)};
   el.addEventListener('click',bye);
   const tick=()=>{if(!document.contains(el))return;const real=typeof REAL!=='undefined'&&REAL&&REAL.count;
     const f=document.getElementById('sfacts');
