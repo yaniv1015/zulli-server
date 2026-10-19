@@ -608,8 +608,34 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 
 .kgnote{font-size:.78rem;color:var(--muted)}
 .rank{color:var(--muted);font-family:var(--body);font-weight:700;font-size:.9em}
+
+/* ---- opening splash: the icon drops in, the arrow falls like a price, the name and promise follow ---- */
+.splash{position:fixed;inset:0;z-index:9999;background:#0B0B0F;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .45s ease,visibility .45s;font-family:var(--body)}
+.splash.out{opacity:0;visibility:hidden}
+.splash .sic{width:116px;height:116px;border-radius:28px;background:#D7FF1F;display:grid;place-items:center;animation:spIn .7s cubic-bezier(.2,1.4,.4,1) both;position:relative}
+.splash .sic svg{width:100%;height:100%;animation:spDrop 1.4s .55s ease-in-out infinite}
+.splash .sic::after{content:"";position:absolute;inset:0;border-radius:28px;animation:spPulse 1.6s .7s ease-out infinite}
+.splash .sname{font-weight:900;font-size:3rem;letter-spacing:-1px;display:flex;align-items:baseline;animation:spUp .6s .35s both}
+.splash .sname svg{width:.36em;height:.8em;margin:0 .02em;fill:#D7FF1F;transform:translateY(.06em)}
+.splash .stag{font-size:1.15rem;color:#C9C9D1;animation:spUp .6s .55s both}
+.splash .sfacts{font-size:.95rem;color:#D7FF1F;min-height:1.4em;animation:spUp .6s .8s both;font-variant-numeric:tabular-nums}
+.splash .sbar{width:160px;height:4px;border-radius:2px;background:#24242C;overflow:hidden;animation:spUp .6s .8s both}
+.splash .sbar i{display:block;height:100%;width:40%;background:#FF4B2B;border-radius:2px;animation:spLoad 1.1s ease-in-out infinite}
+@keyframes spIn{from{transform:translateY(-40px) scale(.6);opacity:0}to{transform:none;opacity:1}}
+@keyframes spDrop{0%,100%{transform:translateY(-6%)}50%{transform:translateY(8%)}}
+@keyframes spPulse{from{box-shadow:0 0 0 0 rgba(215,255,31,.55)}to{box-shadow:0 0 0 26px rgba(215,255,31,0)}}
+@keyframes spUp{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+@keyframes spLoad{0%{transform:translateX(160%)}100%{transform:translateX(-260%)}}
+@media (prefers-reduced-motion:reduce){.splash *,.splash .sic::after{animation:none!important}}
 </style>
 
+<div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
+  <div class="sic" aria-hidden="true"><svg viewBox="0 0 1024 1024"><path d="M392 196h240a28 28 0 0 1 28 28v330h132a22 22 0 0 1 16 37L528 868a22 22 0 0 1-32 0L216 591a22 22 0 0 1 16-37h132V224a28 28 0 0 1 28-28z" fill="#0B0B0F"/><circle cx="512" cy="300" r="46" fill="#FF4B2B"/></svg></div>
+  <div class="sname" aria-hidden="true">מ<svg viewBox="0 0 74 168"><path d="M23 0h28v110h21L37 168 2 110h21z"/></svg>זיל</div>
+  <div class="stag">אותה קנייה. פחות כסף.</div>
+  <div class="sbar" aria-hidden="true"><i></i></div>
+  <div class="sfacts" id="sfacts"></div>
+</div>
 <div class="app" dir="rtl" lang="he">
   <div class="appbar">
     <div class="logo" aria-label="מוזיל"><svg class="lgicon" viewBox="0 0 1024 1024" aria-hidden="true"><rect width="1024" height="1024" rx="236" fill="#D7FF1F"/><path d="M392 196h240a28 28 0 0 1 28 28v330h132a22 22 0 0 1 16 37L528 868a22 22 0 0 1-32 0L216 591a22 22 0 0 1 16-37h132V224a28 28 0 0 1 28-28z" fill="#0B0B0F"/><circle cx="512" cy="300" r="46" fill="#FF4B2B"/></svg><span class="lgtext">מ<svg class="lgarrow" viewBox="0 0 74 168" aria-hidden="true"><path d="M23 0h28v110h21L37 168 2 110h21z"/></svg>זיל</span></div>
@@ -3651,7 +3677,28 @@ async function refreshPrices(){try{const v=await (await fetch('version.json',{ca
   applyReal(sum);REAL.source='bundled';state.real={updated:REAL.updated,count:REAL.count,chains:REAL.chains,source:'bundled'};_brFiles.clear();_mem.clear();LOADING.clear();for(const k in BR)delete BR[k];
   snapshotReal();cleanState();save();render();ensureChains();ensureBranches();toast('המחירים עודכנו לגרסה החדשה')}catch(e){}}
 /* boot: if real prices were loaded before, bring them back before the first render (saved items point at real products) */
-(async function boot(){
+/* ================= chain logos =================
+   Each chain's own site icon (its apple-touch-icon, else its favicon), shown in the round chain badge for identification.
+   Loaded from the chain's website at run time, never redrawn or stored here; until it loads, or when it cannot
+   (no website on file, the site blocks it, offline), the badge keeps the chain's colour and initials. */
+function chainLogos(){if(chainLogos.done)return;chainLogos.done=true;const css=[];let st=null;
+  const add=(c,src)=>{const v=`var(${c.c})`;css.push(`.av[style*="${v})"],.av[style*="${v};"],[style*="--sc:${v}"] .av:not([style*="--sc:"]){background:#fff url("${src}") center/72% no-repeat;color:transparent;box-shadow:inset 0 0 0 1.5px var(--line)}`);
+    if(!st){st=document.createElement('style');st.id='chainLogos';document.head.appendChild(st)}st.textContent=css.join('\n')};
+  for(const c of CH){if(!c.url)continue;let origin;try{origin=new URL(c.url).origin}catch(e){continue}
+    const tries=[origin+'/apple-touch-icon.png',origin+'/favicon.ico'];
+    const next=i=>{if(i>=tries.length)return;const im=new Image();im.referrerPolicy='no-referrer';
+      im.onload=()=>{if(im.naturalWidth>=16)add(c,tries[i]);else next(i+1)};im.onerror=()=>next(i+1);im.src=tries[i]};
+    next(0)}}
+/* the splash leaves once the prices are in (at least ~1.6 s, at most ~5 s, or at a tap); while it waits it counts what is being compared */
+(function splash(){const el=document.getElementById('splash');if(!el)return;const t0=Date.now();let shown=0;
+  const bye=()=>{if(el.classList.contains('out'))return;el.classList.add('out');setTimeout(()=>el.remove(),500)};
+  el.addEventListener('click',bye);
+  const tick=()=>{if(!document.contains(el))return;const real=typeof REAL!=='undefined'&&REAL&&REAL.count;
+    const f=document.getElementById('sfacts');
+    if(real&&f){const n=REAL.count,ch=(REAL.chains||[]).length||(typeof CH!=="undefined"?CH.length:0);shown=Math.min(n,Math.round(shown+Math.max(n/12,1)));f.textContent=`משווה ${shown.toLocaleString('he-IL')} מוצרים · ${ch} רשתות`}
+    const el2=Date.now()-t0;if((real&&shown>=REAL.count&&el2>1600)||el2>5000)return setTimeout(bye,real?350:0);setTimeout(tick,60)};
+  tick()})();
+(async function boot(){setTimeout(()=>{try{chainLogos()}catch(e){}},1500);
   $('screen').innerHTML='<div class="empty">טוען מחירים אמיתיים…</div>';
   let loaded=false;
   if(state.real&&state.real.source!=='bundled'){try{const sum=await idbGet('summary');if(sum){applyReal(sum);REAL.source='file';loaded=true}}catch(e){}}
