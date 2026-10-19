@@ -1645,6 +1645,8 @@ function renderBasket(){
       <button type="button" class="helper" id="scanBtn"><span aria-hidden="true">▥</span> סרוק ברקוד</button>
       <button type="button" class="helper" id="rcptBtn"><span aria-hidden="true">🧾</span> בדוק קבלה</button>
       <button type="button" class="helper wide" id="recipeBtn"><span aria-hidden="true">🍳</span> מתכון → רשימת מצרכים</button>
+      <button type="button" class="helper" id="elecBtn"><span aria-hidden="true">⚡</span> מוצרי חשמל</button>
+      <button type="button" class="helper" id="phoneBtn"><span aria-hidden="true">📱</span> סלולר ואלקטרוניקה</button>
     </div>`;
   html+=`<section class="card addbox" aria-labelledby="ah">
     <h2 id="ah" class="vh">הוספת מוצרים</h2>
@@ -1704,7 +1706,7 @@ function renderBasket(){
   /* while typing the list, the price bar stays out of the way (it sat over the results, and one tap opened the order) */
   q.addEventListener('focus',()=>document.documentElement.classList.add('typing'));q.addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==$('q'))document.documentElement.classList.remove('typing')},150));
   if(document.activeElement===q)document.documentElement.classList.add('typing');else document.documentElement.classList.remove('typing');
-  $('pasteBtn').onclick=openPaste;$('checkBtn').onclick=()=>openPriceCheck();$('photoBtn').onclick=openListPhoto;$('scanBtn').onclick=openScan;$('rcptBtn').onclick=openReceipt;if($('recipeBtn'))$('recipeBtn').onclick=openRecipe;
+  $('pasteBtn').onclick=openPaste;$('checkBtn').onclick=()=>openPriceCheck();$('photoBtn').onclick=openListPhoto;$('scanBtn').onclick=openScan;$('rcptBtn').onclick=openReceipt;if($('recipeBtn'))$('recipeBtn').onclick=openRecipe;if($('elecBtn'))$('elecBtn').onclick=()=>openDepts('appliances');if($('phoneBtn'))$('phoneBtn').onclick=()=>openDepts('phones');
   const ma=S.querySelector('.moreadd');if(ma){const fill=()=>{if(ma.open)renderQuick($('qmore'),true)};ma.ontoggle=()=>{state._moreAdd=ma.open;fill()};fill()}
   bindMega(S);
   if($('megaX'))$('megaX').onclick=()=>{fresh.forEach(m=>state.seenMega.push(megaId(m)));update()};
@@ -2667,7 +2669,7 @@ function cityPriceHtml(v,city,rows,lim){if(!rows)return `<p class="sub">טוען
    A product belongs to a sub-department when a word in its name matches (whole words, with Hebrew prefixes),
    and none of the food words does (so "פלפל במטחנה" is not a kitchen tool). */
 const DEPTS=[
- {id:'phones',n:'סלולר ואלקטרוניקה',e:'📱',subs:[['כבלים ומטענים','כבל|כבלים|מטען|מטענים|power bank|פאוורבנק|סוללה ניידת|סוללת גיבוי|מתאם'],['אביזרים','מגן מסך|מגני מסך|תופסן|כיסוי לטלפון|כיסוי לאייפון|מעמד לטלפון|כרטיס זיכרון|דיסק און קי|שעון חכם|אפל ווטש'],['אוזניות ורמקולים','אוזניות|אוזניה|airpods|רמקול|רמקולים'],['טלפונים וטאבלטים','אייפון|איפון|iphone|ipad|אייפד|גלקסי|סמארטפון|טאבלט',100]]},
+ {id:'phones',n:'סלולר ואלקטרוניקה',e:'📱',subs:[['כבלים ומטענים','כבל|כבלים|מטען|מטענים|power bank|פאוורבנק|סוללה ניידת|סוללת גיבוי|מתאם'],['אביזרים','מגן מסך|מגני מסך|תופסן לטלפון|תופסן לרכב|כיסוי לטלפון|כיסוי לאייפון|מעמד לטלפון|כרטיס זיכרון|דיסק און קי|שעון חכם|אפל ווטש'],['אוזניות ורמקולים','אוזניות|אוזניה|airpods|רמקול|רמקולים'],['טלפונים וטאבלטים','אייפון|איפון|iphone|ipad|אייפד|גלקסי|סמארטפון|טאבלט',100]]},
  {id:'appliances',n:'מוצרי חשמל',e:'⚡',subs:[['מטבח','קומקום|קומקום חשמלי|טוסטר|טוסטר אובן|מצנם|מיקסר|בלנדר|מעבד מזון|מסחטה|מכונת קפה|מקצף חלב|תנור מיקרוגל|מיקרוגל דיגיטלי|סיר בישול איטי|פלטה חשמלית|פלטת שבת|מיחם|מחבת חשמלית|נישנוש|סנדוויץ מייקר|וופל מייקר|מכונת פופקורן|סיר לחץ חשמלי',39],['בית','שואב אבק|מגהץ|מגהץ קיטור|מאוורר|מפזר חום|תנור חימום|רדיאטור|מטהר אוויר חשמלי|מסיר מוך|מכונת כביסה',39],['טיפוח','מייבש שיער|מחליק שיער|מסלסל שיער|מכונת גילוח|מכונת תספורת|מברשת שיניים חשמלית|מכשיר אפילציה',19],['סוללות ותאורה','סוללות|סוללה|נורה|נורות|נורת לד|פנס|פנסים|מאריך|מפצל|שקע']]},
  {id:'kitchen',n:'כלי בית ומטבח',e:'🍳',subs:[['סירים ומחבתות','סיר|סירים|מחבת|מחבתות|ווק|סיר לחץ'],['כלי הגשה','צלחת|צלחות|קערה|קערות|כוס|כוסות|ספל|ספלים|סכו"ם|מגש|מגשים|קנקן|כפית|כפיות|מזלגות|מזלג'],['אפייה','תבנית|תבניות|נייר אפייה|מערוך|מרית|שק זילוף'],['אחסון','קופסת אחסון|קופסאות אחסון|קופסת אוכל|קופסאות מזון|קופסת מזון|קופסת פלסטיק|צנצנת|בקבוק שתייה|תרמוס|שקיות הקפאה|שקיות זיפ'],['כלים למטבח','קרש חיתוך|סכין|סכינים|מקלף|פותחן|מסננת|מגרדת|מטחנת שום|כף עץ|מצקת|מלקחיים']]},
  {id:'textile',n:'טקסטיל וריהוט',e:'🛋️',subs:[['ריהוט','כיסא|כסא|כיסאות|כסאות|שולחן מתקפל|שולחן פלסטיק|שולחן קמפינג|שולחן גן|שולחן כתיבה|שרפרף|מדף|מדפים|ארון|כורסה|כורסא|ספה|מתקן ייבוש|עגלת קניות',15],['מצעים ומגבות','סדין|סדינים|מצעים|סט מצעים|שמיכה|שמיכות|כרית שינה|כרית ראש|כרית נוי|כריות נוי|כרית ישיבה|כרית הריון|כרית מיטה|ציפית|ציפיות|מגבת|מגבות|חלוק|מגבת רחצה'],['לבית','וילון|וילונות|שטיח|שטיחון|מפת שולחן|מפות שולחן|סל כביסה|קולב|קולבים|מתלה|מתלה כביסה|אטבי כביסה']]},
