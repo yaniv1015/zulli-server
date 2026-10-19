@@ -7,7 +7,7 @@ const body = await readFile(new URL('../app/zul-li.html', import.meta.url), 'utf
 const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <base href="${DATA}">
-<meta name="theme-color" content="#1530C8">
+<meta name="theme-color" content="#0B0B0F">
 </head><body>${body}</body></html>`;
 await mkdir(new URL('./www/', import.meta.url), { recursive: true });
 await writeFile(new URL('./www/index.html', import.meta.url), html);

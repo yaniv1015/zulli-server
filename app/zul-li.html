@@ -1,4 +1,4 @@
-<title>זול-לי</title>
+<title>מוזיל</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;700;800&display=swap">
@@ -49,8 +49,11 @@ h2{font-size:1.3rem} h3{font-size:1.08rem}
 .sub{color:var(--muted);font-size:.9rem;margin:0}
 .appbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .logo{display:flex;align-items:center;gap:6px;font-family:var(--body);font-weight:800;font-size:1.7rem;line-height:1}
-.logo .lgicon{width:1.65em;height:1.4em;flex:none}
-.logo .lgtext{color:var(--brand);letter-spacing:-.5px;text-shadow:2px 2px 0 var(--brand2)}
+.logo .lgicon{width:1.3em;height:1.3em;flex:none;border-radius:.3em}
+.logo .lgtext{color:var(--ink);letter-spacing:-.5px;display:inline-flex;align-items:baseline;font-weight:900}
+.lgarrow{width:.36em;height:.8em;margin:0 .02em;fill:#FF4B2B;transform:translateY(.06em)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lgarrow{fill:#D7FF1F}}
+:root[data-theme="dark"] .lgarrow{fill:#D7FF1F}
 .loc{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:.88rem;font-weight:700}
 .prem{background:var(--tag);color:var(--tag-ink);border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:800}
 .demo{font-size:.78rem;color:var(--muted)}
@@ -609,7 +612,7 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 
 <div class="app" dir="rtl" lang="he">
   <div class="appbar">
-    <div class="logo" aria-label="זול לי"><svg class="lgicon" viewBox="0 0 200 170" fill="none" aria-hidden="true"><path d="M8 40h26l26 82M40 58h118M60 122h96a8 8 0 0 0 8-8V96M62 136h100" stroke="var(--brand)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><circle cx="80" cy="152" r="11" fill="var(--brand2)"/><circle cx="146" cy="152" r="11" fill="var(--brand2)"/><g transform="rotate(-32 132 70)"><path d="M98 50h50l18 20-18 20H98a8 8 0 0 1-8-8V58a8 8 0 0 1 8-8z" fill="var(--brand2)"/><text x="120" y="81" text-anchor="middle" font-family="Assistant,sans-serif" font-weight="800" font-size="30" fill="#fff">₪</text></g><path d="M120 4v20M110 16l10 11 10-11" stroke="var(--brand2)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="lgtext">זול לי</span></div>
+    <div class="logo" aria-label="מוזיל"><svg class="lgicon" viewBox="0 0 1024 1024" aria-hidden="true"><rect width="1024" height="1024" rx="236" fill="#D7FF1F"/><path d="M392 196h240a28 28 0 0 1 28 28v330h132a22 22 0 0 1 16 37L528 868a22 22 0 0 1-32 0L216 591a22 22 0 0 1 16-37h132V224a28 28 0 0 1 28-28z" fill="#0B0B0F"/><circle cx="512" cy="300" r="46" fill="#FF4B2B"/></svg><span class="lgtext">מ<svg class="lgarrow" viewBox="0 0 74 168" aria-hidden="true"><path d="M23 0h28v110h21L37 168 2 110h21z"/></svg>זיל</span></div>
     <div class="row2"><span id="premTag"></span><button class="bell" id="bellBtn" type="button" aria-label="התראות על מבצעי שובר שוק">🔔<span class="badge num" id="bellN" hidden></span></button><button class="loc" id="locBtn" type="button"></button></div>
   </div>
   <button class="demo" type="button" id="demoLine" aria-haspopup="dialog"></button>
@@ -1278,7 +1281,7 @@ const agoText=ts=>{if(!ts)return'';const d=new Date(ts);if(isNaN(d))return'';con
 async function loadPriceFile(f,report){
   report('קורא את הקובץ…');
   let sum;try{sum=JSON.parse(await f.text())}catch(e){throw new Error('הקובץ הזה לא נקרא. צריך לבחור את הקובץ summary.json שהשרת יוצר.')}
-  if(!sum||typeof sum.products!=='object')throw new Error('זה לא קובץ המחירים של זול-לי. צריך את הקובץ data/summary.json מהשרת.');
+  if(!sum||typeof sum.products!=='object')throw new Error('זה לא קובץ המחירים של מוזיל. צריך את הקובץ data/summary.json מהשרת.');
   report(`מעבד ${Object.keys(sum.products).length.toLocaleString('he-IL')} מוצרים…`);await new Promise(r=>setTimeout(r,30));
   try{applyReal(sum)}catch(e){throw new Error('בקובץ אין מוצרים עם מחירים של הרשתות שהאפליקציה מכירה.')}
   REAL.source='file';state.real={updated:REAL.updated,count:REAL.count,chains:REAL.chains,source:'file'};state.demoOnly=false;cleanState();save();
@@ -2023,7 +2026,7 @@ async function openRegister(after){const P=state.profile;const ce=await claudeEm
       if(errs.length){const e=$('rErr');e.hidden=false;e.innerHTML='חסר: '+errs.map(esc).join(' · ');return}
       const was=!!P.registered;Object.assign(P,{name:d.name,email:d.email,phone:phoneFmt(d.phone),emailVerified:!!(ce&&d.email.toLowerCase()===ce.toLowerCase()),registered:true,regTs:P.regTs||Date.now()});
       update();toast(`✅ ${was?'הפרטים נשמרו':'נרשמת בהצלחה'} · ${P.name}`);if(after)after();else closeSheet()}};
-  openSheet(state.profile.registered?'👤 הפרטים שלי':'📝 הרשמה לזול-לי','',draw)}
+  openSheet(state.profile.registered?'👤 הפרטים שלי':'📝 הרשמה למוזיל','',draw)}
 function newOccasion(){const EM=['🧺','🎉','🍕','🏕️','🍷','🎄','🕎','🌙','🍖','🥗','🏖️','💼','🐶','🎁'];let e='🧺';
   openSheet('➕ קטגוריה חדשה',`<label class="f">שם הקטגוריה<input type="text" id="noName" placeholder="למשל: ערב סרט, ארוחת חג, קמפינג" maxlength="30"></label>
     <label class="f">לכמה אנשים בדרך כלל?<input type="text" id="noPeople" inputmode="numeric" value="4"></label>
@@ -2216,11 +2219,11 @@ async function shareText(title,text){
 function listShareText(){const ev=state.items.length?evaluate():[];const w=ev.find(r=>!r.rankMin)||ev[0];
   const lines=state.items.map(it=>{const v=it.v?VB[it.v]:null;const nm=v?vLabel(v)+(v.s&&!v.weighted?' '+v.s:''):[TYPES[it.t][0],it.bh].filter(Boolean).join(' ');
     return `• ${nm}${isKg(it)?' · '+String(kgText(it.q,true)).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim():it.q>1?' × '+it.q:''}`});
-  return `🛒 רשימת קניות (${nOf(state.items.length,'מוצר אחד','מוצרים')})\n${lines.join('\n')}`+(w?`\n\nהכי זול כרגע: ${w.c.name}, כ-${fmt(w.show??w.total)} (זול לי)`:'')}
+  return `🛒 רשימת קניות (${nOf(state.items.length,'מוצר אחד','מוצרים')})\n${lines.join('\n')}`+(w?`\n\nהכי זול כרגע: ${w.c.name}, כ-${fmt(w.show??w.total)} (מוזיל)`:'')}
 function shareList(){if(!state.items.length){toast('הרשימה ריקה');return}shareText('רשימת קניות',listShareText())}
 function orderShareText(o){const c=CHB[o.cid];
   const lines=o.lines.map(L=>{const v=VB[L.vid];return `• ${v?vLabel(v):'מוצר'}${L.q>1?' × '+L.q:''} · ${fmt(L.tot)}${L.promo?' (מבצע)':''}`});
-  return `🧾 ${o.ext?'סיכום קנייה':'חשבונית'} · ${c.name}\n${dstr(o.ts)} · ${o.branch||''}\n\n${lines.join('\n')}\n\nמוצרים: ${fmt(o.sub)}${o.fee?`\nמשלוח: ${fmt(o.fee)}`:''}${o.coupon?`\nקופון: −${fmt(o.coupon.off||0)}`:''}\n*סה״כ${o.ext?' משוער':''}: ${fmt(o.total)}*${o.saved?`\nחסכתי ${fmt(o.saved)} עם זול לי 💰`:''}`}
+  return `🧾 ${o.ext?'סיכום קנייה':'חשבונית'} · ${c.name}\n${dstr(o.ts)} · ${o.branch||''}\n\n${lines.join('\n')}\n\nמוצרים: ${fmt(o.sub)}${o.fee?`\nמשלוח: ${fmt(o.fee)}`:''}${o.coupon?`\nקופון: −${fmt(o.coupon.off||0)}`:''}\n*סה״כ${o.ext?' משוער':''}: ${fmt(o.total)}*${o.saved?`\nחסכתי ${fmt(o.saved)} עם מוזיל 💰`:''}`}
 
 /* an ingredient name → a list item: the generic kind when the name is just the kind ("עגבניות", "ביצים"),
    otherwise the best matching product sold in your chains ("רסק עגבניות" is tomato paste, not tomatoes) */
@@ -2400,7 +2403,7 @@ function watchVideo(v){if(v._watched)return;v._watched=true;const msg=v.parentEl
 
 /* ---- share a recipe video: the clip itself where the phone can share files, and always the recipe as text ---- */
 function postShareText(p){const ing=String(p.ingr||'').split('\n').map(x=>x.trim()).filter(Boolean);
-  return `🎬 ${p.title||'מתכון'}${feedName(p.by)&&feedName(p.by)!=='גולש'?` · של ${feedName(p.by)}`:''}`+(ing.length?`\n\n🧾 מצרכים:\n${ing.map(x=>'• '+x).join('\n')}`:'')+`\n\n(מהפיד של זול לי)`}
+  return `🎬 ${p.title||'מתכון'}${feedName(p.by)&&feedName(p.by)!=='גולש'?` · של ${feedName(p.by)}`:''}`+(ing.length?`\n\n🧾 מצרכים:\n${ing.map(x=>'• '+x).join('\n')}`:'')+`\n\n(מהפיד של מוזיל)`}
 function sharePost(p){const text=postShareText(p),title=p.title||'מתכון';
   const canFiles=!!(navigator.share&&navigator.canShare);
   openSheet('📤 שיתוף: '+title,`<p class="sub">אפשר לשתף את הסרטון עצמו יחד עם המתכון, או רק את המתכון כטקסט.</p>
@@ -2544,9 +2547,9 @@ const fileInput=(id,label)=>`<div class="pickrow">
   <details class="camhelp"><summary class="link">המצלמה לא נפתחת?</summary><ul class="sub">
     <li><b>המסך של המצלמה שחור?</b> לאפליקציית Claude אין הרשאה למצלמה. באייפון: הגדרות ← Claude ← מצלמה ← להפעיל. באנדרואיד: הגדרות ← אפליקציות ← Claude ← הרשאות ← מצלמה.</li>
     <li>צלם בעזרת המצלמה הרגילה של הטלפון, ואז לחץ "תמונה מהגלריה" ובחר את הצילום.</li>
-    <li>יש אפליקציות שלא מאפשרות לפתוח מצלמה מתוך חלון פנימי. אפשר לפתוח את הקישור של זול-לי בדפדפן של הטלפון (ספארי או כרום), ושם המצלמה נפתחת.</li>
+    <li>יש אפליקציות שלא מאפשרות לפתוח מצלמה מתוך חלון פנימי. אפשר לפתוח את הקישור של מוזיל בדפדפן של הטלפון (ספארי או כרום), ושם המצלמה נפתחת.</li>
     <li>בסריקת ברקוד אפשר גם להקליד את המספרים שמתחת לפסים.</li></ul></details>`;
-const visionNote=()=>CAN_IMG?'':`<div class="banner">קריאה אמיתית של תמונות פועלת כשפותחים את זול-לי בתוך Claude ומאשרים לה להשתמש ב-Claude. כאן אפשר לראות דוגמה.</div>`;
+const visionNote=()=>CAN_IMG?'':`<div class="banner">קריאה אמיתית של תמונות פועלת כשפותחים את מוזיל בתוך Claude ומאשרים לה להשתמש ב-Claude. כאן אפשר לראות דוגמה.</div>`;
 
 /* price of one product in every followed chain, cheapest first */
 function pricesFor(vid){
@@ -2580,7 +2583,7 @@ function marketHtml(v){const D=deptOf(v);if(!D||!['phones','appliances','textile
   /* chains cut long names ("אייפון 18 פרו כסף 25"): drop the clipped tail so the search finds the model */
   const ws=String(vLabel(v)).replace(/[\u200e\u200f\u202a-\u202e]/g,'').split(/\s+/).filter(Boolean);while(ws.length>2&&ws.at(-1).length<=2)ws.pop();const q=encodeURIComponent(ws.join(' ').slice(0,80));
   return `<div class="market"><b>🏬 ${D.id==='phones'?'רוב הסלולר':'רוב המוצרים האלה'} נמכר גם בחנויות שלא מפרסמות קבצי מחירים</b>
-    <p class="sub">חוק שקיפות המחירים חל על רשתות המזון, ולכן חנויות כמו רשתות סלולר, מחשבים וחשמל לא מופיעות בהשוואה של זול לי. כדי לראות את כל החנויות:</p>
+    <p class="sub">חוק שקיפות המחירים חל על רשתות המזון, ולכן חנויות כמו רשתות סלולר, מחשבים וחשמל לא מופיעות בהשוואה של מוזיל. כדי לראות את כל החנויות:</p>
     <a class="btn ghost" href="https://www.google.com/search?tbm=shop&q=${q}" target="_blank" rel="noopener">🔎 השוואה בכל החנויות (Google Shopping)</a></div>`}
 function priceCard(v){
   const rows=priceRows(v);
@@ -2891,7 +2894,7 @@ function receiptReport(r){
 }
 function openReceipt(){
   let ctl=null,last=null;
-  openSheet('בדיקת קבלה',`<p class="sub">צלם קבלה מהסופר. זול-לי יקרא כל שורה, ויראה לך כמה הקנייה הזו הייתה עולה בכל רשת, ואיפה היית חוסך.</p>
+  openSheet('בדיקת קבלה',`<p class="sub">צלם קבלה מהסופר. מוזיל יקרא כל שורה, ויראה לך כמה הקנייה הזו הייתה עולה בכל רשת, ואיפה היית חוסך.</p>
     ${fileInput('rcFile','צלם קבלה')}${visionNote()}
     ${CAN_IMG?'':'<button class="btn ghost" type="button" id="rcDemo">הצג בדיקה לדוגמה</button>'}
     <div id="rcStatus" class="sub" aria-live="polite"></div><div id="rcRes" style="display:flex;flex-direction:column;gap:12px"></div>`,()=>{
@@ -2926,7 +2929,7 @@ If the image is not a receipt, reply {"store": null, "date": null, "total": null
 const DEMO_LIST_LINES='חלב תנובה 3% (2)\nלחם אחיד\nביצים L\nקוטג׳ 5%\nבננות\nבמבה (3)\nנייר טואלט';
 function openListPhoto(){
   let ctl=null;
-  openSheet('תמונה של רשימת קניות',`<p class="sub">צלם רשימה בכתב יד, פתק מהמקרר או צילום מסך מוואטסאפ. זול-לי יקרא את המוצרים, ותוכל לבדוק ולתקן לפני שהם נכנסים לרשימה.</p>
+  openSheet('תמונה של רשימת קניות',`<p class="sub">צלם רשימה בכתב יד, פתק מהמקרר או צילום מסך מוואטסאפ. מוזיל יקרא את המוצרים, ותוכל לבדוק ולתקן לפני שהם נכנסים לרשימה.</p>
     ${fileInput('lpFile','צלם רשימה')}${visionNote()}
     ${CAN_IMG?'':'<button class="btn ghost" type="button" id="lpDemo">הצג דוגמה</button>'}
     <div id="lpStatus" class="sub" aria-live="polite"></div>
@@ -3069,7 +3072,7 @@ function openClubs(){
       <label class="f">בתוקף עד<input type="date" id="cpExp" value="${esc(draft.expires)}" min="${today}"></label>
       <button class="btn y big" type="button" id="cpSave">שמור קופון</button><button class="link" type="button" id="cpCancel">ביטול</button></div>`
       :`<button class="btn big" type="button" id="cpAdd">+ הוסף שובר או קופון</button>`}
-    <p class="sub">זול-לי לא מחובר לחשבונות המועדון ברשתות, כי לרשתות אין ממשק פתוח לכך. ההנחות מחושבות לפי מה שסימנת והזנת, והקוד מוצג בסיכום ההזמנה.</p>`;
+    <p class="sub">מוזיל לא מחובר לחשבונות המועדון ברשתות, כי לרשתות אין ממשק פתוח לכך. ההנחות מחושבות לפי מה שסימנת והזנת, והקוד מוצג בסיכום ההזמנה.</p>`;
     body.querySelectorAll('[data-club]').forEach(b=>b.onchange=()=>{const id=b.dataset.club;state.clubs=b.checked?[...new Set([...state.clubs,id])]:state.clubs.filter(x=>x!==id);update();draw(body);toast(b.checked?`מחירי ${CHB[id].club} נכנסו להשוואה`:`הוסר: ${CHB[id].club}`)});
     body.querySelectorAll('[data-clubno]').forEach(i=>i.onchange=()=>{state.clubNo={...(state.clubNo||{}),[i.dataset.clubno]:i.value.replace(/[^\d-]/g,'')};save()});
     body.querySelectorAll('[data-cpdel]').forEach(b=>b.onclick=()=>{const k=state.coupons.find(x=>x.id===b.dataset.cpdel);state.coupons=state.coupons.filter(x=>x!==k);update();draw(body);toast('הקופון נמחק',{label:'בטל',fn:()=>{state.coupons.push(k);update()}})});
@@ -3085,7 +3088,7 @@ function openClubs(){
       adding=false;draft={chain:'',kind:'amount',value:'',min:'',code:'',expires:'',title:''};update();draw(body);toast('הקופון נשמר ונכנס להשוואה')};
     // read a voucher photo with Claude: chain, value, minimum, code, expiry
     $('cpPhoto').onchange=$('cpPhotoG').onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(!f){$('cpStatus').innerHTML=missingHelp;return}
-      if(!SAMPLE||!CAN_IMG){$('cpStatus').innerHTML='<div class="banner">קריאת שובר מתמונה פועלת כשפותחים את זול-לי בתוך Claude. אפשר למלא ידנית.</div>';return}
+      if(!SAMPLE||!CAN_IMG){$('cpStatus').innerHTML='<div class="banner">קריאת שובר מתמונה פועלת כשפותחים את מוזיל בתוך Claude. אפשר למלא ידנית.</div>';return}
       let img;try{img=await prepImage(f)}catch(err){$('cpStatus').innerHTML='<div class="unk">לא הצלחנו לפתוח את התמונה.</div>';return}
       grab();ctl?.abort();ctl=new AbortController();$('cpStatus').textContent='קורא את השובר…';
       try{const r=await SAMPLE.json(`The image is a supermarket voucher or coupon from Israel (paper, app screenshot, SMS or email). Chains: ${CH.map(c=>c.id+'='+c.name).join(', ')}.
@@ -3110,7 +3113,7 @@ function realDeal(d,cid){if(!Array.isArray(d))return null;const [k,n,val,club,en
   return null}
 
 /* ================= checkout ================= */
-function basketText(r){return `רשימת קניות מזול-לי (${r.c.short}):\n`+r.lines.map(L=>`${vLabel(VB[L.vid])} ${VB[L.vid].s} × ${L.q}`).join('\n')}
+function basketText(r){return `רשימת קניות ממוזיל (${r.c.short}):\n`+r.lines.map(L=>`${vLabel(VB[L.vid])} ${VB[L.vid].s} × ${L.q}`).join('\n')}
 /* ================= payment methods =================
    Cards are kept as type + last 4 digits + expiry only; a full card number is never typed into the app.
    Apple Pay / Google Pay are not stored: the app offers the one that matches the device. */
@@ -3147,7 +3150,7 @@ function openPayments(after,replaceId){if(typeof after==='function'&&!replaceId)
         <small class="sub">חברת האשראי תבדוק שהכרטיס פעיל ושתעודת הזהות תואמת לבעל הכרטיס. הבדיקה הזו תופעל כשנחבר חברת סליקה. עד אז הכרטיס יסומן "ממתין לאימות". תעודת הזהות לא נשמרת באפליקציה, רק 3 הספרות האחרונות.</small>`}
       ${err?`<div class="unk">${esc(err)}</div>`:''}
       <button class="btn y" type="button" id="pAdd">${old?'🔁 החלף':'הוסף'}</button>
-      <p class="sub">לא מזינים מספר כרטיס מלא. בחיבור לחברת סליקה פרטי הכרטיס יוזנו אצלה בלבד, וזול-לי לא ישמור אותם.</p></fieldset>
+      <p class="sub">לא מזינים מספר כרטיס מלא. בחיבור לחברת סליקה פרטי הכרטיס יוזנו אצלה בלבד, ומוזיל לא ישמור אותם.</p></fieldset>
     ${old?'<button class="btn ghost" type="button" id="pCancel">ביטול, להשאיר את '+esc(old.type)+'</button>':''}
     ${back?'<button class="btn ghost" type="button" id="pBack">חזרה להזמנה</button>':''}`;
     const grab=()=>{if($('pLast')){d.last=$('pLast').value.replace(/\D/g,'');d.exp=$('pExp').value.trim();d.name=$('pName').value.trim();d.tz=$('pTz').value.replace(/\D/g,'')}};
@@ -3182,7 +3185,7 @@ const cardPay=()=>{const cs=cardsOf().filter(p=>!expired(p));return cs.find(p=>p
    Zul-li does not take payment: it copies the list (with the cheapest products it picked) and opens the chain's online shop,
    where the shopper orders and pays. Afterwards they can mark the purchase as done, so it is kept with their savings. */
 const chainUrl=c=>c.url||`https://www.google.com/search?q=${encodeURIComponent(c.name+(c.noDelivery?' סניפים':' הזמנה אונליין'))}`;
-function orderText(r){const c=r.c;return `רשימת קניות מזול לי · ${c.name}${r.branch?' · סניף '+r.branch.nb:''}\n`+r.lines.map(L=>{const v=VB[L.vid];const lab=vLabel(v);return `• ${lab}${v.weighted||!v.s||norm(lab).includes(norm(v.s))?'':' '+v.s} × ${v.weighted?kgText(L.q):L.q}${L.promo?' (מבצע: '+L.promo+')':''}`}).join('\n')+`\nסה״כ משוער: ${fmt(r.total)}`}
+function orderText(r){const c=r.c;return `רשימת קניות ממוזיל · ${c.name}${r.branch?' · סניף '+r.branch.nb:''}\n`+r.lines.map(L=>{const v=VB[L.vid];const lab=vLabel(v);return `• ${lab}${v.weighted||!v.s||norm(lab).includes(norm(v.s))?'':' '+v.s} × ${v.weighted?kgText(L.q):L.q}${L.promo?' (מבצע: '+L.promo+')':''}`}).join('\n')+`\nסה״כ משוער: ${fmt(r.total)}`}
 function openCheckout(cid){
   const c=CHB[cid];let step='list';
   const draw=body=>{
@@ -3220,7 +3223,7 @@ function openCheckout(cid){
         ${r.wvar>0.5?`<div class="sumrow"><span>מוצרים שקילים</span><span>הסכום הסופי ±${fmt(r.wvar)}</span></div>`:''}</div>
       ${r.belowMin?`<div class="unk">הסל מתחת למינימום ההזמנה של ${fmt(c.min)} ב${c.short}.</div>`:''}
       <button class="btn y big" type="button" id="ordGo" ${!r.lines.length?'disabled':''}>${c.noDelivery||c.noOnline?`📋 העתק רשימה לקנייה בסניף${c.url?' ופתח את האתר':''}`:c.viaWolt?`🛒 העתק רשימה ועבור ${/^[A-Za-z]/.test(c.short)?'ל-':'ל'}${esc(c.short)} (הזמנה דרך Wolt)`:`🛒 העתק רשימה ועבור ${/^[A-Za-z]/.test(c.short)?'ל-':'ל'}${esc(c.short)}`}</button>
-      <p class="sub">זול לי לא גובה כסף. ההזמנה והתשלום נעשים ${c.noDelivery||c.noOnline?'בסניף':c.viaWolt?'ב-Wolt':'באתר של הרשת'}, והמחיר שם הוא הקובע.${c.noOnline?` לפי האתר של ${esc(c.short)} אין בו קנייה אונליין, ויש בו רשימת סניפים.`:''}${c.url?'':` אין לנו כתובת מאומתת לאתר של ${esc(c.short)}, אז ייפתח חיפוש.`}</p>`;
+      <p class="sub">מוזיל לא גובה כסף. ההזמנה והתשלום נעשים ${c.noDelivery||c.noOnline?'בסניף':c.viaWolt?'ב-Wolt':'באתר של הרשת'}, והמחיר שם הוא הקובע.${c.noOnline?` לפי האתר של ${esc(c.short)} אין בו קנייה אונליין, ויש בו רשימת סניפים.`:''}${c.url?'':` אין לנו כתובת מאומתת לאתר של ${esc(c.short)}, אז ייפתח חיפוש.`}</p>`;
     if($('brSel'))$('brSel').onchange=e=>{state.branch[c.id]=e.target.value;save();ensureBranches().then(()=>{if(document.contains(body))draw(body)});draw(body)};
     body.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const on=b.dataset.buy==='club';state.clubs=on?[...new Set([...state.clubs,c.id])]:state.clubs.filter(x=>x!==c.id);save();draw(body)});
     $('toClubs').onclick=()=>{_afterClubs=()=>openCheckout(cid);openClubs()};
@@ -3400,7 +3403,7 @@ function schedText(s){if(!s||!s.on)return 'לא מתוזמן';const n=nextRun(s)
 function renderLists(){
   const F=state.family;
   const famHtml=!FAM.db?'':`<section class="card"><div class="row2 spread"><h2>👨‍👩‍👧 רשימה משותפת למשפחה</h2>${state.fam?.code&&FAM.remote?`<span class="pill good">● מחובר</span>`:''}</div>
-    ${!FAM.ready?'<p class="sub">בודק אפשרות שיתוף…</p>':!FAM.db?`<p class="sub">השיתוף החי עובד כשזול-לי פתוחה בתוך Claude ואתה מחובר. כאן הוא לא זמין.</p>`
+    ${!FAM.ready?'<p class="sub">בודק אפשרות שיתוף…</p>':!FAM.db?`<p class="sub">השיתוף החי עובד כשמוזיל פתוח בתוך Claude ואתה מחובר. כאן הוא לא זמין.</p>`
      :state.fam?.code?`<p class="sub">כל מי שמצטרף עם הקוד רואה את אותה רשימה, וכל שינוי מופיע אצל כולם תוך שניות.</p>
       <div class="row2"><span class="code" dir="ltr">${esc(state.fam.code)}</span><button class="btn sm ghost" type="button" id="copyCode">העתק הזמנה</button><button class="btn sm ghost" type="button" id="famLeave">יציאה</button></div>
       ${(FAM.remote?.members||[]).length?`<div class="row2">${FAM.remote.members.map(m=>`<span class="pill ${m.id===FAM.me?'k':''}">${esc(m.id===FAM.me?(state.profile.name||'אני'):m.name||'בן משפחה')}</span>`).join('')}</div>`:''}
@@ -3409,7 +3412,7 @@ function renderLists(){
      :`<p class="sub">צור רשימה משפחתית ושלח את הקוד לבני הבית, או הצטרף עם קוד שקיבלת. כל אחד מוסיף מהטלפון שלו ורואה את אותה רשימה.</p>
       <button class="btn" type="button" id="famNew">➕ צור רשימה משפחתית</button>
       <div class="row2"><input type="text" id="famCode" placeholder="קוד שקיבלת" aria-label="קוד הצטרפות" dir="ltr" autocapitalize="characters" style="flex:1 1 140px"><button class="btn sm ghost" type="button" id="famJoin">הצטרף</button></div>`}
-    <p class="sub">כדי שבני המשפחה יוכלו להיכנס, שתף איתם את זול-לי (תפריט השיתוף של Claude) בהרשאת עריכה.</p></section>`;
+    <p class="sub">כדי שבני המשפחה יוכלו להיכנס, שתף איתם את מוזיל (תפריט השיתוף של Claude) בהרשאת עריכה.</p></section>`;
   const alertsHtml=(()=>{const W=Object.entries(state.watch||{}).filter(([id])=>VB[id]);const AM=state.alertBy||'product';const A=state.chainAlerts||{};
     return `<section class="card"><h2>🔔 התראות</h2>
     <div class="seg" role="group" aria-label="סוג התראה">${[['product','📦 לפי מוצר'],['chain','🏪 לפי רשת']].map(([k,l])=>`<button type="button" data-alertby="${k}" aria-pressed="${AM===k}">${l}</button>`).join('')}</div>
@@ -3423,7 +3426,7 @@ function renderLists(){
       :'<p class="sub">אין עדיין מוצרים במעקב. בבדיקת מחיר של מוצר לחץ "🔔 התראה כשהמחיר יורד" ובחר מתי להתריע.</p>'}
     <button class="btn sm ghost" type="button" id="wAdd">➕ הוסף מוצר למעקב</button>
     <p class="sub">בכל עדכון מחירים נבדוק את התנאי שבחרת לכל מוצר, ונראה הודעה במסך הרשימה.</p>`}</section>`})();
-  $('screen').innerHTML=`<section class="card"><h2>📝 הרשימות שלי</h2><p class="sub">שמור רשימות קבועות ותזמן מתי לקנות. זול-לי ישווה מחירים מחדש לפני כל קנייה.</p>
+  $('screen').innerHTML=`<section class="card"><h2>📝 הרשימות שלי</h2><p class="sub">שמור רשימות קבועות ותזמן מתי לקנות. מוזיל ישווה מחירים מחדש לפני כל קנייה.</p>
     <div class="row2"><input type="text" id="lname" placeholder="שם הרשימה, למשל: קניות לשבת" aria-label="שם רשימה" style="flex:1 1 200px"><button class="btn" type="button" id="saveList">שמור את הסל הנוכחי</button></div></section>
     ${state.lists.map(l=>`<section class="lcard"><div class="t"><h3>${esc(l.name)}</h3><span class="pill">${nOf(l.items.length,'מוצר אחד','מוצרים')}</span></div>
       <div class="sub">⏰ ${schedText(l.sched)}</div>
@@ -3431,7 +3434,7 @@ function renderLists(){
       <div class="row2"><button class="btn sm" type="button" data-load="${l.id}">טען לסל והשווה</button><button class="btn sm ghost" type="button" data-sch="${l.id}">⏰ תזמון</button><button class="btn sm ghost" type="button" data-ldel="${l.id}">מחק</button></div></section>`).join('')||'<div class="empty">אין עדיין רשימות שמורות</div>'}
     ${alertsHtml}${famHtml}`;
   $('screen').querySelectorAll('[data-goadd]').forEach(b=>b.onclick=()=>{state.addMode=b.dataset.goadd;go('basket');setTimeout(()=>($('paste')||$('q'))?.focus(),0)});
-  if($('copyCode'))$('copyCode').onclick=()=>copyText(`הצטרפו לרשימת הקניות המשפחתית שלי בזול-לי: פתחו את זול-לי, "שמורים" ← "רשימה משותפת למשפחה", והקלידו את הקוד ${state.fam.code}`,'ההזמנה הועתקה');
+  if($('copyCode'))$('copyCode').onclick=()=>copyText(`הצטרפו לרשימת הקניות המשפחתית שלי במוזיל: פתחו את מוזיל, "שמורים" ← "רשימה משותפת למשפחה", והקלידו את הקוד ${state.fam.code}`,'ההזמנה הועתקה');
   if($('famLeave'))$('famLeave').onclick=()=>{famLeave();update();toast('יצאת מהרשימה המשפחתית. הרשימה נשארת אצלך.')};
   if($('famNew'))$('famNew').onclick=async()=>{const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let c='';const r=crypto.getRandomValues(new Uint8Array(6));for(const x of r)c+=A[x%A.length];
     if(await famJoin(c,true)){update();toast('נוצרה רשימה משפחתית · הקוד '+c)}};
@@ -3487,7 +3490,7 @@ function savingsChartHtml(){
 function renderOrders(){
   const now=new Date(),mStart=new Date(now.getFullYear(),now.getMonth(),1).getTime();
   const month=state.orders.filter(o=>o.ts>=mStart).reduce((a,o)=>a+(o.saved||0),0),all=state.orders.reduce((a,o)=>a+(o.saved||0),0);
-  $('screen').innerHTML=`<section class="card"><h2>💰 החיסכון שלך עם זול-לי</h2>
+  $('screen').innerHTML=`<section class="card"><h2>💰 החיסכון שלך עם מוזיל</h2>
     <div class="stats"><div class="stat"><div class="v num">${fmt(month)}</div><div class="l">חסכת החודש</div></div><div class="stat b"><div class="v num">${fmt(all)}</div><div class="l">חסכת מאז שהצטרפת</div></div><div class="stat k"><div class="v num">${state.orders.length}</div><div class="l">הזמנות</div></div></div>
     <p class="sub">החיסכון מחושב מול הרשת היקרה ביותר לאותו סל, כולל מבצעים.</p>
     <button class="btn sm ghost" type="button" id="shareSave" style="align-self:flex-start">שתף עם חברים</button></section>
@@ -3496,7 +3499,7 @@ function renderOrders(){
    ${state.orders.map(o=>{const c=CHB[o.cid];return `<section class="lcard"><div class="t"><div class="row2"><span class="av" style="--sc:var(${c.c})">${c.ab}</span><div><b>${c.name}</b><br><small class="sub">${dstr(o.ts)} · ${esc(o.branch)}${o.sample?' · דוגמה':''}</small></div></div><b class="num">${fmt(o.total)}</b></div>
      <div class="pills"><span class="pill ${o.status==='נמסר'?'good':'y'}">${o.status}</span><span class="pill">${nOf(o.lines.length,'מוצר אחד','מוצרים')}</span>${o.saved?`<span class="pill good">חסכת ${fmt(o.saved)}</span>`:''}${o.slot?`<span class="pill">🚚 ${o.slot}</span>`:''}</div>
      <div class="row2"><button class="btn sm ghost" type="button" data-inv="${o.id}">${o.ext?'סיכום':'חשבונית'}</button><button class="btn sm ghost" type="button" data-oshare="${o.id}">📤 שתף</button><button class="btn sm" type="button" data-again="${o.id}">הזמן שוב</button></div></section>`}).join('')||'<div class="empty">עוד לא ביצעת הזמנות</div>'}`;
-  $('shareSave').onclick=()=>copyText(`חסכתי ${fmt(all)} על קניות בסופר עם זול-לי 🛒`,'הטקסט הועתק לשיתוף');
+  $('shareSave').onclick=()=>copyText(`חסכתי ${fmt(all)} על קניות בסופר עם מוזיל 🛒`,'הטקסט הועתק לשיתוף');
   $('screen').querySelectorAll('[data-chp]').forEach(b=>b.onclick=()=>{state.chP=b.dataset.chp;renderOrders()});
   $('screen').querySelectorAll('[data-chm]').forEach(b=>b.onclick=()=>{state.chM=b.dataset.chm;renderOrders()});
   $('screen').querySelectorAll('[data-inv]').forEach(b=>b.onclick=()=>openInvoice(b.dataset.inv));
@@ -3506,7 +3509,7 @@ function renderOrders(){
 function openInvoice(id){
   const o=state.orders.find(x=>x.id===id);const c=CHB[o.cid];const vat=o.total*18/118;
   openSheet(o.ext?'סיכום הקנייה':'חשבונית מס/קבלה',`<div class="inv">
-    <div class="row2 spread"><div class="logo" style="font-size:1.3rem"><svg class="lgicon" viewBox="0 0 200 170" fill="none" aria-hidden="true"><path d="M8 40h26l26 82M40 58h118M60 122h96a8 8 0 0 0 8-8V96M62 136h100" stroke="var(--brand)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><circle cx="80" cy="152" r="11" fill="var(--brand2)"/><circle cx="146" cy="152" r="11" fill="var(--brand2)"/><g transform="rotate(-32 132 70)"><path d="M98 50h50l18 20-18 20H98a8 8 0 0 1-8-8V58a8 8 0 0 1 8-8z" fill="var(--brand2)"/><text x="120" y="81" text-anchor="middle" font-family="Assistant,sans-serif" font-weight="800" font-size="30" fill="#fff">₪</text></g><path d="M120 4v20M110 16l10 11 10-11" stroke="var(--brand2)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="lgtext">זול לי</span></div><span class="sub">מס׳ ${esc(o.id)}${o.sample?' · דוגמה':''}</span></div>
+    <div class="row2 spread"><div class="logo" style="font-size:1.3rem"><svg class="lgicon" viewBox="0 0 1024 1024" aria-hidden="true"><rect width="1024" height="1024" rx="236" fill="#D7FF1F"/><path d="M392 196h240a28 28 0 0 1 28 28v330h132a22 22 0 0 1 16 37L528 868a22 22 0 0 1-32 0L216 591a22 22 0 0 1 16-37h132V224a28 28 0 0 1 28-28z" fill="#0B0B0F"/><circle cx="512" cy="300" r="46" fill="#FF4B2B"/></svg><span class="lgtext">מ<svg class="lgarrow" viewBox="0 0 74 168" aria-hidden="true"><path d="M23 0h28v110h21L37 168 2 110h21z"/></svg>זיל</span></div><span class="sub">מס׳ ${esc(o.id)}${o.sample?' · דוגמה':''}</span></div>
     <div class="sumrow"><span>תאריך</span><span>${dstr(o.ts)}</span></div>
     <div class="sumrow"><span>ספק</span><span>${c.name} · ${esc(o.branch)}</span></div>${o.addr?`<div class="sumrow"><span>כתובת</span><span>${esc(o.addr)}</span></div>`:''}${o.note?`<div class="sumrow"><span>הערה</span><span>${esc(o.note)}</span></div>`:''}${o.coupon?`<div class="sumrow"><span>קופון${o.coupon.code?' '+esc(o.coupon.code):''}</span><span class="num">−${fmt(o.coupon.off)}</span></div>`:''}${o.club?`<div class="sumrow"><span>${esc(o.club.name)}</span><span>${o.club.no?esc(o.club.no):'חבר'}</span></div>`:''}
     <div class="sumrow"><span>לקוח</span><span>${esc(state.profile.name||'—')}</span></div>
@@ -3529,7 +3532,7 @@ const LEGAL={
   <h3>שימוש במידע</h3><p>להשוואת מחירים, ביצוע הזמנות מול הרשתות, התראות על ירידות מחיר ושיפור השירות. נתונים סטטיסטיים מצטברים ואנונימיים בלבד עשויים לשמש לניתוח שוק.</p>
   <h3>הזכויות שלך</h3><p>לעיין במידע, לתקן אותו ולבקש למחוק את החשבון בכל עת, בהתאם לחוק הגנת הפרטיות.</p></div>`],
  terms:['תנאי שימוש (טיוטה)',`<div class="prose"><p>טיוטה ראשונית לעבודה עם עורך דין.</p>
-  <h3>השירות</h3><p>זול-לי משווה מחירים על בסיס קבצי המחירים שהרשתות מפרסמות לפי חוק המזון (שקיפות מחירים). ייתכנו הבדלים בין המחיר המוצג למחיר בפועל, והמחיר הקובע הוא של הרשת.</p>
+  <h3>השירות</h3><p>מוזיל משווה מחירים על בסיס קבצי המחירים שהרשתות מפרסמות לפי חוק המזון (שקיפות מחירים). ייתכנו הבדלים בין המחיר המוצג למחיר בפועל, והמחיר הקובע הוא של הרשת.</p>
   <h3>הזמנות</h3><p>ההזמנה מתבצעת מול הרשת שנבחרה, והיא האחראית לאספקה, למלאי ולהחזרות. במוצרים שקילים הסכום הסופי נקבע לפי המשקל בפועל.</p>
   <h3>מנוי פרימיום</h3><p>מתחדש חודשית וניתן לביטול בכל עת, בהתאם לחוק הגנת הצרכן.</p></div>`]
 };
@@ -3546,7 +3549,7 @@ function accordion(root){const order=[...(state.profile.registered?[]:['👤']),
 function renderAccount(){
   const p=state.profile,P=state.pref;
   $('screen').innerHTML=`
-  <section class="plan"><div class="row2 spread"><h2>⭐ זול-לי פרימיום</h2>${state.premium?'<span class="pill y">פעיל</span>':''}</div>
+  <section class="plan"><div class="row2 spread"><h2>⭐ מוזיל פרימיום</h2>${state.premium?'<span class="pill y">פעיל</span>':''}</div>
     <div class="price">₪14.90 <small style="font-size:.9rem;color:var(--hero-ink)">לחודש</small></div>
     <ul><li>הזמנה אוטומטית ברשימות מתוזמנות</li><li>התראות מיידיות על ירידות מחיר במוצרים שלך</li><li>רשימה משפחתית ללא הגבלת משתתפים</li><li>דוח חיסכון חודשי</li></ul>
     <button class="btn y" type="button" id="premBtn">${state.premium?'בטל מנוי (הדגמה)':'הצטרף לפרימיום (הדגמה)'}</button></section>
@@ -3565,7 +3568,7 @@ function renderAccount(){
   <section class="card" id="realCard"><h2>📊 מחירים אמיתיים</h2>
     ${REAL?`<div class="banner">✅ נטענו <b>${REAL.count.toLocaleString('he-IL')}</b> מוצרים עם מחירים אמיתיים מ-${nOf(REAL.chains.length,'רשת אחת','רשתות')} (${REAL.chains.map(c=>CHB[c].short).join(', ')}) · עודכנו ${agoText(REAL.updated)||'בתאריך לא ידוע'}</div>
       <p class="sub">${REAL.source==='bundled'?'המחירים האלה מגיעים עם האפליקציה. ':''}כדי לעדכן, טען קובץ חדש שהשרת יצר. מבצעים, דמי משלוח וכשרות עדיין לדוגמה. ${REAL.chains.length<CH.length?`עדיין אין מחירים מ${CH.filter(c=>!REAL.chains.includes(c.id)).map(c=>c.short).join(', ')}.`:''}</p>`
-     :`<p class="sub">כרגע המחירים באפליקציה לדוגמה. טען את קובץ המחירים שהשרת של זול-לי יוצר מקבצי הרשתות, והאפליקציה תעבור למחירים אמיתיים.</p>
+     :`<p class="sub">כרגע המחירים באפליקציה לדוגמה. טען את קובץ המחירים שהשרת של מוזיל יוצר מקבצי הרשתות, והאפליקציה תעבור למחירים אמיתיים.</p>
       <details><summary class="link" style="cursor:pointer">איך משיגים את הקובץ?</summary><ol class="sub steps">
         <li>במאגר של השרת ב-GitHub, עבור לענף <b>data</b>.</li><li>פתח את התיקייה <b>data</b> ואת הקובץ <b>summary.json</b>.</li>
         <li>לחץ על כפתור ההורדה (Download raw file) ושמור את הקובץ בטלפון או במחשב.</li><li>חזור לכאן ולחץ "טען קובץ מחירים".</li></ol></details>`}
@@ -3583,8 +3586,8 @@ function renderAccount(){
     <div class="banner">📱 ${WALLETS()[0].label} זמין אוטומטית במכשיר הזה</div>
     <div id="payList">${payListHtml()}</div>
     <button class="btn" type="button" id="payManage">➕ הוספה והסרה של אמצעי תשלום</button>
-    <p class="sub">כרגע ההזמנה והתשלום נעשים באתר של הרשת. אמצעי התשלום כאן ישמשו כשנחבר תשלום בתוך זול לי.</p></section>
-  <section class="card"><h2>🏪 רשתות ומועדוני לקוחות</h2><p class="sub">אפשר להזמין דרך זול-לי מכל רשת פעילה. סמן מועדונים שאתה חבר בהם כדי לקבל את מחירי המועדון בהשוואה.</p>
+    <p class="sub">כרגע ההזמנה והתשלום נעשים באתר של הרשת. אמצעי התשלום כאן ישמשו כשנחבר תשלום בתוך מוזיל.</p></section>
+  <section class="card"><h2>🏪 רשתות ומועדוני לקוחות</h2><p class="sub">אפשר להזמין דרך מוזיל מכל רשת פעילה. סמן מועדונים שאתה חבר בהם כדי לקבל את מחירי המועדון בהשוואה.</p>
     <div>${CH.map(c=>{const bs=branchesOf(c);return `<div class="chain" style="--sc:var(${c.c})"><span class="av">${c.ab}</span><div class="grow"><b>${c.name}</b><br>
       <small class="sub">${bs.length?bs.length+' סניפים ב'+esc(state.city)+' · ':''}${feeText(c)}</small><br>
       <label class="sub"><input type="checkbox" data-club="${c.id}" ${state.clubs.includes(c.id)?'checked':''}> חבר ב${c.club}</label>${NEW_CHAINS.includes(c.id)?' · <span class="pill y">חדש</span>':''}</div>
@@ -3628,7 +3631,7 @@ function renderMine(){(state.mine==='orders'?renderOrders:renderLists)();
   $('screen').insertAdjacentHTML('afterbegin',`<div class="seg" role="tablist" aria-label="מה להציג">${[['lists','📝 רשימות שמורות'],['orders','🧾 הזמנות קודמות']].map(([k,l])=>`<button type="button" role="tab" data-mine="${k}" aria-selected="${state.mine===k}">${l}</button>`).join('')}</div>`);
   $('screen').querySelectorAll('[data-mine]').forEach(b=>b.onclick=()=>{state.mine=b.dataset.mine;update()});}
 function openAbout(){openSheet('על המחירים',`<p>${REAL?`המחירים אמיתיים, מקבצי השקיפות שהרשתות מפרסמות לפי חוק. ${REAL.count.toLocaleString('he-IL')} מוצרים מ-${nOf(REAL.chains.length,'רשת אחת','רשתות')}. עודכנו ${agoText(REAL.updated)||'(תאריך לא ידוע)'}.`:'כרגע מוצגים מחירים לדוגמה.'}</p>
-  <p>המחיר שמוצג הוא המחיר שרוב הסניפים של הרשת גובים. אם בחרת סניף, מוצגים המחירים של הסניף הזה. המבצעים אמיתיים מקבצי הרשתות. דמי המשלוח לפי מה שהרשתות פרסמו (נבדק ב${FEES_CHECKED}). זמני המשלוח והכשרות עדיין לדוגמה.</p><p>הסניף הקרוב נקבע לפי מיקומי רחובות וסניפים מ-OpenStreetMap (© OpenStreetMap contributors, ODbL), לפי מרכז הרחוב.</p><p><b>הזמנה:</b> זול לי לא גובה כסף. בוחרים רשת, הרשימה מועתקת, והאתר של הרשת נפתח כדי להזמין ולשלם שם.</p>`)}
+  <p>המחיר שמוצג הוא המחיר שרוב הסניפים של הרשת גובים. אם בחרת סניף, מוצגים המחירים של הסניף הזה. המבצעים אמיתיים מקבצי הרשתות. דמי המשלוח לפי מה שהרשתות פרסמו (נבדק ב${FEES_CHECKED}). זמני המשלוח והכשרות עדיין לדוגמה.</p><p>הסניף הקרוב נקבע לפי מיקומי רחובות וסניפים מ-OpenStreetMap (© OpenStreetMap contributors, ODbL), לפי מרכז הרחוב.</p><p><b>הזמנה:</b> מוזיל לא גובה כסף. בוחרים רשת, הרשימה מועתקת, והאתר של הרשת נפתח כדי להזמין ולשלם שם.</p>`)}
 function go(t){state.tab=t;update();window.scrollTo(0,0)}
 
 function render(){if(!state.dealsN)state.dealsN=20;

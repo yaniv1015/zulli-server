@@ -35,6 +35,8 @@ jobs:
           sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />#' $M
           grep -c CAMERA $M
           sed -i "s/versionCode 1/versionCode ${GITHUB_RUN_NUMBER}/; s/versionName \"1.0\"/versionName \"0.1.${GITHUB_RUN_NUMBER}\"/" android/app/build.gradle
+      - name: Icon and splash (mobile/assets)
+        run: npx --yes @capacitor/assets@3.0.5 generate --android --iconBackgroundColor '#D7FF1F' --iconBackgroundColorDark '#D7FF1F' --splashBackgroundColor '#0B0B0F' --splashBackgroundColorDark '#0B0B0F'
       - run: npx cap sync android
       - name: Build
         working-directory: mobile/android
@@ -43,6 +45,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk zulli.apk
-          gh release view android-test >/dev/null 2>&1 || gh release create android-test --prerelease --title "זול לי · גרסת בדיקה לאנדרואיד" --notes "קובץ התקנה לבדיקה. בטלפון: הורד את zulli.apk ואשר התקנה ממקור לא ידוע."
-          gh release upload android-test zulli.apk --clobber
+          cp android/app/build/outputs/apk/debug/app-debug.apk mozil.apk
+          gh release view android-test >/dev/null 2>&1 || gh release create android-test --prerelease --title "מוזיל · גרסת בדיקה לאנדרואיד" --notes "קובץ התקנה לבדיקה. בטלפון: הורד את mozil.apk ואשר התקנה ממקור לא ידוע."
+          gh release upload android-test mozil.apk --clobber
+          gh release edit android-test --title "מוזיל · גרסת בדיקה לאנדרואיד" --notes "קובץ התקנה לבדיקה. בטלפון: הורד את mozil.apk ואשר התקנה ממקור לא ידוע."
+          gh release delete-asset android-test zulli.apk -y 2>/dev/null || true

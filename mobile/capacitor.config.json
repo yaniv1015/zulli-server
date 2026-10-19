@@ -1,7 +1,11 @@
 {
-  "appId": "il.zulli.app",
-  "appName": "זול לי",
+  "appId": "il.mozil.app",
+  "appName": "מוזיל",
   "webDir": "www",
-  "android": { "allowMixedContent": false },
-  "server": { "androidScheme": "https" }
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
 }
