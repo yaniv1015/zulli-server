@@ -53,6 +53,8 @@ async function hd(buf) {
     .flatten({ background: '#ffffff' }).webp({ quality: QUALITY }).toBuffer();
 }
 
+const BIG_RX = /טלוויזי|טלויזי|מסך\s*\d{2}|מקרר|מכונת כביסה|מייבש|מדיח|תנור|מיקרוגל|שואב|מזגן|מאוורר|מעבד מזון|מכונת קפה|טוסטר|קומקום|בלנדר|מיקסר|מיחם|אוזניות|רמקול|מגהץ|מחליק|מייבש שיער|סיר לחץ|airfryer|נינג'ה|ninja|טאבלט|סמארטפון|גלקסי|אייפון|שעון חכם|קורקינט/i;
+const BIG = (p) => Math.max(0, ...Object.values(p.p || {})) >= 150 && BIG_RX.test(p.n || '') && !/שידת|כורסא|קרם|קפסולות|טבליות|תרכיז|נוזל|מפיץ ריח/.test(p.n || '');
 // strong deals right now: "N for X" where one costs at least MIN_PCT less than the regular price
 const sum = JSON.parse(readFileSync(SUMMARY, 'utf8'));
 const best = new Map();
@@ -61,13 +63,15 @@ for (const [bc, p] of Object.entries(sum.products)) {
   for (const [ch, d] of Object.entries(p.d)) {
     const reg = p.p?.[ch]; if (d[0] !== 'm' || !reg || !d[1]) continue;
     const pct = 1 - d[2] / d[1] / reg;
-    if (pct >= MIN_PCT && pct <= 0.86 && pct > (best.get(bc) || 0)) best.set(bc, pct);
+    // big electrical items get in from 10% off and go first: a photo matters most where models differ
+    const score = BIG(p) ? (pct >= 0.1 ? 2 + pct : 0) : (pct >= MIN_PCT ? pct : 0);
+    if (score && pct <= 0.86 && score > (best.get(bc) || 0)) best.set(bc, score);
   }
 }
 let haveThumb = new Set();
 for (const f of ['img/have.json', 'prev/img/have.json']) { try { haveThumb = new Set(String(JSON.parse(readFileSync(f, 'utf8'))).split(',')); break; } catch {} }
 // a product with a regular photo, or one Rami sells, is likely to have a sharp one too
-const want = [...best.entries()].filter(([bc]) => haveThumb.has(bc) || sum.products[bc].p?.rami != null)
+const want = [...best.entries()].filter(([bc]) => haveThumb.has(bc) || sum.products[bc].p?.rami != null || sum.products[bc].p?.carrefour != null)
   .sort((a, b) => b[1] - a[1]).slice(0, HD_MAX).map(([bc]) => bc);
 const wantSet = new Set(want);
 console.log(`deals ≥${MIN_PCT * 100}%: ${best.size} · hd candidates: ${want.length}`);
@@ -84,9 +88,12 @@ for (let i = 0; i < HD_CHUNKS; i++) {
 const today = Math.floor(Date.now() / 864e5);
 const todo = want.filter((bc) => chunks[hdChunk(bc)][bc] == null && !(misses[bc] && today - misses[bc] < 14));
 console.log(`kept ${kept} · to fetch ${todo.length}`);
-const stats = { rami: 0, off: 0, miss: 0, bytes: 0 };
-const ramiTodo = todo.filter((bc) => sum.products[bc].p?.rami != null);
-const offTodo = todo.filter((bc) => sum.products[bc].p?.rami == null);
+const stats = { rami: 0, carrefour: 0, off: 0, miss: 0, bytes: 0 };
+const sells = (bc, ch) => sum.products[bc].p?.[ch] != null;
+const ramiTodo = todo.filter((bc) => sells(bc, 'rami'));
+const carTodo = todo.filter((bc) => !sells(bc, 'rami') && sells(bc, 'carrefour'));
+const offTodo = todo.filter((bc) => !sells(bc, 'rami') && !sells(bc, 'carrefour'));
+let carDone = false; const carStat = { tried: 0, found: 0 };
 async function keep(bc, raw, src) {
   let w = null; try { w = raw && await hd(raw); } catch {}
   if (!w) { stats.miss++; misses[bc] = today; return false; }
@@ -100,26 +107,48 @@ const ramiRun = (async () => {
       const bc = ramiTodo[next++]; const raw = await fromRami(bc);
       streak = raw ? 0 : streak + 1; ramiStat.tried++; if (streak >= 40) ramiStat.stopped = true;
       // Rami-sold product without a Rami shot: try the open databases
-      if (raw) await keep(bc, raw, 'rami'); else offTodo.push(bc);
+      if (raw) await keep(bc, raw, 'rami'); else (sells(bc, 'carrefour') ? carTodo : offTodo).push(bc);
       await sleep(80);
     }
   }));
   ramiDone = true;
 })();
+// Carrefour's online store (self-point storefront): its product API gives the photo for a barcode
+async function fromCarrefour(bc) {
+  const f = encodeURIComponent(JSON.stringify({ must: { term: { barcode: bc } } }));
+  const r = await get(`https://www.carrefour.co.il/v2/retailers/1540/products?filters=${f}&appId=4`);
+  if (!r) return null; let url = null;
+  try { const p = JSON.parse(r.buf.toString()).products?.[0]; url = p?.image?.url || p?.images?.[0]?.url; } catch {}
+  if (!url) return null;
+  url = url.replace('{{size}}', 'large').replace(/\{\{extension[^}]*\}\}/, 'jpg');
+  const im = await get(url); return im && im.type.startsWith('image/') && im.buf.length > 3000 ? im.buf : null;
+}
+const carRun = (async () => {
+  let i = 0;
+  await Promise.all(Array.from({ length: 4 }, async () => {
+    while (!timeUp()) {
+      if (i >= carTodo.length) { if (ramiDone) break; await sleep(1000); continue; }
+      const bc = carTodo[i++]; carStat.tried++; const raw = await fromCarrefour(bc);
+      if (raw) { carStat.found++; await keep(bc, raw, 'carrefour'); } else offTodo.push(bc);
+      await sleep(150);
+    }
+  }));
+  carDone = true;
+})();
 const offRun = (async () => {
   let i = 0;
   while (!timeUp()) {
-    if (i >= offTodo.length) { if (ramiDone) break; await sleep(1000); continue; }
+    if (i >= offTodo.length) { if (ramiDone && carDone) break; await sleep(1000); continue; }
     const bc = offTodo[i++]; await keep(bc, await fromOpen(bc), 'off');
   }
 })();
-await Promise.all([ramiRun, offRun]);
+await Promise.all([ramiRun, carRun, offRun]);
 mkdirSync('img/hd', { recursive: true });
 chunks.forEach((c, i) => writeFileSync(`img/hd/${String(i).padStart(2, '0')}.json`, JSON.stringify(c)));
 for (const bc of Object.keys(misses)) if (today - misses[bc] >= 14) delete misses[bc];
 writeFileSync('img/hd/misses.json', JSON.stringify(misses));
 const all = chunks.flatMap((c) => Object.keys(c)).sort();
 writeFileSync('img/hd/have.json', JSON.stringify(all.join(',')));
-const report = { updated: new Date().toISOString(), hd: all.length, candidates: want.length, todo: todo.length, added: stats, rami: { todo: ramiTodo.length, ...ramiStat }, off: offTodo.length, minutes: Math.round((Date.now() - t0) / 6e4) };
+const report = { updated: new Date().toISOString(), hd: all.length, candidates: want.length, todo: todo.length, added: stats, rami: { todo: ramiTodo.length, ...ramiStat }, carrefour: carStat, off: offTodo.length, minutes: Math.round((Date.now() - t0) / 6e4) };
 writeFileSync('img/hd/index.json', JSON.stringify(report));
 console.log(JSON.stringify(report));
