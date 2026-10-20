@@ -632,19 +632,25 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 .stories{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none;width:0;min-width:100%;box-sizing:border-box}
 .storycard{min-width:0;overflow:hidden}
 .stories::-webkit-scrollbar{display:none}
-.story{flex:none;display:flex;flex-direction:column;align-items:center;gap:10px;width:74px;background:none;border:0;padding:0;color:var(--ink);font:inherit}
-.story .ring{width:70px;height:70px;border-radius:50%;padding:3px;background:conic-gradient(#D7FF1F,#FF4B2B,#D7FF1F)}
-.story.seen .ring{background:var(--line)}
-.story .inner{width:100%;height:100%;border-radius:50%;background:var(--surface);border:3px solid var(--surface);display:grid;place-items:center;overflow:hidden;font-size:1.9rem;box-sizing:border-box}
-.story .inner .th{width:100%;height:100%;border-radius:50%;font-size:1.8rem}
-.story small{font-size:.74rem;line-height:1.15;text-align:center;max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.story .cnt{position:absolute}
-.story .ring{position:relative}
-.story .inner.hl{background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.75) 0,rgba(255,255,255,0) 42%),linear-gradient(145deg,var(--g1),var(--g2));border-color:var(--surface)}
-.story .hle{font-size:2.05rem;line-height:1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25));transform:rotate(-8deg);transition:transform .2s ease}
-.story:hover .hle,.story:focus-visible .hle{transform:rotate(0) scale(1.08)}
-.story .hlp{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);background:#FF4B2B;color:#fff;font-weight:900;font-size:.68rem;line-height:1;padding:3px 6px;border-radius:999px;border:2px solid var(--surface);white-space:nowrap;font-family:var(--display)}
-.story.seen .hlp{background:#8A8A99}
+.story{flex:none;display:flex;flex-direction:column;align-items:center;gap:9px;width:84px;background:none;border:0;padding:0;color:#fff;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+/* the band: ink background so the neon rings and icons pop */
+.storyband{background:linear-gradient(200deg,#23280F 0%,#0B0B0F 45%);border-radius:22px;padding:14px 10px 12px;width:0;min-width:100%;box-sizing:border-box;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(215,255,31,.12)}
+.storyband .stories{padding:2px 4px 4px;gap:12px}
+@property --ra{syntax:'<angle>';inherits:false;initial-value:0deg}
+.story .ring{position:relative;width:80px;height:80px;border-radius:50%;padding:3px;background:conic-gradient(from var(--ra),#D7FF1F,#FF4B2B,#FF2E93,#FFB800,#D7FF1F);animation:ringspin 3.2s linear infinite}
+@keyframes ringspin{to{--ra:360deg}}
+.story.seen .ring{background:#3A3A44;animation:none;box-shadow:none}
+.story .inner{width:100%;height:100%;border-radius:50%;border:3px solid #0B0B0F;display:grid;place-items:center;overflow:hidden;box-sizing:border-box}
+.story .inner.hl{background:radial-gradient(circle at 50% 115%,var(--g2) 0,transparent 68%),radial-gradient(circle at 30% 20%,rgba(255,255,255,.18) 0,transparent 40%),#14141A}
+.story .hle{font-size:2.35rem;line-height:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5));transform:rotate(-8deg) translateY(-2px);transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.story:hover .hle,.story:focus-visible .hle,.story:active .hle{transform:rotate(4deg) scale(1.15) translateY(-3px)}
+.story:active .ring{transform:scale(.94)}
+.story .hlp{position:absolute;bottom:-4px;inset-inline-start:-6px;transform:rotate(-8deg);background:#D7FF1F;color:#0B0B0F;font-weight:900;font-size:.74rem;line-height:1;padding:4px 7px;border-radius:8px;border:2px solid #0B0B0F;white-space:nowrap;font-family:var(--display);box-shadow:0 4px 10px rgba(0,0,0,.35)}
+.story small{font-size:.78rem;font-weight:800;line-height:1.15;text-align:center;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#F2F2EE}
+.story.seen small{color:#8A8A99;font-weight:600}
+.story.seen .hlp{background:#3A3A44;color:#C9C9D1;border-color:#0B0B0F}
+.story.seen .hle{filter:drop-shadow(0 4px 6px rgba(0,0,0,.5)) grayscale(.35)}
+@media (prefers-reduced-motion:reduce){.story .ring{animation:none}.story .hle{transition:none}}
 .sview{position:fixed;top:0;left:0;width:100vw;height:100%;max-width:100vw;z-index:9000;background:#0B0B0F;color:#fff;display:flex;flex-direction:column;user-select:none;-webkit-user-select:none;overflow:hidden}
 .sview,.sview *{box-sizing:border-box}.sview .svhero,.sview .sinfo,.sview .sact{width:100%;min-width:0}.sview .nm{overflow-wrap:anywhere}
 .sview .bars{display:flex;gap:4px}
@@ -3794,7 +3800,7 @@ const HL={top:['🔥','#FFB800','#FF4B2B'],produce:['🥑','#C8F56A','#22B26B'],
   meat:['🥩','#FFB8A8','#E23D4B'],frozen:['🍦','#D9F7FF','#4FB8F0'],pantry:['🍝','#FFE7A3','#F08A24'],snacks:['🍫','#FFC6E6','#B85CF5'],
   drink:['🥤','#A9F0FF','#2E6BFF'],baby:['🍼','#FFE1F0','#FF7DB8'],care:['🧴','#E6DDFF','#8B6CFF'],home:['🧼','#C9FFF0','#14B8A0'],elec:['⚡','#FFF59E','#FF8A00'],other:['🛒','#E8E8EE','#8A8A99']};
 function storiesHtml(){const G=storyGroups();if(!G.length)return'';const seen=state.storySeen||{};
-  return `<div class="stories" role="list" aria-label="מבצעים לפי קטגוריה">${G.map((g,i)=>`<button type="button" class="story${seen[g.id]===storyKey(g)?' seen':''}" data-story="${i}" role="listitem" aria-label="${esc(g.n)}: ${g.rows.length} מבצעים"><span class="ring"><span class="inner hl" style="--g1:${(HL[g.id]||HL.other)[1]};--g2:${(HL[g.id]||HL.other)[2]}"><span class="hle" aria-hidden="true">${(HL[g.id]||HL.other)[0]}</span></span><span class="hlp" dir="ltr">−${Math.max(...g.rows.map(r=>r.pct))}%</span></span><small>${esc(g.n)}</small></button>`).join('')}</div>`}
+  return `<div class="storyband"><div class="stories" role="list" aria-label="מבצעים לפי קטגוריה">${G.map((g,i)=>`<button type="button" class="story${seen[g.id]===storyKey(g)?' seen':''}" data-story="${i}" role="listitem" aria-label="${esc(g.n)}: ${g.rows.length} מבצעים"><span class="ring"><span class="inner hl" style="--g1:${(HL[g.id]||HL.other)[1]};--g2:${(HL[g.id]||HL.other)[2]}"><span class="hle" aria-hidden="true">${(HL[g.id]||HL.other)[0]}</span></span><span class="hlp" dir="ltr">−${Math.max(...g.rows.map(r=>r.pct))}%</span></span><small>${esc(g.n)}</small></button>`).join('')}</div></div>`}
 function openStories(start){const G=storyGroups();if(!G[start])return;let gi=start,si=0,timer=0,t0=0,paused=false,left=0;let DUR=5000;
   const root=document.createElement('div');root.className='sview';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.appendChild(root);
   /* the page behind must not scroll sideways or under the story (iOS shifts fixed layers when the page is wider than the screen) */
