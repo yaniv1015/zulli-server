@@ -716,6 +716,52 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 @keyframes spUp{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
 @keyframes spLoad{0%{transform:translateX(160%)}100%{transform:translateX(-260%)}}
 @media (prefers-reduced-motion:reduce){.splash *,.splash .sic::after{animation:none!important}}
+
+/* ================= story: neon showcase ================= */
+.sview.neo{background:radial-gradient(80% 45% at 50% 34%,rgba(79,227,255,.12),transparent 62%),radial-gradient(60% 34% at 50% 60%,rgba(255,46,46,.14),transparent 70%),repeating-linear-gradient(135deg,rgba(255,255,255,.022) 0 2px,transparent 2px 24px),#06070A;color:#fff;--cs:min(58vw,240px,30vh)}
+.sview.neo .svhero{background:none;border-radius:0;height:auto;flex:1;min-height:0;display:flex;flex-direction:column;padding-bottom:6px}
+.sview.neo .bolt{position:absolute;top:0;left:0;width:100%;height:84px;pointer-events:none;opacity:.95}
+.sview.neo .bolt .b1{animation:bflick 2.6s steps(1) infinite}.sview.neo .bolt .b2{animation:bflick 1.9s steps(1) .4s infinite}.sview.neo .bolt .b3{animation:bflick 1.3s steps(1) .2s infinite}
+@keyframes bflick{0%,100%{opacity:1}12%{opacity:.35}18%{opacity:1}54%{opacity:.6}60%{opacity:1}}
+.sview.neo .bars{position:relative;margin-top:30px}.sview.neo .bars i{background:rgba(255,255,255,.16);height:4px}.sview.neo .bars i b{background:#B6FF3B;box-shadow:0 0 8px #B6FF3B}
+.sview.neo .svhead{color:#fff;margin-top:10px;justify-content:center;position:relative}
+.sview.neo .svhead .x{position:absolute;inset-inline-end:0;top:-4px;color:#B6FF3B;opacity:1;font-size:1.35rem;text-shadow:0 0 8px rgba(182,255,59,.7)}
+.sview.neo .svtitle{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}
+.sview.neo .svtitle b{font-family:var(--display);font-weight:900;font-size:clamp(1.9rem,9vw,2.7rem);line-height:1.05;letter-spacing:-.5px;background:linear-gradient(180deg,#FFF6E0 0%,#FFC46B 42%,#FF6A1F 56%,#FFB25C 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:1px rgba(110,30,0,.55);filter:drop-shadow(0 3px 0 #4A1500) drop-shadow(0 0 14px rgba(255,106,31,.45))}
+.sview.neo .svtitle .te{-webkit-text-fill-color:initial;color:initial;-webkit-text-stroke:0}
+.sview.neo .svtitle small{color:#B6FF3B;font-weight:800;font-size:1.05rem;text-shadow:0 0 10px rgba(182,255,59,.45)}
+.sview.neo .svstage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(var(--cs)*0.14) 0 0;min-height:0}
+.sview.neo .svstage::before,.sview.neo .svstage::after{display:none}
+.sview.neo .case{position:relative;width:var(--cs);height:calc(var(--cs)*1.12);z-index:1;background:linear-gradient(90deg,rgba(79,227,255,.26) 0,rgba(255,255,255,.07) 10%,rgba(255,255,255,0) 26%,rgba(255,255,255,0) 74%,rgba(255,255,255,.07) 90%,rgba(79,227,255,.26) 100%);border-inline:2px solid #8FF3FF;box-shadow:-8px 0 18px -8px #4FE3FF,8px 0 18px -8px #4FE3FF;border-radius:0 0 50% 50%/0 0 12% 12%}
+.sview.neo .case::before{content:'';position:absolute;left:-2px;right:-2px;top:-11%;height:22%;border:2px solid #9FF4FF;border-radius:50%;box-shadow:0 0 12px #4FE3FF,inset 0 0 10px rgba(79,227,255,.35);background:rgba(79,227,255,.05)}
+.sview.neo .case::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 18%,rgba(255,255,255,.10) 22%,transparent 30%);pointer-events:none;border-radius:inherit}
+.sview.neo .prod{position:absolute;inset:6% 9% 9%;display:grid;place-items:center}
+.sview.neo .svstage .th,.sview.neo .svstage .th.hires{width:100%;height:100%;padding:0;background:transparent}
+.sview.neo .svstage .th img{mix-blend-mode:normal;filter:drop-shadow(0 10px 14px rgba(0,0,0,.6))}
+.sview.neo .svstage .th.nocut img{border-radius:18px;background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.08),0 0 30px rgba(79,227,255,.35)}
+.sview.neo .svstage .th.svtext{transform:none;width:100%;height:auto;max-height:100%;background:rgba(255,255,255,.06);border:1px solid rgba(159,244,255,.35);color:#fff;box-shadow:0 0 24px rgba(79,227,255,.18) inset}
+.sview.neo .svtext .svtag{background:rgba(182,255,59,.15);color:#B6FF3B}.sview.neo .svtext .svrest{color:#C9C9D1}.sview.neo .svtext .svsize{color:#FF6A4D}
+.sview.neo .podium{position:relative;margin-top:calc(var(--cs)*-0.13);width:calc(var(--cs)*1.32);height:calc(var(--cs)*0.42);border-radius:50%;background:radial-gradient(ellipse at 50% 28%,#3A0C0C 0,#14080A 55%,#08080B 75%);border:3px solid #FF2E2E;box-shadow:0 0 16px #FF2E2E,0 0 34px rgba(255,46,46,.5),inset 0 0 22px rgba(255,46,46,.55);display:grid;place-items:center}
+.sview.neo .podium::before{content:'';position:absolute;left:8%;right:8%;top:-14%;height:44%;border-radius:50%;border:2px solid #7FEFFF;box-shadow:0 0 10px #4FE3FF;background:radial-gradient(ellipse,#101820 0,#06070A 70%)}
+.sview.neo .podium::after{content:'';position:absolute;inset:-12% -9% -16%;border-radius:50%;border:2px solid rgba(255,46,46,.4);border-top-color:transparent;box-shadow:0 8px 18px -8px rgba(255,46,46,.6);pointer-events:none}
+.sview.neo .neonpct{position:relative;margin-top:14%;font-family:var(--display);font-weight:900;font-size:calc(var(--cs)*0.19);letter-spacing:-1px;color:#FFE9E9;text-shadow:0 0 3px #fff,0 0 10px #FF2E2E,0 0 22px #FF2E2E,0 0 42px #FF0000;animation:neonp 3s ease-in-out infinite}
+@keyframes neonp{50%{text-shadow:0 0 3px #fff,0 0 8px #FF2E2E,0 0 16px #FF2E2E,0 0 30px #FF0000}}
+.sview.neo .pct{display:none}
+.sview.neo .sinfo{flex:none;justify-content:flex-start;padding-top:12px;gap:8px;overflow:visible}
+.sview.neo .svchain{background:linear-gradient(#0E0F14,#0E0F14) padding-box,linear-gradient(90deg,#FFFFFF,#9FF4FF) border-box;border:2px solid transparent;box-shadow:0 0 14px rgba(159,244,255,.25);color:#fff;border-radius:16px;padding:6px 20px}
+.sview.neo .svchain b{color:#fff}
+.sview.neo .nm{color:#fff;font-size:1.2rem}
+.sview.neo .pr b{font-size:2.3rem;color:#C8FF3B;text-shadow:0 0 16px rgba(182,255,59,.55)}.sview.neo .pr s{color:#FF3B3B;text-decoration-thickness:2px}
+.sview.neo .svcheck.good{background:rgba(60,160,40,.14);color:#B6FF3B;border:1.5px solid #6BFF5A;box-shadow:0 0 12px rgba(107,255,90,.25)}
+.sview.neo .svcheck.warn{border:1.5px solid #FF6A4D}
+.sview.neo .sact{gap:12px;padding-top:12px}
+.sview.neo #stAdd{background:linear-gradient(180deg,#FFB547 0%,#FF7A00 55%,#E35A00 100%);color:#1A0A00;border:1px solid #FFC56B;border-radius:14px;font-weight:900;box-shadow:0 4px 0 #8A3A00,0 10px 24px rgba(255,122,0,.42),inset 0 1px 0 rgba(255,255,255,.65)}
+.sview.neo #stCheck{background:linear-gradient(180deg,#3B3E46,#1B1D22)!important;color:#fff!important;border:1.5px solid #B6FF3B!important;border-radius:14px;font-weight:800;box-shadow:0 4px 0 #0A0B0D,0 0 14px rgba(182,255,59,.32),inset 0 1px 0 rgba(255,255,255,.22)}
+.sview.neo #stAdd:active,.sview.neo #stCheck:active{transform:translateY(3px);box-shadow:0 1px 0 #000}
+.sview.neo .svrep{color:#B6FF3B}
+.sview.neo .tapzone{top:150px}
+@media (max-height:780px){.sview.neo{--cs:min(50vw,25vh)}.sview.neo .bars{margin-top:22px}.sview.neo .svtitle b{font-size:clamp(1.6rem,8vw,2.1rem)}.sview.neo .svtitle small{font-size:.92rem}.sview.neo .pr b{font-size:1.9rem}.sview.neo .bolt{height:64px}}
+@media (prefers-reduced-motion:reduce){.sview.neo .bolt path,.sview.neo .neonpct{animation:none}}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -3778,6 +3824,29 @@ function storyShelf(v){const n=' '+unfinal(String(v&&v.n||'')).replace(/[\u200e\
   let processed=false;
   for(const [id,rx] of STORY_RULES){if(!rx.test(n)||STORY_NOT[id]&&STORY_NOT[id].test(n))continue;if(id==='produce'&&NOT_FRESH.test(n)){processed=true;continue}return id}
   const cat=TYPES[v&&v.t]?.[2];const sh=v&&v.t!=='other'&&CAT_SHELF[cat]||'other';return sh==='produce'?(processed?'pantry':'other'):STORY_NOT[sh]&&STORY_NOT[sh].test(n)?'other':sh}
+/* lightning across the top of the story */
+const BOLT_SVG=`<svg class="bolt" viewBox="0 0 400 90" preserveAspectRatio="none" aria-hidden="true"><defs><filter id="bglow" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+  <g filter="url(#bglow)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path class="b1" d="M0 30 L38 22 L52 40 L84 18 L101 36 L132 24 L150 44 L178 30" stroke="#7FEFFF" stroke-width="2.2"/><path class="b2" d="M0 52 L30 46 L46 60 L70 40 L96 58 L122 42 L146 56" stroke="#B6FF3B" stroke-width="1.6"/>
+  <path class="b1" d="M400 28 L362 20 L348 40 L316 16 L299 36 L268 22 L250 42 L222 30" stroke="#7FEFFF" stroke-width="2.2"/><path class="b2" d="M400 54 L370 46 L354 62 L330 40 L304 58 L278 42 L254 56" stroke="#B6FF3B" stroke-width="1.6"/>
+  <path class="b3" d="M84 18 L92 2 M316 16 L306 0 M132 24 L140 8 M268 22 L258 6" stroke="#E6FDFF" stroke-width="1.2"/></g></svg>`;
+/* product photos come on white; on the dark story the white around the product is cleared: a flood fill from the edges over
+   near-white pixels, with a soft edge. Works on the photos the app ships (data: URLs); others keep a light disc behind them. */
+const _cut=new Map();
+function cutoutSrc(src){if(_cut.has(src))return _cut.get(src);const pr=new Promise(ok=>{const im=new Image();im.onload=()=>{try{
+    const W=Math.min(480,im.naturalWidth),H=Math.round(im.naturalHeight*W/im.naturalWidth),cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0,W,H);
+    const d=x.getImageData(0,0,W,H),a=d.data,seen=new Uint8Array(W*H),q=new Int32Array(W*H);let qh=0,qt=0;
+    const white=i=>{const r=a[i*4],g=a[i*4+1],b=a[i*4+2];return Math.min(r,g,b)>=228&&Math.max(r,g,b)-Math.min(r,g,b)<28};
+    const push=i=>{if(!seen[i]&&white(i)){seen[i]=1;q[qt++]=i}};
+    for(let X=0;X<W;X++){push(X);push((H-1)*W+X)}for(let Y=0;Y<H;Y++){push(Y*W);push(Y*W+W-1)}
+    while(qh<qt){const i=q[qh++],X=i%W,Y=(i/W)|0;if(X>0)push(i-1);if(X<W-1)push(i+1);if(Y>0)push(i-W);if(Y<H-1)push(i+W)}
+    if(qt<W*H*0.04){ok(null);return}/* no white background to clear */
+    for(let i=0;i<W*H;i++){if(seen[i]){a[i*4+3]=0;continue}
+      const X=i%W,Y=(i/W)|0;if((X>0&&seen[i-1])||(X<W-1&&seen[i+1])||(Y>0&&seen[i-W])||(Y<H-1&&seen[i+W])){const m=Math.min(a[i*4],a[i*4+1],a[i*4+2]);a[i*4+3]=m>200?Math.round(255*(1-(m-200)/55)*0.85):255}}
+    x.putImageData(d,0,0);ok(cv.toDataURL('image/png'))}catch(e){ok(null)}};im.onerror=()=>ok(null);im.src=src});_cut.set(src,pr);return pr}
+function cutoutIn(el){const fix=img=>{if(!img||img.dataset.cut)return;img.dataset.cut='1';const src=img.currentSrc||img.src;
+    if(!/^data:/.test(src)){el.classList.add('nocut');return}cutoutSrc(src).then(u=>{if(u&&document.contains(img)){img.src=u;el.classList.add('cut')}else el.classList.add('nocut')})};
+  fix(el.querySelector('img'));new MutationObserver(()=>fix(el.querySelector('img'))).observe(el,{childList:true,subtree:true})}
 function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)return [];
   const best=new Map();for(const r of dealRows(fol,20)){const k=r.v.id;if(!best.has(k)||best.get(k).pct<r.pct)best.set(k,r)}
   const promo=new Set(),names=new Set();
@@ -3808,7 +3877,7 @@ const HL={top:['🔥','#FFB800','#FF4B2B'],produce:['🥑','#C8F56A','#22B26B'],
 function storiesHtml(){const G=storyGroups();if(!G.length)return'';const seen=state.storySeen||{};
   return `<div class="storyband"><div class="stories" role="list" aria-label="מבצעים לפי קטגוריה">${G.map((g,i)=>`<button type="button" class="story${seen[g.id]===storyKey(g)?' seen':''}" data-story="${i}" role="listitem" aria-label="${esc(g.n)}: ${g.rows.length} מבצעים"><span class="ring"><span class="inner hl" style="--g1:${(HL[g.id]||HL.other)[1]};--g2:${(HL[g.id]||HL.other)[2]}"><span class="hle" aria-hidden="true">${(HL[g.id]||HL.other)[0]}</span></span><span class="hlp" dir="ltr">−${Math.max(...g.rows.map(r=>r.pct))}%</span></span><small>${esc(g.n)}</small></button>`).join('')}</div></div>`}
 function openStories(start){const G=storyGroups();if(!G[start])return;let gi=start,si=0,timer=0,t0=0,paused=false,left=0;let DUR=5000;
-  const root=document.createElement('div');root.className='sview';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.appendChild(root);
+  const root=document.createElement('div');root.className='sview neo';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.appendChild(root);
   /* the page behind must not scroll sideways or under the story (iOS shifts fixed layers when the page is wider than the screen) */
   const ov=[document.documentElement.style.overflow,document.body.style.overflow];document.documentElement.style.overflow=document.body.style.overflow='hidden';window.scrollTo(0,window.scrollY);
   const prevFocus=document.activeElement;
@@ -3820,16 +3889,16 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
   const resume=()=>{if(!paused)return;paused=false;run(left||DUR)};
   const key=e=>{if(e.key==='Escape')close();else if(e.key==='ArrowLeft')go(1);else if(e.key==='ArrowRight')go(-1)};document.addEventListener('keydown',key);
   const draw=()=>{const g=G[gi],r=g.rows[si],c=CHB[r.cid];const left=r.pr.end?Math.ceil((new Date(r.pr.end)-Date.now())/864e5):null;
-    root.innerHTML=`<div class="svhero"><div class="bars" aria-hidden="true">${g.rows.map((_,i)=>`<i class="${i<si?'done':i===si?'cur':''}"><b></b></i>`).join('')}</div>
-      <div class="svhead"><div><b style="font-size:1.15rem">${esc(g.e+' '+g.n)}</b><br><small>מבצע ${si+1} מתוך ${g.rows.length}</small></div><button class="x" type="button" aria-label="סגור">✕</button></div>
-      <div class="svstage">${noPic(r.v)?textCard(r.v):thumb(r.v,TYPES[r.v.t][1])}</div><span class="pct">−${r.pct}%</span>
+    root.innerHTML=`<div class="svhero">${BOLT_SVG}<div class="bars" aria-hidden="true">${g.rows.map((_,i)=>`<i class="${i<si?'done':i===si?'cur':''}"><b></b></i>`).join('')}</div>
+      <div class="svhead"><div class="svtitle"><b>${esc(g.n)} <span class="te">${g.e}</span></b><small>מבצע ${si+1} מתוך ${g.rows.length}</small></div><button class="x" type="button" aria-label="סגור">✕</button></div>
+      <div class="svstage"><div class="case"><div class="prod">${noPic(r.v)?textCard(r.v):thumb(r.v,TYPES[r.v.t][1])}</div></div><div class="podium"><span class="neonpct" dir="ltr">−${r.pct}%</span></div></div>
       <button class="tapzone prev" type="button" aria-label="הקודם"></button><button class="tapzone next" type="button" aria-label="הבא"></button></div>
       <div class="sinfo"><div class="svchain" style="--sc:var(${c.c})"><span>המבצע ב<b>${esc(c.name)}</b>${r.pr.club?` <small>· למועדון ${esc(c.club||"")}</small>`:''}</span></div><div class="nm">${esc(vLabel(r.v))}${r.v.s&&!vLabel(r.v).includes(r.v.s)?` <small style="color:#C9C9D1">${esc(r.v.s)}</small>`:''}</div>
         <div class="pr"><b>${fmt(r.unit)}</b>${r.pr.kind==='multi'?' ליח׳':''} &nbsp;<s>${fmt(r.p)}</s></div>${r.pr.kind==='multi'?`<small style="color:#C9C9D1">${esc(r.pr.label)}</small>`:''}
         ${(()=>{const k=dealCheck(r);return `<div class="svcheck ${k?k.cls:''}" id="svck"${k?'':' hidden'}>${k?(k.cls==='good'?'✓ ':'⚠️ ')+esc(k.t):''}</div>`})()}
         <small style="color:#A9A9B3">${left!=null&&left>=0?(left===0?'נגמר היום':`עוד ${nOf(left,'יום אחד','ימים')}`):''}${r.pr.club?' · למועדון':''}</small></div>
       <div class="sact"><button class="btn y" type="button" id="stAdd">➕ הוסף לרשימה</button><button class="btn ghost" type="button" id="stCheck" style="color:#fff;border-color:#3A3A44">🏷️ איפה עוד?</button></div><button class="svrep" type="button" id="stRep">⚠️ דווח על מחיר שגוי</button>`;
-    const stg=root.querySelector('.svstage .th');if(stg)sharpen(stg,r.v);
+    const stg=root.querySelector('.svstage .th');if(stg){sharpen(stg,r.v);cutoutIn(stg)}
     {const me=r;histCheck(r).then(k=>{const el=root.querySelector('#svck');if(!k||!el||G[gi].rows[si]!==me)return;const cur=dealCheck(r);
       /* a warning from the other chains stays; history adds its own warning or a "lowest in N days" */
       if(cur&&cur.cls==='warn'&&k.cls!=='warn')return;if(k.cls==='info'&&cur)return;el.hidden=false;el.className='svcheck '+k.cls;el.textContent=k.t})}
