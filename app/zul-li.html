@@ -633,7 +633,7 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 .sview .svstage{flex:1;display:grid;place-items:center;min-height:0;padding:6px 0 30px}
 .sview .svstage .th{width:min(62vw,230px);height:min(62vw,230px,34vh);background:#fff;border:0;border-radius:32px;font-size:6rem;padding:18px;box-sizing:border-box;box-shadow:0 22px 44px -12px rgba(11,11,15,.35),0 0 0 6px rgba(255,255,255,.45);transform:rotate(-3deg);transition:width .35s ease,height .35s ease}
 .sview .svstage .th.has{background:#fff;border:0}
-.sview .svstage .th.hires{width:min(74vw,300px);height:min(74vw,300px,40vh);padding:14px}
+.sview .svstage .th.hires{width:min(66vw,260px,34vh);height:min(66vw,260px,34vh);padding:14px}
 .sview .svstage .th.svtext{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;color:#0B0B0F;padding:22px;background:linear-gradient(160deg,#fff 0%,#fff 62%,#F3F6E8 100%)}
 .sview .svtext .svtag{font-size:.82rem;font-weight:700;color:#3A3A44;background:#EEF3D4;border-radius:999px;padding:4px 12px}
 .sview .svtext b{font-size:1.75rem;font-weight:900;line-height:1.12;letter-spacing:-.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
@@ -2227,7 +2227,8 @@ function findProducts(q,{fids=null,limit=30,needSold=false}={}){
 
 /* ================= shelves: the order of a typical Israeli supermarket =================
    (patterns run on norm(name): no quotes, and final letters written as regular ones) */
-const SHELVES=[['produce','🥬 ירקות ופירות',/ירק|פירות|פרי |עגבני|מלפפונ|בננ|תפוח|בצל|גזר|חסה|פלפל|לימונ|אבוקדו|תפוז|ענב|אבטיח|מלונ|שומ |פטרוזיליה|כוסברה|שמיר|נענע/],
+/* produce words must start a word ("קרפרי" is not fruit, "גזרה" is not carrots) */
+const SHELVES=[['produce','🥬 ירקות ופירות',/(?<=\s[והבל]?)(?:ירק|פירות|פרי |עגבני|מלפפונ|בננ|תפוח|בצל|גזר|חסה|פלפל|לימונ|אבוקדו|תפוז|ענב|אבטיח|מלונ|שומ |פטרוזיליה|כוסברה|שמיר|נענע)/],
   ['bakery','🍞 לחם ומאפים',/לחמ|לחמני|פית|חלה|באגט|מאפה|בורקס|קרואסונ|עוגה|עוגת|עוגות|טורטיה|לאפה/],
   ['dairy','🥛 חלב, גבינות וביצים',/חלב|גבינ|קוטג|יוגורט|יוגרט|שמנת|לבנ|חמאה|מעדנ|ביצ|מילקי|דנונה|יופלה|שוקו/],
   ['meat','🍗 בשר, עוף ודגים',/בשר|עופ|חזה|שניצל|כבד|נקניק|קבב|המבורגר|דג |דגי|סלמונ|טונה|פרגית|כרעיימ|כנפיימ|סטייק|אנטריקוט|קציצ/],
@@ -2236,8 +2237,8 @@ const SHELVES=[['produce','🥬 ירקות ופירות',/ירק|פירות|פר
   ['snacks','🍫 חטיפים ומתוקים',/חטיפ|במבה|ביסלי|ציפס|דוריטוס|שוקולד|עוגיות|ופל|סוכריות|מסטיק|קרקר|בייגלה|פופקורנ/],
   ['drink','🥤 שתייה',/מימ |מימ$|משקה|מיצ|קולה|ספרייט|פנטה|סודה|בירה|יינ|נקטר|תרכיז|פריגת|אנרגיה/],
   ['baby','👶 תינוקות',/חיתול|מגבונ|מטרנה|סימילאק|תמל|האגיס|פמפרס|בייבי/],
-  ['care','🧴 טיפוח ופארם',/שמפו|מרככ שיער|סבונ|דאודורנט|משחת שיניימ|מברשת שיניימ|קרמ |תחליב|גילוח|טמפונ|תחבושות|צמר גפנ/],
-  ['home','🧽 ניקיון ובית',/כביסה|אקונומיקה|נוזל כלימ|מנקה|ניקוי|טואלט|מגבות נייר|שקיות|אלומיניומ|ניילונ|ספוג|אשפה|מטהר/],
+  ['care','🧴 טיפוח ופארם',/שמפו|מרככ שיער|סבונ|דאודורנט|משחת שיניימ|מברשת שיניימ|קרמ |תחליב|גילוח|טמפונ|תחבושות|צמר גפנ|מגנ תחתונ|מגני תחתונ|פדימ|קרפרי|אולוויז/],
+  ['home','🧽 ניקיון ובית',/כביסה|אקונומיקה|נוזל כלימ|מנקה|ניקוי|טואלט|מגבות נייר|שקיות|אלומיניומ|ניילונ|ספוג|אשפה|מטהר|כפית|כפיות|מזלג|צלחות|כוסות חד/],
   ['other','🛒 שונות',/$^/]];
 const CAT_SHELF={produce:'produce',bakery:'bakery',dairy:'dairy',meat:'meat',pantry:'pantry',drink:'drink',home:'home',baby:'baby'};
 function shelfOf(it){const v=it.v?VB[it.v]:null;const cat=TYPES[it.t]?.[2];
@@ -3506,6 +3507,33 @@ const noPic=v=>!(v&&v.bc&&((HAVE&&HAVE.has(v.bc))||(HD&&HD.has(v.bc))))&&!(v&&v.
 function textCard(v){const n=vLabel(v).replace(/\s+\d+(?:[.,]\d+)?\s*(?:גרם|ג׳|ג'|ק״ג|קג|מ״ל|מ"ל|מל|ליטר|ל׳|יח׳|יחידות)(?=\s|$).*$/,'');const words=n.split(/\s+/);
   const head=words.slice(0,3).join(' '),rest=words.slice(3).join(' ');const t=TYPES[v.t]||TYPES.other;
   return `<span class="th svtext" aria-hidden="true">${v.t==='other'?'':`<span class="svtag">${v.t==='oil'?'':esc(t[1])+' '}${esc(t[0])}</span>`}<b>${esc(head)}</b>${rest?`<span class="svrest">${esc(rest)}</span>`:''}${v.s?`<span class="svsize">${esc(v.s)}</span>`:''}</span>`}
+/* which department a deal story goes in, from the product name alone: the kind ("type") a product was matched to is often
+   too loose for this (sunscreen filed under home, canned lychee under fruit). Ordered rules; the first match wins. */
+/* final letters are written plain on both sides, so "חטיף" also finds "חטיפים" */
+const unfinal=s=>s.replace(/[ךםןףץ]/g,c=>({'ך':'כ','ם':'מ','ן':'נ','ף':'פ','ץ':'צ'})[c]);
+const W=s=>new RegExp('(?:^|[\\s\\-–(״"\'/])[והבלמש]?(?:'+unfinal(s)+')','i');
+const STORY_RULES=[
+  ['snacks',W("חטיף|במבה|ביסלי|צ'?יפס|ציפס|דוריטוס|צ'?יטוס|פופקורן|פופקו|שוקולד|עוגיות|עוגייה|וופל|ביסקוויט|קרקר|פריכיות|בייגל|סוכרי|מסטיק|מנטוס|ממרח|ממרחית|פסק זמן|קליק|אפרופו|סניקרס|מקלות חספוס|ממתק|גומי|מרשמלו|לואקר|אוראו|לוטוס|ופלים|קוביות וופל")],
+  ['care',W("סקינגארד|הגנה מהשמש|קרם הגנה|spf|תחליב|קרם(?![א-ת])|שמפו|מרכך ל?שיער|לשיער|דאודורנט|דאו |רול ?און|משחת שיניים|משחת ש\\.|מברשת שיניים|מי פה|סבון|ג'ל רחצה|גילוח|סכיני|טמפון|תחבושות|מגן תחתון|מגני תחתון|קרפרי|אולוויז|צמר גפן|קיסמי אוזניים|ספריי גוף|לק |איפור|מסקרה|בושם|טוטאל")],
+  ['baby',W("חיתול|טיטולים|האגיס|פמפרס|בייביסיטר|מגבונים לתינוק|מגבוני|מטרנה|סימילאק|תמ\"ל|מחית(?! עגבני)|דייסה לתינוק|בקבוק לתינוק|מוצץ")],
+  ['home',W("ניקוי|לניקוי|כביסה|מרכך כביסה|אבקת כביסה|קפסולות|אקונומיקה|כלים|אסלה|מטליות|מגבונים לניקוי|מרסס|מבשם|מקלות ריח|ריחני|אייר ?וויק|מסיר כתמים|מטהר|שקיות|שקית|נייר טואלט|מגבות נייר|ספוג|כפיות|כפית|מזלגות|סכו\"ם|צלחות|כוסות|נייר כסף|נייר אפייה|רצפות|ריצפז|נוזל רחצה לכלים|מסיר שומנים|kh-7|סיליט|דפים לשמירה|דפי כביסה|סוללות|נרות|פיניש|פיירי|סנו|וניש|הרפיק|אוקסיג'ן|אסטוניש")],
+  ['frozen',W("קפוא|קפואה|קפואים|מוקפא|מוקפאת|מוקפאים|גלידה|גלידת|שלגון|ארטיק|מיני אייס|סנפרוסט|מאגדת|סולרו|קטנטנים")],
+  ['dairy',W("חלב|גבינ|קוטג'?|יוגורט|יוגורטים|שמנת|לבנה|לאבנה|חמאה|מעדן|מלבי|שוקו|פודינג|דנונה|יופלה|מילקי|אלפרו|משקה שיבולת|משקה שקדים|משקה סויה|על בסיס חלב|בולגרית|צ'?דר|מוצרלה|פרמזן|ריקוטה|ביצים|ביצה")],
+  ['drink',W("משקה|מים מינרל|מי עדן|נביעות|עין גדי|סודה|קולה|פפסי|ספרייט|פאנטה|שוופס|בירה|יין|נקטר|מיץ|תפוזינה|אנרגיה|רד ?בול|נורדיק|פריגת|תרכיז|ליפטון|xl|סמוזי|סמירנוף|סיידר|אלכוהול|אייס קפה|קפה קר")],
+  ['meat',W("עוף|בשר|שניצל|שניצלונים|נקניק|נקניקיות|קבנוס|פסטרמה|המבורגר|קציצות|כבד|סטייק|אנטריקוט|פרגית|כנפיים|שוקיים|חזה|טחון|דג |דגים|סלמון|טונה|סרדינים|אמנון|לברק|מושט|קבב|שווארמה")],
+  ['bakery',W("לחם|לחמני|לחמניות|פיתה|פיתות|חלה|חלות|באגט|בורקס|קרואסון|עוגה|עוגת|עוגות|טורטיה|טורטיות|לאפה|מאפה|מאפים|בריוש|רוגלך|שמרים|פוקצ'ה")],
+  ['produce',W("עגבני|מלפפון|בננ|תפוח|תפוחי|בצל(?:ים)?(?![א-ת])|גזר(?![א-ת])|חסה|פלפל|לימון|אבוקדו|תפוז(?:ים)?(?![א-ת])|ענבים|אבטיח|מלון|שום(?![א-ת])|פטרוזיליה|כוסברה|שמיר|נענע|רוקולה|תרד|כרוב|קישוא|חציל|פטריות|נבטי|סלק(?![א-ת])|צנון|ירקות|פירות|פרי |מנגו|אננס|תות(?:ים)?(?![א-ת])|אגס(?![א-ת])|שזיף|אפרסק|נקטרינ|קיווי|רימון|תמר|ליצ'י|בטטה|דלעת|ברוקולי|כרובית|שעועית ירוקה|אפונה ירוקה|תירס")],
+  ['pantry',W("אורז|פסטה|ספגטי|לינגוויני|פנה|איטריות|אטריות|נודלס|קמח|סוכר|שמן|קטניות|עדשים|שעועית|חומוס|טחינה|רוטב|רסק|שימורי|קפה|תה |דגני|קורנפלקס|גרנולה|ריבה|קונפיטורה|דבש|סילאן|תבלין|פפריקה|מלח|פתיתים|קוסקוס|גריסי|אפונה|מרק|בצק|פיצה|זיתים|מלפפונים חמוצים|חמוצים|קטשופ|מיונז|חרדל|שקדים|אגוזים|פיסטוק|בוטנים|גרעינים|לבבות דקל|פירה|ניוקי|עלי גפן|שימור|פירורי|פרורי|פירורית|סילאן|תירס מתוק|ארוחת|אבקת|פחית")],
+];
+/* words that rule a department out even when one of its words is in the name */
+const STORY_NOT={produce:/חליט|מתבל|תבלינ|גבישי|אבקה|תה |קפה|שמנ|מאגדת|סולרו|ארטיק|קטנטנימ|גלידה|יוגורט|משקה|מיצ/,meat:/אגוז|מרק|אבקת|בטעמ|דגני|פטריות|טבעוני|צמחי|נודלס/,dairy:/ארוחת|פסטה|חטיפ|דגני|עוגי|פיצה/,bakery:/קמח|פירור|פרורי|פירורית|חטיפ/,
+  baby:/עגבני|טואלט|לניקוי|טישו|ממחטות|למטבח|לרצפה/,care:/kh-7|לניקוי|מסיר שומנימ|ממחטות/i,frozen:/משקה|אבקת|סמירנופ/};
+/* processed food named after a fruit or vegetable (canned lychee, potato mash, tomato paste) is not the produce aisle */
+const NOT_FRESH=/pickles|קלוי|מי מלח|חתוכ|רצועות|פרוט|ווג'|מהמטבח|במלח|כבוש|בצנצנת|גרוס|טחונ|בסירופ|פחית|יכינ|סטיקס|סילאנ|תירס מתוק|בלה איטליה|קרושה|מרוסק|קצוצות|קלופות|שימור|שימורי|מחית|רסק|פירה|ניוקי|ממולא|בטעמ|משקה|מיצ|קונפיטור|ריבה|מקלוני|שייק|חומוס| עמ |חטיפ|מרק|רוטב|פרוס דק|מטוגנ|צ'יפס|אבקת|מיובש|מיובשימ|חמוצ|בחומצ|מרינדה|סלט |ממרח/;
+function storyShelf(v){const n=' '+unfinal(String(v&&v.n||'')).replace(/[\u200e\u200f\u202a-\u202e]/g,'').replace(/[׳`]/g,"'").replace(/״/g,'"')+' ';
+  let processed=false;
+  for(const [id,rx] of STORY_RULES){if(!rx.test(n)||STORY_NOT[id]&&STORY_NOT[id].test(n))continue;if(id==='produce'&&NOT_FRESH.test(n)){processed=true;continue}return id}
+  const cat=TYPES[v&&v.t]?.[2];const sh=v&&v.t!=='other'&&CAT_SHELF[cat]||'other';return sh==='produce'?(processed?'pantry':'other'):STORY_NOT[sh]&&STORY_NOT[sh].test(n)?'other':sh}
 function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)return [];
   const best=new Map();for(const r of dealRows(fol,20)){const k=r.v.id;if(!best.has(k)||best.get(k).pct<r.pct)best.set(k,r)}
   const promo=new Set(),names=new Set();
@@ -3516,9 +3544,9 @@ function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)r
   /* products with a photo first; a group keeps photo-less ones only when it has few pictures */
   const hdp=r=>!!(HD&&r.v.bc&&HD.has(r.v.bc));const pic=r=>hdp(r)||!!(HAVE&&r.v.bc&&HAVE.has(r.v.bc));
   const pick=(rows,n)=>{if(!HAVE&&!HD)return rows.slice(0,n);rows=[...rows.filter(hdp),...rows.filter(r=>!hdp(r))];const a=rows.filter(pic);return a.length>=Math.min(5,rows.length)?a.slice(0,n):[...a,...rows.filter(r=>!pic(r))].slice(0,n)};
-  const by={};for(const r of all){const a=shelfOf({t:r.v.t,v:r.v.id});(by[a]||=[]).push(r)}
+  const by={};for(const r of all){const a=storyShelf(r.v);(by[a]||=[]).push(r)}
   const groups=[{id:'top',e:'🔥',n:'הכי שווים',rows:pick(all,15)}];
-  for(const [id,name] of SHELVES){const rows=pick(by[id]||[],15);if(rows.length>=2)groups.push({id,e:name.split(' ')[0],n:name.split(' ').slice(1).join(' ').replace(/,.*$/,''),rows})}
+  for(const [id,name] of SHELVES){if(id==='other')continue;const rows=pick(by[id]||[],15);if(rows.length>=2)groups.push({id,e:name.split(' ')[0],n:name.split(' ').slice(1).join(' ').replace(/,.*$/,''),rows})}
   return groups.filter(g=>g.rows.length)}
 const storyKey=g=>g.rows.map(r=>r.key).join('~').slice(0,400);
 function storiesHtml(){const G=storyGroups();if(!G.length)return'';const seen=state.storySeen||{};
