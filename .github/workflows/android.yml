@@ -34,6 +34,9 @@ jobs:
           M=android/app/src/main/AndroidManifest.xml
           sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />#' $M
           grep -c CAMERA $M
+          # links to a shared list (mozil://l/…) open the app
+          sed -i 's#</activity>#    <intent-filter><action android:name="android.intent.action.VIEW" /><category android:name="android.intent.category.DEFAULT" /><category android:name="android.intent.category.BROWSABLE" /><data android:scheme="mozil" /></intent-filter>\n        </activity>#' $M
+          grep -c 'android:scheme="mozil"' $M
           sed -i "s/versionCode 1/versionCode ${GITHUB_RUN_NUMBER}/; s/versionName \"1.0\"/versionName \"0.1.${GITHUB_RUN_NUMBER}\"/" android/app/build.gradle
       - name: Icon and splash (mobile/assets)
         run: npx --yes @capacitor/assets@3.0.5 generate --android --iconBackgroundColor '#D7FF1F' --iconBackgroundColorDark '#D7FF1F' --splashBackgroundColor '#0B0B0F' --splashBackgroundColorDark '#0B0B0F'

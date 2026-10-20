@@ -183,6 +183,13 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:.88rem;font-weight:
 .ssob.a{background:#0B0B0F;color:#fff;border-color:#0B0B0F}.ssob.m{background:var(--bg)}
 .ssob:disabled{opacity:.6}
 .ordiv{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.9rem}.ordiv::before,.ordiv::after{content:'';flex:1;height:1px;background:var(--line)}
+.tour{display:flex;flex-direction:column;gap:14px;align-items:stretch;text-align:center;padding:6px 0}
+.tour .temo{font-size:4.4rem;line-height:1;margin:6px auto;width:120px;height:120px;border-radius:34px;display:grid;place-items:center;background:linear-gradient(145deg,#F4FFC2,#D7FF1F);box-shadow:0 14px 30px -14px rgba(11,11,15,.35)}
+.tour .tt{margin:0;font-size:1.5rem}.tour .td{font-size:1.05rem;line-height:1.5;margin:0}
+.tdots{display:flex;gap:6px;justify-content:center}.tdots i{width:8px;height:8px;border-radius:99px;background:var(--line)}.tdots i.on{width:22px;background:#FF4B2B}
+.pgraph{width:100%;height:auto;direction:ltr}.pgl{stroke:var(--line);stroke-dasharray:3 3}.pgt{font-size:10px;fill:var(--muted)}
+.pglegend{display:flex;flex-wrap:wrap;gap:10px;font-size:.85rem}.pglegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:4px;vertical-align:middle}
+.sview .svrep{background:none;border:0;color:#8A8A99;font:inherit;font-size:.82rem;padding:0 0 calc(10px + env(safe-area-inset-bottom,0px));align-self:center;text-decoration:underline}
 .savefun{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,#F4FFC2,#E2FF6B);color:#0B0B0F;border-radius:14px;padding:10px 14px;font-size:1rem}
 .savefun>span:first-child{font-size:1.6rem}.savefun small{color:#3A3A44}
 .pill.warnp{background:#FFF1E0;color:#A64B00}
@@ -1992,6 +1999,7 @@ function openPaste(){
     <div class="row2 spread"><button class="link" type="button" id="sampleBtn">מלא רשימה לדוגמה</button><button class="link" type="button" id="toPhoto">📷 יש לי תמונה של הרשימה</button></div><div id="unk"></div>`,()=>{
     $('sampleBtn').onclick=()=>{$('paste').value=SAMPLE_PASTE};$('toPhoto').onclick=()=>{closeSheet();openListPhoto()};
     $('parseBtn').onclick=()=>{const txt=$('paste').value.trim();if(!txt){toast('הדבק קודם רשימה');$('paste').focus();return}
+      {const d=listLinkOf(txt);if(d&&decodeList(d)?.length){closeSheet();openSharedList(d);return}}
       const{out,unknown}=parseList(txt);const keys=addItems(out,'מהדבקה');save();render();
       if(unknown.length){$('unk').innerHTML=`<div class="okline">✓ נוספו ${nOf(out.length,'מוצר אחד','מוצרים')}</div>`+unknownBox(unknown);bindUnknown($('unk'),keys);$('unk').scrollIntoView({block:'start'})}
       else{closeSheet();toast(`נוספו ${nOf(out.length,'מוצר אחד','מוצרים')} לרשימה`);refineQueue(keys)}};
@@ -2182,7 +2190,61 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
   openSheet(state.profile.registered?'👤 הפרטים שלי':welcome?'הרשמה':'📝 הרשמה למוזיל','',draw);
   if(welcome)document.querySelector('#sheetRoot .sheet')?.classList.add('full')}
 /* the first time the app opens: after the splash, the welcome and sign-up page; every later time the app opens as usual */
-function firstRun(){let seen=false;try{seen=!!localStorage.getItem('mozilSeen')}catch(e){}if(seen||state.firstRunDone||state.profile.registered)return;state.firstRunDone=Date.now();try{localStorage.setItem('mozilSeen','1')}catch(e){}save();openRegister(null,true)}
+/* first run: three short slides, then sign-up */
+/* ================= support: errors, feedback, price reports =================
+   Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
+   SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
+const SUPPORT_EMAIL='';
+const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
+function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
+window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
+window.addEventListener('unhandledrejection',e=>logErr('promise: '+(e.reason&&(e.reason.message||e.reason))));
+const appVer=()=>'מוזיל '+((REAL&&REAL.updated)?'נתונים '+String(REAL.updated).slice(0,10):'')+(window.Capacitor?' · אנדרואיד':' · דפדפן');
+async function sendSupport(subject,text){(state.outbox||(state.outbox=[])).push({ts:Date.now(),subject,text:text.slice(0,4000)});state.outbox=state.outbox.slice(-50);save();
+  if(SUPPORT_EMAIL){location.href=`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;return}
+  await shareText(subject,text)}
+function openFeedback(){openSheet('💬 משוב ודיווח על תקלה',`<p class="sub">מה עובד, מה לא, ומה חסר לך? כל הודעה נקראת.</p>
+    <div class="seg" role="group" aria-label="סוג">${[['idea','💡 רעיון'],['bug','🐞 תקלה'],['other','💬 אחר']].map(([k,l],j)=>`<button type="button" data-fbk="${k}" aria-pressed="${j===0}">${l}</button>`).join('')}</div>
+    <label class="f" for="fbText">ההודעה</label><textarea id="fbText" placeholder="למשל: הסניף שלי לא מופיע / הייתי רוצה…"></textarea>
+    <label class="row2 sub" style="flex-wrap:nowrap"><input type="checkbox" id="fbLog" ${ERRLOG.length?'checked':''} style="width:22px;height:22px"> לצרף פרטים טכניים${ERRLOG.length?` (${nOf(ERRLOG.length,'תקלה אחת','תקלות')} שנרשמו בטלפון)`:''}</label>
+    <button class="btn y big" type="button" id="fbSend">שלח</button>`,()=>{let k='idea';
+    document.querySelectorAll('[data-fbk]').forEach(b=>b.onclick=()=>{k=b.dataset.fbk;document.querySelectorAll('[data-fbk]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))});
+    $('fbSend').onclick=async()=>{const t=$('fbText').value.trim();if(!t){toast('כתוב קודם מה לשלוח');$('fbText').focus();return}
+      const kind={idea:'רעיון',bug:'תקלה',other:'משוב'}[k];let body=`${kind}:\n${t}\n\n— ${appVer()} · ${navigator.userAgent.slice(0,120)}`;
+      if($('fbLog').checked&&ERRLOG.length)body+='\n\nתקלות אחרונות:\n'+ERRLOG.slice(-10).map(e=>e.t+' '+e.m).join('\n');
+      await sendSupport(`מוזיל · ${kind}`,body);closeSheet();toast('תודה! ההודעה מוכנה לשליחה')}})}
+function openReport(v,cid){const sellers=followed().filter(c=>basePriceAt(c.id,v.id)!=null);let ch=cid||(sellers[0]&&sellers[0].id)||'';
+  openSheet('⚠️ דיווח על מחיר שגוי',`<div class="row2" style="flex-wrap:nowrap">${thumb(v,TYPES[v.t][1],'ico')}<div class="grow"><b>${esc(vLabel(v))}</b><br><small class="sub">${esc(v.s||'')}${v.bc?' · ברקוד '+esc(v.bc):''}</small></div></div>
+    <label class="f" for="rpCh">באיזו רשת?</label><select id="rpCh">${sellers.map(c=>`<option value="${c.id}" ${c.id===ch?'selected':''}>${esc(c.name)} · ${fmt(basePriceAt(c.id,v.id))}</option>`).join('')}</select>
+    <fieldset class="fs"><legend>מה לא נכון?</legend>${[['price','המחיר בסניף שונה'],['deal','המבצע לא קיים או שונה'],['gone','המוצר לא נמכר שם'],['name','השם או התמונה לא נכונים']].map(([k,l],j)=>`<label class="row2"><input type="radio" name="rpK" value="${k}" ${j===0?'checked':''}> ${l}</label>`).join('')}</fieldset>
+    <label class="f" for="rpP">המחיר שראית (לא חובה)<input type="text" id="rpP" inputmode="decimal" dir="ltr" placeholder="₪"></label>
+    <label class="f" for="rpN">הערה (לא חובה)<input type="text" id="rpN" placeholder="למשל: סניף דיזנגוף, מדף 4"></label>
+    <button class="btn y big" type="button" id="rpSend">שלח דיווח</button>`,()=>{
+    $('rpSend').onclick=async()=>{const c=CHB[$('rpCh').value];const k=document.querySelector('[name=rpK]:checked').value;const kinds={price:'מחיר שונה',deal:'מבצע שגוי',gone:'לא נמכר',name:'שם/תמונה שגויים'};
+      const br=c&&pickedBranch(c);const text=`דיווח: ${kinds[k]}\nמוצר: ${vLabel(v)} ${v.s||''}\nברקוד: ${v.bc||v.id}\nרשת: ${c?c.name:'-'}${br&&br.name?' · סניף '+br.name:''}\nמחיר אצלנו: ${c?fmt(basePriceAt(c.id,v.id)):'-'}${$('rpP').value.trim()?'\nמחיר שנראה: '+$('rpP').value.trim():''}${$('rpN').value.trim()?'\nהערה: '+$('rpN').value.trim():''}\n\n— ${appVer()}`;
+      (state.reports||(state.reports=[])).push({ts:Date.now(),v:v.id,c:c&&c.id,k});await sendSupport('מוזיל · דיווח על מחיר',text);closeSheet();toast('תודה! הדיווח עוזר לכולם')}})}
+function openDeleteAccount(){openSheet('🗑️ מחיקת החשבון',`<p>המחיקה מוחקת מהטלפון הזה את כל מה ששמרת במוזיל: פרטי ההרשמה והכתובת, הרשימות, ההזמנות, ההתראות וההגדרות.${state.profile.uid?' גם החשבון שהתחברת איתו נמחק מהשרת של מוזיל.':''}</p>
+    <p class="sub">אי אפשר לבטל את המחיקה. רשימה משפחתית משותפת נשארת אצל שאר בני המשפחה.</p>
+    <label class="f" for="delOk">כדי לאשר, כתוב <b>מחק</b></label><input type="text" id="delOk" autocomplete="off">
+    <button class="btn big" type="button" id="delGo" style="background:#D92D20;color:#fff;border-color:#D92D20">מחק את החשבון לצמיתות</button>`,()=>{
+    $('delGo').onclick=async()=>{if($('delOk').value.trim()!=='מחק'){toast('כתוב "מחק" כדי לאשר');$('delOk').focus();return}$('delGo').disabled=true;
+      try{const P=fbPlugin();if(P&&state.profile.uid)await P.deleteUser();else if(window.firebase&&firebase.auth&&firebase.auth().currentUser)await firebase.auth().currentUser.delete()}catch(e){}
+      try{for(const k of Object.keys(localStorage))if(/^(zulli|mozil)/.test(k))localStorage.removeItem(k)}catch(e){}
+      try{indexedDB.deleteDatabase('zulli')}catch(e){}
+      try{const L=LN();if(L){const p=await L.getPending();if(p&&p.notifications&&p.notifications.length)await L.cancel({notifications:p.notifications.map(n=>({id:n.id}))})}}catch(e){}
+      document.body.innerHTML='<div style="padding:40px 20px;text-align:center;font-family:sans-serif" dir="rtl"><h2>החשבון נמחק</h2><p>כל הנתונים נמחקו מהטלפון. אפשר לסגור את האפליקציה.</p></div>';setTimeout(()=>location.reload(),2500)}})}
+function openTour(done){const S=[['🛒','כותבים מה צריך','מקלידים, אומרים בקול, סורקים ברקוד או מצלמים רשימה. מוזיל מבין גם "חלב תנובה x2".'],
+    ['🏆','רואים איפה הכי זול','הרשימה כולה מושווית בכל הרשתות, לפי הסניף הקרוב אליך, כולל מבצעים ומועדונים.'],
+    ['🔔','לא מפספסים מבצע','סטורי של המבצעים הכי שווים, בדיקה אם המבצע אמיתי, והתראה כשמוצר שאתה קונה יורד במחיר.']];let i=0;
+  const draw=body=>{const [e,t,d]=S[i];body.innerHTML=`<div class="tour"><div class="tdots" aria-hidden="true">${S.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</div>
+      <div class="temo" aria-hidden="true">${e}</div><h3 class="tt">${t}</h3><p class="sub td">${d}</p>
+      <button class="btn y big" type="button" id="tNext">${i<S.length-1?'הבא ←':'🚀 יאללה, מתחילים'}</button>
+      <button class="link" type="button" id="tSkip" style="align-self:center">${i<S.length-1?'דלג':''}</button></div>`;
+    body.querySelector('#tNext').onclick=()=>{if(i<S.length-1){i++;draw(body)}else{closeSheet();done&&done()}};
+    body.querySelector('#tSkip').onclick=()=>{closeSheet();done&&done()};
+    let x0=null;body.ontouchstart=e=>{x0=e.touches[0].clientX};body.ontouchend=e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(dx<-50&&i>0){i--;draw(body)}else if(dx>50&&i<S.length-1){i++;draw(body)}}};
+  openSheet('ברוכים הבאים',`<div id="tourHost"></div>`,()=>draw($('tourHost')))}
+function firstRun(){let seen=false;try{seen=!!localStorage.getItem('mozilSeen')}catch(e){}if(seen||state.firstRunDone||state.profile.registered)return;state.firstRunDone=Date.now();try{localStorage.setItem('mozilSeen','1')}catch(e){}save();openTour(()=>openRegister(null,true))}
 function newOccasion(){const EM=['🧺','🎉','🍕','🏕️','🍷','🎄','🕎','🌙','🍖','🥗','🏖️','💼','🐶','🎁'];let e='🧺';
   openSheet('➕ קטגוריה חדשה',`<label class="f">שם הקטגוריה<input type="text" id="noName" placeholder="למשל: ערב סרט, ארוחת חג, קמפינג" maxlength="30"></label>
     <label class="f">לכמה אנשים בדרך כלל?<input type="text" id="noPeople" inputmode="numeric" value="4"></label>
@@ -2377,10 +2439,28 @@ async function shareText(title,text){
   openSheet('📤 '+title,`<div class="sharegrid"><a class="btn" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">💬 וואטסאפ</a><button class="btn ghost" type="button" id="shCopy">📋 העתק</button>
     <a class="btn ghost" href="mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text)}">✉️ מייל</a><a class="btn ghost" href="sms:?&body=${encodeURIComponent(text)}">📱 SMS</a></div>
     <pre class="cpybox" style="white-space:pre-wrap;font:inherit;max-height:40vh;overflow:auto">${esc(text)}</pre>`,()=>{$('shCopy').onclick=()=>copyText(text,'הועתק')})}
+/* ================= a list as a link =================
+   The list travels inside the link itself (no server): https://…/l.html#<data>. The page opens the app on Android
+   (mozil://l/<data>) or shows the list; pasting the link (or the whole message) into "הדבק רשימה" also loads it exactly. */
+const LIST_LINK='https://yaniv1015.github.io/zulli-server/l.html#';
+const b64u={enc:s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''),dec:s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))))};
+function encodeList(items){return b64u.enc(JSON.stringify({n:'',i:items.map(it=>[it.v||('t:'+it.t),+it.q||1,it.bh||''].filter((x,k)=>k<2||x))}))}
+function decodeList(data){try{const o=JSON.parse(b64u.dec(String(data).trim()));return (o.i||[]).map(([id,q,bh])=>{if(String(id).startsWith('t:')){const t=id.slice(2);return TYPES[t]?{t,v:null,q:+q||1,bh:bh||undefined}:null}
+  const v=VB[id];return v?{t:v.t,v:v.id,q:+q||1}:null}).filter(Boolean)}catch(e){return null}}
+const listLinkOf=t=>{const m=String(t||'').match(/(?:l\.html#|mozil:\/\/l\/)([A-Za-z0-9_-]{8,})/);return m?m[1]:null};
+function openSharedList(data){const items=decodeList(data);if(!items||!items.length){toast('הקישור לרשימה לא תקין או ישן');return}
+  openSheet('📲 רשימה ששיתפו איתך',`<p>${nOf(items.length,'מוצר אחד','מוצרים')}:</p><ul class="sub" style="margin:0;padding-inline-start:18px">${items.slice(0,40).map(it=>`<li>${esc(it.v?vLabel(VB[it.v]):TYPES[it.t][0])}${it.q>1?' × '+it.q:''}</li>`).join('')}</ul>
+    <button class="btn y big" type="button" id="slAdd">➕ הוסף לרשימה שלי</button>${state.items.length?'<button class="btn ghost" type="button" id="slRep">החלף את הרשימה שלי בזו</button>':''}`,()=>{
+    $('slAdd').onclick=()=>{addItems(items,'מקישור');closeSheet();update();toast(`נוספו ${nOf(items.length,'מוצר אחד','מוצרים')}`)};
+    if($('slRep'))$('slRep').onclick=()=>{state.items=[];addItems(items,'מקישור');closeSheet();update();toast('הרשימה הוחלפה')}})}
+/* arriving with a list: the web address (#l=…), or the phone app opened by a mozil:// link */
+setTimeout(()=>{const m=location.hash.match(/^#l=([A-Za-z0-9_-]+)/);if(m){history.replaceState(null,'',location.pathname+location.search);const go=()=>REAL?openSharedList(m[1]):setTimeout(go,800);go()}},1200);
+try{const App=window.Capacitor?.Plugins?.App;if(App){App.addListener('appUrlOpen',e=>{const d=listLinkOf(e&&e.url);if(d){const go=()=>REAL?openSharedList(d):setTimeout(go,800);go()}});
+  App.getLaunchUrl?.().then(r=>{const d=listLinkOf(r&&r.url);if(d){const go=()=>REAL?openSharedList(d):setTimeout(go,800);setTimeout(go,2500)}}).catch(()=>{})}}catch(e){}
 function listShareText(){const ev=state.items.length?evaluate():[];const w=ev.find(r=>!r.rankMin)||ev[0];
   const lines=state.items.map(it=>{const v=it.v?VB[it.v]:null;const nm=v?vLabel(v)+(v.s&&!v.weighted?' '+v.s:''):[TYPES[it.t][0],it.bh].filter(Boolean).join(' ');
     return `• ${nm}${isKg(it)?' · '+String(kgText(it.q,true)).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim():it.q>1?' × '+it.q:''}`});
-  return `🛒 רשימת קניות (${nOf(state.items.length,'מוצר אחד','מוצרים')})\n${lines.join('\n')}`+(w?`\n\nהכי זול כרגע: ${w.c.name}, כ-${fmt(w.show??w.total)} (מוזיל)`:'')}
+  return `🛒 רשימת קניות (${nOf(state.items.length,'מוצר אחד','מוצרים')})\n${lines.join('\n')}`+(w?`\n\nהכי זול כרגע: ${w.c.name}, כ-${fmt(w.show??w.total)} (מוזיל)`:'')+`\n\n📲 לפתיחת הרשימה במוזיל:\n${LIST_LINK}${encodeList(state.items)}`}
 function shareList(){if(!state.items.length){toast('הרשימה ריקה');return}shareText('רשימת קניות',listShareText())}
 function orderShareText(o){const c=CHB[o.cid];
   const lines=o.lines.map(L=>{const v=VB[L.vid];return `• ${v?vLabel(v):'מוצר'}${L.q>1?' × '+L.q:''} · ${fmt(L.tot)}${L.promo?' (מבצע)':''}`});
@@ -2872,7 +2952,9 @@ function openPriceCheck(startV,startQ){
           L.querySelectorAll('[data-ci]').forEach(o=>{const go=e=>{e.preventDefault();pick(m[+o.dataset.ci])};o.addEventListener('touchstart',go,{passive:false});o.onmousedown=go;o.onclick=go})};
         ci.onfocus=()=>ci.select();ci.onkeydown=e=>{if(e.key==='Enter'){const o=L.querySelector('[data-ci]');if(o){e.preventDefault();o.click()}}};
         ci.onblur=()=>setTimeout(()=>{L.hidden=true;ci.value=pcCity||cmpCity()},200)}
-      else{body.innerHTML=`<button class="link" type="button" id="pcBack" style="align-self:flex-start">→ חיפוש אחר</button>${seg}${priceCard(picked)}`;
+      else{body.innerHTML=`<button class="link" type="button" id="pcBack" style="align-self:flex-start">→ חיפוש אחר</button>${seg}${priceCard(picked)}<div id="pcHist" class="phist"></div><button class="link" type="button" id="pcRep" style="align-self:flex-start">⚠️ דווח על מחיר שגוי</button>`;
+        {const me=picked;priceGraph(me).then(h=>{const el=body.querySelector('#pcHist');if(el&&picked===me)el.innerHTML=h})}
+        body.querySelector('#pcRep').onclick=()=>openReport(VB[picked.id]||picked);
         if(body.querySelector('#prodAdd'))bindPriceCard(body,picked,()=>draw(body))}
       body.querySelector('#pcBack').onclick=()=>{picked=null;draw(body);body.querySelector('#pcQ')?.focus()};
       body.querySelectorAll('[data-pcm]').forEach(b=>b.onclick=()=>{mode=b.dataset.pcm;state.pcMode=mode;save();draw(body)});return}
@@ -3578,6 +3660,25 @@ function packHint(v){if(!v||!v.real||v.weighted)return null;const q=qtyOf(v);if(
   const me=fam.find(f=>f.x.id===v.id);if(!me)return null;
   let best=null;for(const f of fam){if(f.x.id===v.id||f.q.k!==q.k||f.q.n<=q.n||f.q.n>q.n*4)continue;if(f.pu<me.pu*0.9&&(!best||f.pu<best.pu))best=f}
   if(!best)return null;return {to:best.x,pct:Math.round((1-best.pu/me.pu)*100),per:fmt(best.pu*q.per),u:q.u}}
+/* price over time for one product: a step line per chain (the chains the shopper follows that sell it), last 90 days */
+async function priceGraph(v){const ix=await histIx();const h=v&&v.bc?await histOf(v.bc):null;
+  if(!ix||!h)return '';const today=ix.last,start=Math.max(ix.first,today-90),span=today-start;
+  const since=new Date(ix.first*864e5).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'});
+  if(span<3)return `<p class="sub">📈 מעקב המחיר של המוצר הזה התחיל ב-${since}. בעוד כמה ימים יופיע כאן גרף.</p>`;
+  const fol=new Set(followed().map(c=>c.id));const ser=Object.entries(h).filter(([c,L])=>fol.has(c)&&CHB[c]&&L.length).map(([c,L])=>({c:CHB[c],L})).sort((a,b)=>a.L[a.L.length-1][1]-b.L[b.L.length-1][1]).slice(0,5);
+  if(!ser.length)return '';const W=320,H=150,P=28;let lo=Infinity,hi=-Infinity;
+  const pts=ser.map(s=>{const out=[];let cur=null;for(const [d,p] of s.L){if(d<=start)cur=p;}if(cur!=null)out.push([start,cur]);for(const [d,p] of s.L)if(d>start)out.push([d,p]);out.push([today,out.length?out[out.length-1][1]:s.L[s.L.length-1][1]]);out.forEach(([,p])=>{lo=Math.min(lo,p);hi=Math.max(hi,p)});return {...s,out}});
+  if(hi-lo<0.01){hi+=1;lo=Math.max(0,lo-1)}const X=d=>P+(W-P-6)*(1-(d-start)/span),Y=p=>8+(H-30)*(1-(p-lo)/(hi-lo));
+  const path=o=>o.map(([d,p],i)=>i?`H${X(d).toFixed(1)}V${Y(p).toFixed(1)}`:`M${X(d).toFixed(1)} ${Y(p).toFixed(1)}`).join('');
+  const changes=pts.reduce((a,s)=>a+s.out.length-2,0);
+  return `<h3 style="margin:4px 0 0">📈 המחיר ב-${span} הימים האחרונים</h3>
+    <svg viewBox="0 0 ${W} ${H}" class="pgraph" role="img" aria-label="${esc(pts.map(s=>`${s.c.short}: עכשיו ${fmt(s.out[s.out.length-1][1])}`).join(', '))}">
+      <line x1="${P}" x2="${W-6}" y1="${Y(lo)}" y2="${Y(lo)}" class="pgl"/><line x1="${P}" x2="${W-6}" y1="${Y(hi)}" y2="${Y(hi)}" class="pgl"/>
+      <text x="${P-4}" y="${Y(hi)+4}" class="pgt" text-anchor="end">${Math.round(hi)}</text><text x="${P-4}" y="${Y(lo)+4}" class="pgt" text-anchor="end">${Math.round(lo)}</text>
+      ${pts.map(s=>`<path d="${path(s.out)}" fill="none" stroke="var(${s.c.c})" stroke-width="2.5" stroke-linejoin="round"/>`).join('')}
+      <text x="${W-6}" y="${H-4}" class="pgt" text-anchor="end">${new Date(start*864e5).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})}</text><text x="${P}" y="${H-4}" class="pgt">היום</text></svg>
+    <div class="pglegend">${pts.map(s=>`<span><i style="background:var(${s.c.c})"></i>${esc(s.c.short)} ${fmt(s.out[s.out.length-1][1])}</span>`).join('')}</div>
+    <p class="sub">${changes?'':'המחיר לא השתנה בתקופה הזו. '}המעקב התחיל ב-${since}.</p>`}
 function promoSection(){
   const fol=followed().map(c=>c.id),rows=[];const F=state.promoF||'all';
   for(const v of V){if((!v.rd&&!v.rdc)||v.weighted)continue;for(const cid of fol){const p=v.rp[cid];if(p==null)continue;
@@ -3711,7 +3812,7 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
         <div class="pr"><b>${fmt(r.unit)}</b>${r.pr.kind==='multi'?' ליח׳':''} &nbsp;<s>${fmt(r.p)}</s></div>${r.pr.kind==='multi'?`<small style="color:#C9C9D1">${esc(r.pr.label)}</small>`:''}
         ${(()=>{const k=dealCheck(r);return `<div class="svcheck ${k?k.cls:''}" id="svck"${k?'':' hidden'}>${k?(k.cls==='good'?'✓ ':'⚠️ ')+esc(k.t):''}</div>`})()}
         <small style="color:#A9A9B3">${left!=null&&left>=0?(left===0?'נגמר היום':`עוד ${nOf(left,'יום אחד','ימים')}`):''}${r.pr.club?' · למועדון':''}</small></div>
-      <div class="sact"><button class="btn y" type="button" id="stAdd">➕ הוסף לרשימה</button><button class="btn ghost" type="button" id="stCheck" style="color:#fff;border-color:#3A3A44">🏷️ איפה עוד?</button></div>`;
+      <div class="sact"><button class="btn y" type="button" id="stAdd">➕ הוסף לרשימה</button><button class="btn ghost" type="button" id="stCheck" style="color:#fff;border-color:#3A3A44">🏷️ איפה עוד?</button></div><button class="svrep" type="button" id="stRep">⚠️ דווח על מחיר שגוי</button>`;
     const stg=root.querySelector('.svstage .th');if(stg)sharpen(stg,r.v);
     {const me=r;histCheck(r).then(k=>{const el=root.querySelector('#svck');if(!k||!el||G[gi].rows[si]!==me)return;const cur=dealCheck(r);
       /* a warning from the other chains stays; history adds its own warning or a "lowest in N days" */
@@ -3720,6 +3821,7 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
     root.querySelector('.tapzone.next').onclick=()=>go(1);root.querySelector('.tapzone.prev').onclick=()=>go(-1);
     const body=root.querySelector('.svhero');body.onpointerdown=()=>{pause()};body.onpointerup=()=>{resume()};body.onpointerleave=()=>{resume()};
     root.querySelector('#stAdd').onclick=()=>{addItems([{t:r.v.t,v:r.v.id,q:r.pr.kind==='multi'?r.pr.n:1}]);save();toast(`${vLabel(r.v)} נוסף לרשימה`);go(1)};
+    root.querySelector('#stRep').onclick=()=>{close();openReport(r.v,r.cid)};
     root.querySelector('#stCheck').onclick=()=>{close();openPriceCheck(r.v)};
     let sy=null;root.ontouchstart=e=>{sy=e.touches[0].clientY};root.ontouchend=e=>{if(sy!=null&&e.changedTouches[0].clientY-sy>90)close();sy=null};
     /* every story stays 7 seconds on screen */DUR=7000;
@@ -3872,6 +3974,15 @@ function openInvoice(id){
 
 /* ================= account ================= */
 const LEGAL={
+ access:['הצהרת נגישות (טיוטה)',`<div class="prose"><p>טיוטה לבדיקה עם מורשה נגישות. עודכנה לאחרונה: אוקטובר 2026.</p>
+  <p>מוזיל רוצה שכל אחד יוכל להשוות מחירים ולחסוך, גם אנשים עם מוגבלות. האפליקציה נבנית לפי הנחיות הנגישות המקובלות (WCAG 2.1 ברמה AA, ותקן ישראלי 5568), ואנחנו ממשיכים לשפר.</p>
+  <h3>מה כבר נעשה</h3><ul><li>כל הכפתורים והשדות מתויגים לקורא מסך (TalkBack ו-VoiceOver), כולל כמויות, מחירים ושינויים שמוכרזים בקול.</li>
+  <li>כפתורים גדולים לנגיעה, וניגודיות צבעים גבוהה, גם במצב כהה.</li><li>תמיכה בהגדלת טקסט של הטלפון.</li>
+  <li>מי שביקש בטלפון פחות תנועה מקבל מסכים בלי אנימציות.</li><li>הסטורי נעצר בלחיצה ממושכת, וניתן לניווט במקלדת (חיצים ו-Esc).</li>
+  <li>אפשר להוסיף מוצרים בהקלדה, בקול, בסריקת ברקוד או בתמונה.</li></ul>
+  <h3>מה עוד לא נגיש במלואו</h3><ul><li>חלק מתמונות המוצרים מגיעות מהרשתות בלי תיאור, ולכן מוקרא שם המוצר בלבד.</li><li>הגרפים מוצגים גם כטקסט, אבל לא תמיד בכל הפרטים.</li></ul>
+  <h3>נתקלת בבעיה?</h3><p>נשמח לשמוע ולתקן. אפשר לפנות דרך "שלח משוב" בלשונית החשבון.</p>
+  <p><b>רכז/ת נגישות:</b> [שם, טלפון ומייל ייקבעו לפני ההשקה]</p></div>`],
  privacy:['מדיניות פרטיות (טיוטה)',`<div class="prose"><p>טיוטה ראשונית לעבודה עם עורך דין. לא מסמך משפטי סופי.</p>
   <h3>מה אנחנו אוספים</h3><ul><li>פרטי חשבון: שם, טלפון, אימייל וכתובת למשלוח.</li><li>רשימות קניות, הזמנות וחשבוניות.</li><li>קבלות שהמשתמש מעלה, לצורך זיהוי מוצרים בלבד.</li></ul>
   <h3>מה אנחנו לא עושים</h3><ul><li>לא שומרים מספרי כרטיסי אשראי. התשלום עובר דרך חברת סליקה מאובטחת.</li><li>לא מוכרים מידע אישי לצד שלישי.</li></ul>
@@ -3945,7 +4056,13 @@ function renderAccount(){
     <div class="toggle"><label for="nsound">🔊 צליל "ביפ" בסריקת מוצר</label><input type="checkbox" id="nsound" ${state.sound!==false?'checked':''}></div>
     <div class="toggle"><label for="nmega">🚨 מבצעי שובר שוק (הנחות של עשרות אחוזים)</label><input type="checkbox" id="nmega" ${state.notif.mega?'checked':''}></div></section>
   <section class="card"><h2>🔒 פרטיות ותנאים</h2>
-    <div class="row2"><button class="btn sm ghost" type="button" data-legal="privacy">מדיניות פרטיות</button><button class="btn sm ghost" type="button" data-legal="terms">תנאי שימוש</button><button class="btn sm ghost" type="button" id="resetAll">איפוס נתוני ההדגמה</button></div></section>`;
+    <div class="row2"><button class="btn sm ghost" type="button" data-legal="privacy">מדיניות פרטיות</button><button class="btn sm ghost" type="button" data-legal="terms">תנאי שימוש</button><button class="btn sm ghost" type="button" data-legal="access">♿ הצהרת נגישות</button><button class="btn sm ghost" type="button" id="resetAll">איפוס נתוני ההדגמה</button></div></section>
+  <section class="card"><h2>🛟 עזרה ומשוב</h2>
+    <div class="row2"><button class="btn sm" type="button" id="fbOpen">💬 שלח משוב או דווח על תקלה</button><button class="btn sm ghost" type="button" id="tourAgain">👋 איך זה עובד</button></div>
+    ${(state.reports||[]).length?`<p class="sub">שלחת ${nOf(state.reports.length,'דיווח אחד','דיווחים')} על מחירים. תודה!</p>`:''}</section>
+  <section class="card"><h2>🗑️ מחיקת חשבון</h2><p class="sub">מוחק את כל הפרטים והנתונים ששמרת במוזיל.</p>
+    <button class="btn sm ghost" type="button" id="delAcc" style="align-self:flex-start;color:#D92D20;border-color:#F3B7B1">מחק את החשבון</button></section>`;
+  $('fbOpen').onclick=openFeedback;$('tourAgain').onclick=()=>openTour();$('delAcc').onclick=openDeleteAccount;
   const bindP=(id,key)=>{$(id).onchange=e=>{state.profile[key]=e.target.value;save();toast('נשמר')}};
   $('openLoc').onclick=openLocation;$('openClubs').onclick=openClubs;
   $('priceFile').onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;const st=$('priceStatus');

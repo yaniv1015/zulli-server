@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>רשימת קניות · מוזיל</title>
+<meta name="theme-color" content="#0B0B0F">
+<style>
+:root{--ink:#0B0B0F;--lime:#D7FF1F;--coral:#FF4B2B;--bg:#F6F6F2;--card:#fff;--muted:#55555F;--line:#E4E4DE}
+@media (prefers-color-scheme:dark){:root{--ink:#F2F2EE;--bg:#0B0B0F;--card:#17171D;--muted:#A9A9B3;--line:#2A2A33}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Rubik,Arial,sans-serif;line-height:1.5}
+main{max-width:520px;margin:0 auto;padding:24px 16px 40px;display:flex;flex-direction:column;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:1.4rem}
+.brand i{width:40px;height:40px;border-radius:12px;background:var(--lime);display:grid;place-items:center;font-style:normal;color:#0B0B0F}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+ul{margin:8px 0 0;padding-inline-start:20px}
+.btn{display:block;width:100%;min-height:52px;border-radius:14px;border:0;font:inherit;font-weight:800;font-size:1.05rem;cursor:pointer;text-align:center;text-decoration:none;line-height:52px}
+.y{background:var(--coral);color:#fff}.g{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.sub{color:var(--muted);font-size:.92rem}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand"><i aria-hidden="true">↓</i>מוזיל</div>
+  <div class="card"><b id="title">רשימת קניות ששיתפו איתך</b><ul id="items"></ul><p class="sub" id="err" hidden>הקישור לא שלם. בקש מהשולח לשתף שוב.</p></div>
+  <a class="btn y" id="open" href="#">📲 פתח במוזיל</a>
+  <button class="btn g" type="button" id="copy">העתק את הרשימה</button>
+  <p class="sub">אין לך את מוזיל? אפשר להעתיק את הרשימה ולהדביק אותה ב"הדבק רשימה" באפליקציה.</p>
+</main>
+<script>
+// The list is inside the address (after #). This page only reads it; nothing is sent anywhere.
+(function () {
+  var data = (location.hash || '').replace(/^#/, '');
+  var names = [];
+  try {
+    var o = JSON.parse(decodeURIComponent(escape(atob(data.replace(/-/g, '+').replace(/_/g, '/')))));
+    (o.i || []).forEach(function (x) { names.push(x); });
+  } catch (e) { document.getElementById('err').hidden = false; }
+  var ul = document.getElementById('items');
+  // product ids are catalog ids; the app shows the full names, here we show how many and the kinds we can tell
+  ul.innerHTML = '<li>' + names.length + ' מוצרים</li>';
+  document.getElementById('title').textContent = 'רשימת קניות ששיתפו איתך (' + names.length + ' מוצרים)';
+  var isAndroid = /Android/i.test(navigator.userAgent);
+  var open = document.getElementById('open');
+  open.href = isAndroid
+    ? 'intent://l/' + data + '#Intent;scheme=mozil;package=il.mozil.app;end'
+    : 'mozil://l/' + data;
+  document.getElementById('copy').onclick = function () {
+    var t = location.href;
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
+      document.getElementById('copy').textContent = '✓ הועתק. הדבק ב"הדבק רשימה" במוזיל';
+    }).catch(function () { prompt('העתק את הקישור:', t); });
+  };
+})();
+</script>
+</body>
+</html>
