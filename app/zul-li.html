@@ -2152,12 +2152,15 @@ function renderQuick(R,fold){if(!R)return;let html='';const has=state.items.leng
       const v=VB[k];const c=cheapestOf(v.id);const has=inList(k);return `<button class="chip qchip" type="button" style="--cc:${typeColor(v.t)}" data-addv="${v.id}" aria-label="הוסף ${esc(vLabel(v))}">${thumb(v,TYPES[v.t][1],'thc')}<span class="qtx"><span>${esc(vLabel(v))}</span><small>${esc(v.s)}${c?` · <b>${fmt(c.p)}</b>`:''}</small></span>${has?`<span class="qn">${has.q}</span>`:''}</button>`};
     const top=!fold,rest=fold||!has;
     if(top&&us.length>=3){html=`<div class="qhead"><span class="sub">⭐ הקבועים שלך</span><button class="link" type="button" id="qAll">➕ הוסף את כולם</button></div><div class="qrow">${us.map(chipU).join('')}</div>`}
-    else if(us.length<3&&rest)html='<span class="sub" style="width:100%">הוספה מהירה:</span>'+Object.entries(TYPES).slice(0,8).map(([t,[n,e]])=>`<button class="chip" type="button" style="--cc:${typeColor(t)}" data-addt="${t}">${e} ${n}</button>`).join('');
+    /* the quick-add chips gave way to the deal stories: the best deals of each department, in circles */
+    if(rest){const st=storiesHtml();if(st)html+=`<div class="qhead"><span class="sub">🔥 מבצעים לפי קטגוריה</span><button class="link" type="button" id="qDeals">כל המבצעים ›</button></div><div style="width:100%">${st}</div>`}
     if(rest)html+=`<div class="qhead"><span class="sub">🗂️ מחלקות</span><button class="link" type="button" data-depts="">הכל ›</button></div><div class="qrow">${DEPTS.map(D=>`<button class="chip occchip" type="button" data-depts="${D.id}">${D.e} ${D.n}</button>`).join('')}</div>`;
     if(rest)html+=`<div class="qhead"><span class="sub">🧺 קנייה לפי אירוע</span></div><div class="qrow">${allOccasions().map(o=>`<button class="chip occchip" type="button" data-occ="${o.id}">${o.e} ${esc(o.n)}${o.edited&&!o.custom?' ✏️':''}</button>`).join('')}<button class="chip occchip" type="button" id="occNew">➕ קטגוריה חדשה</button></div>`;
     const qd=rest?quickDeals():[];
     if(qd.length)html+=`<div class="qhead"><span class="sub">🔥 במבצע עכשיו${myTypes().size?' ממה שאתה קונה':''}</span></div><div class="qrow">${qd.map(r=>`<button class="chip qchip" type="button" style="--cc:${typeColor(r.v.t)}" data-addv="${r.v.id}" data-q="${r.pr.n||1}">${thumb(r.v,TYPES[r.v.t][1],'thc')}<span class="qtx"><span>${esc(vLabel(r.v))}</span><small>${CHB[r.cid].short} · ${esc(r.pr.label)}</small></span><span class="pill mega">−${r.pct}%</span></button>`).join('')}</div>`;
     R.innerHTML=html;R.classList.toggle('quick',!!html);
+    R.querySelectorAll('[data-story]').forEach(b=>b.onclick=()=>openStories(+b.dataset.story));
+    if($('qDeals'))$('qDeals').onclick=()=>go('deals');
     R.querySelectorAll('[data-occ]').forEach(b=>b.onclick=()=>openOccasion(b.dataset.occ));
     R.querySelectorAll('[data-depts]').forEach(b=>b.onclick=()=>openDepts(b.dataset.depts||null));
     if($('occNew'))$('occNew').onclick=newOccasion;
