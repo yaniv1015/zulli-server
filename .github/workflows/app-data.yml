@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Fetch the data branches
-        run: git fetch --depth 1 origin data bd geo images
+        run: git fetch --depth 1 origin data bd geo images && (git fetch --depth 1 origin history:refs/remotes/origin/history || true)
       - name: Build the app data
         run: bash tools/build_app_data.sh site
       - name: Publish to gh-pages

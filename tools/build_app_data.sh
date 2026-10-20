@@ -15,6 +15,7 @@ take data data/br "$OUT/br"
 take bd data/bd "$OUT/bd" && rm -f "$OUT/bd/log.txt"
 take geo data/geo "$OUT/geo" && rm -f "$OUT/geo/log.txt" "$OUT/geo/report.json"
 git show origin/geo:data/storegeo.json > "$OUT/storegeo.json"
+git rev-parse -q --verify origin/history >/dev/null && take history hist "$OUT/hist" || true
 take images img "$OUT/img" && rm -f "$OUT/img/misses.json" "$OUT/img/hd/misses.json"
 cp app/static/* "$OUT/"
 touch "$OUT/.nojekyll"

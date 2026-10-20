@@ -44,6 +44,18 @@ jobs:
           git add -f data/summary.json data/report.json; test -d data/br && git add -f data/br || true
           git commit -m "prices $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -f origin data-tmp:data
+      # one entry per price change at every chain, for "lowest in 90 days" and "raised before the deal"
+      - name: Update the price history ("history" branch)
+        if: success()
+        run: |
+          test -f data/summary.json || exit 0
+          mkdir -p prev && if git fetch --depth 1 origin history; then git archive FETCH_HEAD hist | tar -x -C prev || true; fi
+          node tools/hist.js data/summary.json prev/hist out/hist
+          git checkout -q --orphan history-tmp
+          git rm -rf --cached . > /dev/null
+          rm -rf hist && cp -r out/hist hist && git add -f hist
+          git commit -q -m "history $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -f origin history-tmp:history
       - name: Tell the owner if something went wrong
         if: always()
         env:
