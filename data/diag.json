@@ -1,0 +1,377 @@
+{
+ "branches": {
+  "bids": [
+   "2992",
+   "3003"
+  ],
+  "bid2": [],
+  "apiRoots": [
+   "self-point.com"
+  ]
+ },
+ "8806095485775": {
+  "status": 200,
+  "total": 1,
+  "name": "טלוויזיה חכמה",
+  "images": [
+   [
+    ".image.url",
+    "https://d226b0iufwcjmj.cloudfront.net/product-images/1540/20162823/12668432/{{size}}.{{extension||'jpg'}}"
+   ],
+   [
+    ".images.0.url",
+    "https://d226b0iufwcjmj.cloudfront.net/product-images/1540/20162823/12668417/{{size}}.{{extension||'jpg'}}"
+   ],
+   [
+    ".images.1.url",
+    "https://d226b0iufwcjmj.cloudfront.net/product-images/1540/20162823/12668418/{{size}}.{{extension||'jpg'}}"
+   ],
+   [
+    ".images.2.url",
+    "https://d226b0iufwcjmj.cloudfront.net/product-images/1540/20162823/12668419/{{size}}.{{extension||'jpg'}}"
+   ]
+  ],
+  "keys": [
+   "retailerFamily",
+   "supplierId",
+   "data",
+   "searchKeywords",
+   "isPrivate",
+   "unitResolution",
+   "productTagsData",
+   "localBarcode",
+   "isSuggested",
+   "id",
+   "department",
+   "barcode",
+   "brand",
+   "isCoupon",
+   "image",
+   "isOnHomePageCarousel",
+   "images",
+   "original",
+   "productProperties",
+   "productId",
+   "unitOfMeasure",
+   "productTagsById",
+   "tagById",
+   "weight",
+   "isForSaleOnline",
+   "retailerId",
+   "branches",
+   "tags",
+   "isWeighable",
+   "localName",
+   "names",
+   "nutritionImageUrl",
+   "numberOfItems",
+   "isGeneralCouponBlocked",
+   "_indexTimestamp",
+   "family",
+   "isSubsidy",
+   "productTags"
+  ]
+ },
+ "7290109409962": {
+  "status": 200,
+  "total": 1,
+  "name": "טלוויזיה חכמה 65 אינץ",
+  "images": [
+   [
+    ".image.url",
+    "https://d226b0iufwcjmj.cloudfront.net/product-images/1540/20167202/12650959/{{size}}.{{extension||'jpg'}}"
+   ],
+   [
+    ".images.0.url",
+    "https://d226b0iufwcjmj.cloudfront.net/product-images/1540/20167202/12651028/{{size}}.{{extension||'jpg'}}"
+   ]
+  ],
+  "keys": [
+   "retailerFamily",
+   "supplierId",
+   "data",
+   "searchKeywords",
+   "isPrivate",
+   "unitResolution",
+   "productTagsData",
+   "localBarcode",
+   "isSuggested",
+   "id",
+   "department",
+   "barcode",
+   "brand",
+   "isCoupon",
+   "image",
+   "isOnHomePageCarousel",
+   "images",
+   "original",
+   "productProperties",
+   "productId",
+   "unitOfMeasure",
+   "productTagsById",
+   "tagById",
+   "weight",
+   "retailerId",
+   "branches",
+   "tags",
+   "isWeighable",
+   "localName",
+   "names",
+   "nutritionImageUrl",
+   "numberOfItems",
+   "isGeneralCouponBlocked",
+   "_indexTimestamp",
+   "family",
+   "isSubsidy",
+   "productTags"
+  ]
+ },
+ "7290110959418": {
+  "status": 200,
+  "total": 1,
+  "name": "קומקום חשמלי שחור 1.",
+  "images": [],
+  "keys": [
+   "isOnHomePageCarousel",
+   "original",
+   "supplierId",
+   "productId",
+   "isPrivate",
+   "unitResolution",
+   "retailerId",
+   "branches",
+   "isWeighable",
+   "localBarcode",
+   "localName",
+   "names",
+   "nutritionImageUrl",
+   "numberOfItems",
+   "isSuggested",
+   "isGeneralCouponBlocked",
+   "id",
+   "_indexTimestamp",
+   "department",
+   "barcode",
+   "isSubsidy",
+   "isCoupon"
+  ]
+ },
+ "7290118471738": {
+  "status": 200,
+  "total": 1,
+  "name": "מיקרוגל דיגיטלי MWS5",
+  "images": [],
+  "keys": [
+   "isOnHomePageCarousel",
+   "original",
+   "supplierId",
+   "productId",
+   "isPrivate",
+   "unitResolution",
+   "retailerId",
+   "branches",
+   "isWeighable",
+   "localBarcode",
+   "localName",
+   "names",
+   "nutritionImageUrl",
+   "numberOfItems",
+   "isSuggested",
+   "isGeneralCouponBlocked",
+   "id",
+   "_indexTimestamp",
+   "department",
+   "barcode",
+   "isSubsidy",
+   "isCoupon"
+  ]
+ },
+ "7290118470410": {
+  "status": 200,
+  "total": 1,
+  "name": "טוסטר אובן",
+  "images": [
+   [
+    ".image.url",
+    "https://d226b0iufwcjmj.cloudfront.net/product-images/1540/16445084/11938555/{{size}}.{{extension||'jpg'}}"
+   ]
+  ],
+  "keys": [
+   "retailerFamily",
+   "supplierId",
+   "searchKeywords",
+   "isPrivate",
+   "unitResolution",
+   "localBarcode",
+   "isSuggested",
+   "id",
+   "department",
+   "barcode",
+   "isCoupon",
+   "image",
+   "isOnHomePageCarousel",
+   "original",
+   "productId",
+   "retailerId",
+   "branches",
+   "isWeighable",
+   "localName",
+   "activeDays",
+   "names",
+   "nutritionImageUrl",
+   "numberOfItems",
+   "isGeneralCouponBlocked",
+   "_indexTimestamp",
+   "family",
+   "isSubsidy"
+  ]
+ },
+ "7290118471301": {
+  "status": 200,
+  "total": 1,
+  "name": "טוסטר אובן 35 ליטר T",
+  "images": [],
+  "keys": [
+   "isOnHomePageCarousel",
+   "original",
+   "supplierId",
+   "productId",
+   "isPrivate",
+   "unitResolution",
+   "retailerId",
+   "branches",
+   "isWeighable",
+   "localBarcode",
+   "localName",
+   "names",
+   "nutritionImageUrl",
+   "numberOfItems",
+   "isSuggested",
+   "isGeneralCouponBlocked",
+   "id",
+   "_indexTimestamp",
+   "department",
+   "barcode",
+   "isSubsidy",
+   "isCoupon"
+  ]
+ },
+ "7290118472971": {
+  "status": 200,
+  "total": 1,
+  "name": "מיחם מייסטר 12 ליטר",
+  "images": [],
+  "keys": [
+   "isOnHomePageCarousel",
+   "original",
+   "supplierId",
+   "productId",
+   "isPrivate",
+   "unitResolution",
+   "retailerId",
+   "branches",
+   "isWeighable",
+   "localBarcode",
+   "localName",
+   "names",
+   "nutritionImageUrl",
+   "numberOfItems",
+   "isSuggested",
+   "isGeneralCouponBlocked",
+   "id",
+   "_indexTimestamp",
+   "department",
+   "barcode",
+   "isSubsidy",
+   "isCoupon"
+  ]
+ },
+ "7290118473602": {
+  "status": 200,
+  "total": 1,
+  "name": "מעבד מזון + בלנדר 8",
+  "images": [
+   [
+    ".image.url",
+    "https://d226b0iufwcjmj.cloudfront.net/product-images/1540/17880579/11578371/{{size}}.{{extension||'jpg'}}"
+   ]
+  ],
+  "keys": [
+   "retailerFamily",
+   "supplierId",
+   "searchKeywords",
+   "isPrivate",
+   "unitResolution",
+   "localBarcode",
+   "isSuggested",
+   "id",
+   "department",
+   "barcode",
+   "isCoupon",
+   "image",
+   "isOnHomePageCarousel",
+   "original",
+   "productId",
+   "retailerId",
+   "branches",
+   "isWeighable",
+   "localName",
+   "activeDays",
+   "names",
+   "nutritionImageUrl",
+   "numberOfItems",
+   "isGeneralCouponBlocked",
+   "_indexTimestamp",
+   "family",
+   "isSubsidy"
+  ]
+ },
+ "7290118470113": {
+  "status": 200,
+  "total": 1,
+  "name": "מאוורר נטען vr1400",
+  "images": [],
+  "keys": [
+   "isOnHomePageCarousel",
+   "original",
+   "supplierId",
+   "productId",
+   "isPrivate",
+   "unitResolution",
+   "retailerId",
+   "branches",
+   "isWeighable",
+   "localBarcode",
+   "localName",
+   "names",
+   "nutritionImageUrl",
+   "numberOfItems",
+   "isSuggested",
+   "isGeneralCouponBlocked",
+   "id",
+   "_indexTimestamp",
+   "department",
+   "barcode",
+   "isSubsidy",
+   "isCoupon"
+  ]
+ },
+ "7290120126404": {
+  "status": 200,
+  "total": 0,
+  "images": [],
+  "keys": []
+ },
+ "742779140494": {
+  "status": 200,
+  "total": 0,
+  "images": [],
+  "keys": []
+ },
+ "6985462458139": {
+  "status": 200,
+  "total": 0,
+  "images": [],
+  "keys": []
+ }
+}
