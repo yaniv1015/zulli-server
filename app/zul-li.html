@@ -3690,7 +3690,7 @@ const HL={top:['🔥','#FFB800','#FF4B2B'],produce:['🥑','#C8F56A','#22B26B'],
   drink:['🥤','#A9F0FF','#2E6BFF'],baby:['🍼','#FFE1F0','#FF7DB8'],care:['🧴','#E6DDFF','#8B6CFF'],home:['🧼','#C9FFF0','#14B8A0'],elec:['⚡','#FFF59E','#FF8A00'],other:['🛒','#E8E8EE','#8A8A99']};
 function storiesHtml(){const G=storyGroups();if(!G.length)return'';const seen=state.storySeen||{};
   return `<div class="stories" role="list" aria-label="מבצעים לפי קטגוריה">${G.map((g,i)=>`<button type="button" class="story${seen[g.id]===storyKey(g)?' seen':''}" data-story="${i}" role="listitem" aria-label="${esc(g.n)}: ${g.rows.length} מבצעים"><span class="ring"><span class="inner hl" style="--g1:${(HL[g.id]||HL.other)[1]};--g2:${(HL[g.id]||HL.other)[2]}"><span class="hle" aria-hidden="true">${(HL[g.id]||HL.other)[0]}</span></span><span class="hlp" dir="ltr">−${Math.max(...g.rows.map(r=>r.pct))}%</span></span><small>${esc(g.n)}</small></button>`).join('')}</div>`}
-function openStories(start){const G=storyGroups();if(!G[start])return;let gi=start,si=0,timer=0,t0=0,paused=false,left=0;const DUR=5000;
+function openStories(start){const G=storyGroups();if(!G[start])return;let gi=start,si=0,timer=0,t0=0,paused=false,left=0;let DUR=5000;
   const root=document.createElement('div');root.className='sview';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.appendChild(root);
   /* the page behind must not scroll sideways or under the story (iOS shifts fixed layers when the page is wider than the screen) */
   const ov=[document.documentElement.style.overflow,document.body.style.overflow];document.documentElement.style.overflow=document.body.style.overflow='hidden';window.scrollTo(0,window.scrollY);
@@ -3722,6 +3722,8 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
     root.querySelector('#stAdd').onclick=()=>{addItems([{t:r.v.t,v:r.v.id,q:r.pr.kind==='multi'?r.pr.n:1}]);save();toast(`${vLabel(r.v)} נוסף לרשימה`);go(1)};
     root.querySelector('#stCheck').onclick=()=>{close();openPriceCheck(r.v)};
     let sy=null;root.ontouchstart=e=>{sy=e.touches[0].clientY};root.ontouchend=e=>{if(sy!=null&&e.changedTouches[0].clientY-sy>90)close();sy=null};
+    /* time on screen: 5 s, the usual for a photo story, plus time to read: a long name, the deal's own wording, the deal check; at most 10 s */
+    {const words=(vLabel(r.v)+' '+(r.pr.kind==='multi'?r.pr.label:'')).split(/\s+/).length+(dealCheck(r)?4:0);DUR=Math.round(Math.min(10000,Math.max(5000,3000+words*180))/500)*500}
     paused=false;run(DUR);root.querySelector('.x').focus()};
   draw()}
 function renderDealsReal(){
