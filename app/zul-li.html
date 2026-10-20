@@ -178,6 +178,11 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:.88rem;font-weight:
 .pills{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
 .pill{font-size:.76rem;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--bg);color:var(--muted)}
 .pill.good{background:var(--good-soft);color:var(--good)}
+.savefun{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,#F4FFC2,#E2FF6B);color:#0B0B0F;border-radius:14px;padding:10px 14px;font-size:1rem}
+.savefun>span:first-child{font-size:1.6rem}.savefun small{color:#3A3A44}
+.pill.warnp{background:#FFF1E0;color:#A64B00}
+.sview .svcheck{font-size:.92rem;font-weight:700;border-radius:12px;padding:6px 12px;background:#1E1E26;color:#E6E6EE;max-width:92%}
+.sview .svcheck.good{background:rgba(215,255,31,.14);color:#D7FF1F}.sview .svcheck.warn{background:rgba(255,75,43,.16);color:#FF8A73}
 .pill.warn{background:var(--warn-soft);color:var(--warn)}
 .pill.y{background:var(--tag);color:var(--tag-ink)}
 .pill.k{background:var(--ink);color:var(--bg)}
@@ -1735,7 +1740,7 @@ function renderBasket(){
         <button type="button" data-inc="${it.k}" aria-label="${kg?'עוד חצי קילו':'עוד אחד'}">+</button>
         <output class="num" aria-live="polite">${kg?kgText(it.q,true):it.q}</output>
         <button type="button" data-dec="${it.k}" aria-label="${it.q>(kg?.5:1)?(kg?'חצי קילו פחות':'אחד פחות'):'הסר מהרשימה'}">${it.q>(kg?.5:1)?'−':'🗑'}</button>
-      </div>${swapOf.has(it.k)?(x=>`<button class="swaphint" type="button" data-swapk="${it.k}">💡 ${esc(vLabel(x.to))}, אותו גודל, זול ב-<b>${fmt(x.save)}</b> ב${w.c.short} · <u>החלף</u></button>`)(swapOf.get(it.k)):''}</li>`};
+      </div>${swapOf.has(it.k)?(x=>`<button class="swaphint" type="button" data-swapk="${it.k}">💡 ${esc(vLabel(x.to))}, אותו גודל, זול ב-<b>${fmt(x.save)}</b> ב${w.c.short} · <u>החלף</u></button>`)(swapOf.get(it.k)):(h=>h?`<button class="swaphint" type="button" data-packk="${it.k}" data-packto="${h.to.id}">📦 ב${esc(h.to.s)} זה זול ב-<b>${h.pct}%</b> ל${h.u} (${h.per} ל${h.u}) · <u>החלף</u></button>`:'')(v&&packHint(v))}</li>`};
   html+=budgetHtml(w&&state.items.length?w.total:0);
   html+=`<section class="card" aria-labelledby="bh">
     <div class="row2 spread"><h2 id="bh" tabindex="-1">הרשימה שלי${state.items.length?` <span class="cnt">${state.items.length}</span>`:''}</h2>
@@ -1782,6 +1787,7 @@ function renderBasket(){
   if($('quickList'))$('quickList').onclick=()=>loadList(state.lists[0]);
   if($('caGo'))$('caGo').onclick=openChainDeals;if($('caX'))$('caX').onclick=()=>{markDealsSeen(cnew);update()};
   if($('dropGo'))$('dropGo').onclick=()=>openDrops();if($('dropX'))$('dropX').onclick=()=>{for(const d of drops)state.watch[d.v.id].seen=d.to;update()};
+  S.querySelectorAll('[data-packk]').forEach(b=>b.onclick=()=>{const it=state.items.find(i=>i.k===b.dataset.packk);const to=VB[b.dataset.packto];if(!it||!to)return;it.v=to.id;update();toast(`הוחלף ל${vLabel(to)}`)});
   S.querySelectorAll('[data-swapk]').forEach(b=>b.onclick=()=>{const x=swapOf.get(b.dataset.swapk);x.it.v=x.to.id;update();toast(`הוחלף ל${vLabel(x.to)} · חסכת ${fmt(x.save)}`)});
   if($('doneX'))$('doneX').onclick=()=>{state.done=null;update()};
   if($('doneOrder'))$('doneOrder').onclick=()=>{state.done=null;state.tab='mine';state.mine='orders';update();window.scrollTo(0,0)};
@@ -2998,6 +3004,23 @@ function receiptReport(r){
     ${unmatched.length?`<p class="sub">לא זוהו בקטלוג (${unmatched.length}): ${unmatched.map(i=>esc(i.name)).join(', ')}</p>`:''}
     <button class="btn" type="button" id="rcAdd">הוסף את המוצרים לסל להשוואה מלאה</button>`;
 }
+/* on-device OCR for the phone app: tesseract.js from jsDelivr, Hebrew model; loaded only the first time a receipt is read */
+let _tess=null;
+function loadTesseract(){return _tess||(_tess=new Promise((ok,bad)=>{if(window.Tesseract)return ok(window.Tesseract);const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';sc.onload=()=>ok(window.Tesseract);sc.onerror=()=>{_tess=null;bad(new Error('load'))};document.head.appendChild(sc)}))}
+async function ocrHebrew(file,onp){const T=await loadTesseract();const w=await T.createWorker('heb',1,{logger:m=>{if(m.status==='recognizing text'&&onp)onp(m.progress)}});
+  try{const {data}=await w.recognize(file);return data.text||''}finally{w.terminate()}}
+/* receipt text → {total, items:[{name, qty, paid, match}]}: a line that ends (or starts) with a price is a product line,
+   unless it is a total, tax, payment or deposit line; a barcode on the line wins over the name */
+function parseReceiptText(text){const items=[];let total=null;
+  const SKIP=/סה["״]?כ|סך הכל|מע["״]?מ|תשלום|אשראי|מזומן|עודף|פיקדון|פקדון|שקית|נקודות|כרטיס|הנחה כללית|לתשלום|חיוב|קופה|קופאי|תאריך|שעה|טלפון|ח\.פ|עוסק|מספר/;
+  for(const raw of String(text).split(/\n+/)){const line=raw.replace(/[|_~]+/g,' ').replace(/\s+/g,' ').trim();if(line.length<4)continue;
+    const pm=line.match(/(-?\d{1,4}[.,]\d{2})\s*-?\s*$/)||line.match(/^\s*(-?\d{1,4}[.,]\d{2})\s/);if(!pm)continue;const price=parseFloat(pm[1].replace(',','.'));
+    if(/סה["״]?כ|לתשלום|סך הכל/.test(line)){if(price>0&&(!total||price>total))total=price;continue}
+    if(SKIP.test(line)||!(price>0))continue;
+    let name=line.replace(pm[0],' ');const qm=name.match(/(\d{1,2})\s*[xX×*]\s*\d{1,4}[.,]\d{2}/)||name.match(/\d{1,4}[.,]\d{2}\s*[xX×*]\s*(\d{1,2})/);const qty=qm?+qm[1]:1;if(qm)name=name.replace(qm[0],' ');
+    const bc=(name.match(/\b(\d{7,13})\b/)||[])[1];name=name.replace(/\b\d{5,13}\b/g,' ').replace(/[\d.,]+\s*(?=$)/,'').replace(/\s+/g,' ').trim();
+    if(!/[\u0590-\u05FF]{2}/.test(name))continue;const match=bc&&VB['r'+bc]?'r'+bc:null;items.push({name,qty,paid:price,match})}
+  return {store:null,date:null,total,items}}
 function openReceipt(){
   let ctl=null,last=null;
   openSheet('בדיקת קבלה',`<p class="sub">צלם קבלה מהסופר. מוזיל יקרא כל שורה, ויראה לך כמה הקנייה הזו הייתה עולה בכל רשת, ואיפה היית חוסך.</p>
@@ -3011,7 +3034,15 @@ function openReceipt(){
     $('rcFile').onchange=$('rcFileG').onchange=async e=>{
       const f=e.target.files&&e.target.files[0];e.target.value='';if(!f){$('rcStatus').innerHTML=missingHelp;return}
       $('rcStatus').textContent=`התמונה התקבלה ✓ (${kb(f.size)})`;
-      if(!SAMPLE||!CAN_IMG){show(DEMO_RECEIPT);$('rcStatus').innerHTML='<div class="banner">דוגמה: בתצוגה הזו הקבלה לא נקראת באמת.</div>';return}
+      if(!SAMPLE||!CAN_IMG){
+        /* no Claude here (the phone app): read the receipt on the phone itself (Tesseract, Hebrew), then match the lines to the catalog */
+        if(!navigator.onLine){show(DEMO_RECEIPT);$('rcStatus').innerHTML='<div class="banner">אין חיבור לאינטרנט: מוצגת בדיקה לדוגמה.</div>';return}
+        $('rcRes').innerHTML='';$('rcStatus').innerHTML='קורא את הקבלה בטלפון… <span id="rcPct">0%</span> (בפעם הראשונה נטען גם מילון עברית, כ-2MB)';
+        try{const text=await ocrHebrew(f,p=>{const el=$('rcPct');if(el)el.textContent=Math.round(p*100)+'%'});const r=parseReceiptText(text);
+          if(!r.items.length){$('rcStatus').innerHTML='<div class="unk">לא הצלחנו לקרוא שורות מוצרים מהתמונה. צלם את הקבלה ישר, באור טוב, כך שהיא ממלאת את המסך.</div>';return}
+          show(r);$('rcStatus').innerHTML=`<div class="banner">נקרא בטלפון: ${nOf(r.items.length,'שורה אחת','שורות')}. קריאה אוטומטית יכולה לטעות בשם או במחיר.</div>`}
+        catch(err){$('rcStatus').innerHTML='<div class="unk">הקריאה בטלפון נכשלה. בדוק חיבור לאינטרנט ונסה שוב.</div>'}
+        return}
       let img;try{img=await prepImage(f)}catch(err){$('rcStatus').innerHTML='<div class="unk">לא הצלחנו לפתוח את התמונה. נסה לצלם שוב, או לבחור תמונה אחרת מהגלריה.</div>';return}
       ctl?.abort();ctl=new AbortController();$('rcRes').innerHTML='';
       $('rcStatus').innerHTML='התמונה התקבלה ✓ · קורא את הקבלה… זה לוקח כחצי דקה. אם מופיעה בקשה לאשר שימוש ב-Claude, אשר אותה. <button class="link" type="button" id="rcStop">עצור</button>';$('rcStop').onclick=()=>ctl.abort();
@@ -3460,6 +3491,44 @@ function openChainDeals(){const rows=chainAlertDeals(true).slice(0,200);
 /* which chains mark club deals in the files they publish (the rest publish no club prices, so membership changes nothing there) */
 let _clubData=null,_clubDataKey='';
 function clubDataChains(){const k=(REAL&&REAL.updated)+'|'+[...LOADED].join(',');if(_clubDataKey===k)return _clubData;const s=new Set();for(const v of V)if(v.rdc)for(const c in v.rdc)s.add(c);_clubDataKey=k;return _clubData=s}
+/* ================= is this deal real? =================
+   Now: the deal price against the regular price of the same barcode at every other chain, and the "before" price
+   against what others charge (an inflated "before" makes the discount look bigger than it is).
+   With history (hist/NN.json, one entry per regular-price change, from the price job): "lowest in N days" and
+   "the regular price went up just before the deal". History is used once it covers at least 3 weeks. */
+function dealCheck(r){const v=r.v,others=Object.entries(v.rp||{}).filter(([c,p])=>c!==r.cid&&p>0&&CHB[c]);if(!others.length)return null;
+  const [mc,mp]=others.reduce((a,b)=>b[1]<a[1]?b:a);const ps=others.map(o=>o[1]).sort((a,b)=>a-b),med=ps[Math.floor(ps.length/2)];
+  if(mp<=r.unit+0.005)return {cls:'warn',t:`ב${CHB[mc].short} זה ${fmt(mp)} גם בלי מבצע`};
+  if(others.length>=2&&r.p>med*1.25)return {cls:'warn',t:`המחיר "לפני" גבוה ב-${Math.round((r.p/med-1)*100)}% מהרגיל ברשתות אחרות`};
+  return {cls:'good',t:`הכי זול מ-${nOf(others.length+1,'רשת אחת','רשתות')} שמוכרות אותו`}}
+let HIST_IX=null;const histIx=()=>HIST_IX||(HIST_IX=fetch('hist/index.json').then(r=>r.ok?r.json():null).catch(()=>null));
+const _histC=new Map();
+function histOf(bc){if(!bc)return Promise.resolve(null);const n=Number(String(bc).slice(-4))%64;
+  if(!_histC.has(n))_histC.set(n,fetch(`hist/${String(n).padStart(2,'0')}.json`).then(r=>r.ok?r.json():{}).catch(()=>({})));
+  return _histC.get(n).then(c=>c[bc]||null)}
+async function histCheck(r){const ix=await histIx();if(!ix)return null;const today=ix.last,span=today-ix.first;if(span<21)return {cls:'info',t:`🕒 מעקב מחירים מ-${new Date(ix.first*864e5).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})}`};
+  const h=await histOf(r.v.bc);if(!h)return null;const L=h[r.cid]||[];
+  /* the regular price went up in the 45 days before the deal: the "discount" is partly the raise */
+  for(let i=L.length-1;i>0;i--){if(today-L[i][0]>45)break;if(L[i-1][1]<r.p*0.92&&Math.abs(L[i][1]-r.p)<0.01)return {cls:'warn',t:`⚠️ המחיר הרגיל עלה מ-${fmt(L[i-1][1])} לפני ${nOf(today-L[i][0],'יום','ימים')}`}}
+  const win=Math.min(90,span);let min=Infinity;for(const [c,E] of Object.entries(h)){for(let i=0;i<E.length;i++){const end=i+1<E.length?E[i+1][0]:today+1;if(end>today-win)min=Math.min(min,E[i][1])}}
+  if(r.unit<min-0.005)return {cls:'good',t:`📉 המחיר הכי נמוך ב-${win} הימים האחרונים`};return null}
+/* ================= the better-value pack =================
+   Same product line (same kind, the name without its size), another size: if the price per kilo / litre / unit is
+   clearly lower in a bigger pack (at most 4 times the size), the list says so and offers the switch. */
+function qtyOf(v){const m=String(v&&v.s||'').match(/^([\d.,]+)\s*(גרם|ק״ג|מ״ל|ליטר|יח׳)$/);if(!m)return null;const n=parseFloat(m[1].replace(',','.'));if(!(n>0))return null;
+  return {g:{n,k:'g',u:'ק״ג',per:1000},'ק״ג':{n:n*1000,k:'g',u:'ק״ג',per:1000},'מ״ל':{n,k:'ml',u:'ליטר',per:1000},'ליטר':{n:n*1000,k:'ml',u:'ליטר',per:1000},'יח׳':{n,k:'u',u:'יח׳',per:1}}[m[2]==='גרם'?'g':m[2]]}
+/* the name without its size: every other word (and percentages like "3% שומן") must match */
+const lineKey=v=>norm(String(v.n).replace(/[\d.,]+\s*(?:גרם|גר'|גר|ג'|ג׳|ג|ק״ג|קג|ק"ג|קילו|מ״ל|מ"ל|מל|ליטר|ל'|ל׳|יח׳|יח'|יחידות|יח)(?![\p{L}])/gu,' ')).replace(/[^\p{L}\p{N}%]+/gu,' ').trim();
+let _packIx=null,_packKey='',_packFam=null,_packN=0;
+function packHint(v){if(!v||!v.real||v.weighted)return null;const q=qtyOf(v);if(!q)return null;
+  const key=(REAL&&REAL.updated)+'|'+state.follow.join(',');if(_packKey!==key){_packIx=new Map();_packKey=key}
+  /* one pass over the catalog builds the product lines (again only when the catalog grows) */
+  if(!_packFam||_packN!==V.length){_packFam=new Map();_packN=V.length;_packIx=new Map();for(const x of V){if(!x.real||x.weighted||!qtyOf(x))continue;const k=x.t+'|'+lineKey(x);let L=_packFam.get(k);if(!L)_packFam.set(k,L=[]);L.push(x)}}
+  const lk=v.t+'|'+lineKey(v);let fam=_packIx.get(lk);
+  if(!fam){fam=(_packFam.get(lk)||[]).map(x=>{const qx=qtyOf(x),c=cheapestOf(x.id);return qx&&c?{x,q:qx,c,pu:c.p/qx.n}:null}).filter(Boolean);_packIx.set(lk,fam)}
+  const me=fam.find(f=>f.x.id===v.id);if(!me)return null;
+  let best=null;for(const f of fam){if(f.x.id===v.id||f.q.k!==q.k||f.q.n<=q.n||f.q.n>q.n*4)continue;if(f.pu<me.pu*0.9&&(!best||f.pu<best.pu))best=f}
+  if(!best)return null;return {to:best.x,pct:Math.round((1-best.pu/me.pu)*100),per:fmt(best.pu*q.per),u:q.u}}
 function promoSection(){
   const fol=followed().map(c=>c.id),rows=[];const F=state.promoF||'all';
   for(const v of V){if((!v.rd&&!v.rdc)||v.weighted)continue;for(const cid of fol){const p=v.rp[cid];if(p==null)continue;
@@ -3491,7 +3560,7 @@ function promoSection(){
       return `<li class="drow">${thumb(r.v,TYPES[r.v.t][1],'thv')}<div class="grow"><b>${esc(vLabel(r.v))}</b>
         <span class="dline"><b>${c.short}</b> · ${esc(r.pr.label)}</span>
         <span class="dline">ליחידה: <b>${fmt(r.unit)}</b> במקום <s>${fmt(r.p)}</s>${r.pr.end?` · עד ${esc(String(r.pr.end).split('-').reverse().slice(0,2).join('.'))}`:''}</span>
-        <span class="row2" style="gap:4px"><span class="pill mega">−${r.pct}%</span>${r.pr.club?`<span class="pill ${member?'good':'y'}">${member?'✓ ':''}${esc(c.club)}</span>`:''}${r.pr.kind==='multi'?`<span class="pill">בקניית ${r.pr.n}</span>`:''}<button class="btn sm dadd" type="button" data-dv="${r.v.id}" data-q="${r.pr.n||1}" aria-label="הוסף ${esc(vLabel(r.v))}">+ הוסף</button></span></div></li>`}).join('')||`<li class="empty">${F==='club'&&mineC.length?'אין כרגע מבצעי מועדון של 40% ומעלה במועדונים שסימנת':'אין כרגע מבצעים בסינון הזה'}</li>`}</ul>
+        <span class="row2" style="gap:4px"><span class="pill mega">−${r.pct}%</span>${(()=>{const k=dealCheck(r);return k?`<span class="pill ${k.cls==='good'?'good':'warnp'}">${k.cls==='good'?'✓':'⚠️'} ${esc(k.t)}</span>`:''})()}${r.pr.club?`<span class="pill ${member?'good':'y'}">${member?'✓ ':''}${esc(c.club)}</span>`:''}${r.pr.kind==='multi'?`<span class="pill">בקניית ${r.pr.n}</span>`:''}<button class="btn sm dadd" type="button" data-dv="${r.v.id}" data-q="${r.pr.n||1}" aria-label="הוסף ${esc(vLabel(r.v))}">+ הוסף</button></span></div></li>`}).join('')||`<li class="empty">${F==='club'&&mineC.length?'אין כרגע מבצעי מועדון של 40% ומעלה במועדונים שסימנת':'אין כרגע מבצעים בסינון הזה'}</li>`}</ul>
     ${rows.length>pick.length?'<button class="btn ghost" type="button" id="pmore">הצג עוד</button>':''}</section>`;
 }
 /* ================= deal stories: the best deals of each department, in circles like stories ================= */
@@ -3589,9 +3658,13 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
       <button class="tapzone prev" type="button" aria-label="הקודם"></button><button class="tapzone next" type="button" aria-label="הבא"></button></div>
       <div class="sinfo"><div class="svchain" style="--sc:var(${c.c})"><span class="av" style="--sc:var(${c.c})">${c.ab}</span><span>המבצע ב<b>${esc(c.name)}</b>${r.pr.club?` <small>· למועדון ${esc(c.club||"")}</small>`:''}</span></div><div class="nm">${esc(vLabel(r.v))}${r.v.s&&!vLabel(r.v).includes(r.v.s)?` <small style="color:#C9C9D1">${esc(r.v.s)}</small>`:''}</div>
         <div class="pr"><b>${fmt(r.unit)}</b>${r.pr.kind==='multi'?' ליח׳':''} &nbsp;<s>${fmt(r.p)}</s></div>${r.pr.kind==='multi'?`<small style="color:#C9C9D1">${esc(r.pr.label)}</small>`:''}
+        ${(()=>{const k=dealCheck(r);return `<div class="svcheck ${k?k.cls:''}" id="svck"${k?'':' hidden'}>${k?(k.cls==='good'?'✓ ':'⚠️ ')+esc(k.t):''}</div>`})()}
         <small style="color:#A9A9B3">${left!=null&&left>=0?(left===0?'נגמר היום':`עוד ${nOf(left,'יום אחד','ימים')}`):''}${r.pr.club?' · למועדון':''}</small></div>
       <div class="sact"><button class="btn y" type="button" id="stAdd">➕ הוסף לרשימה</button><button class="btn ghost" type="button" id="stCheck" style="color:#fff;border-color:#3A3A44">🏷️ איפה עוד?</button></div>`;
     const stg=root.querySelector('.svstage .th');if(stg)sharpen(stg,r.v);
+    {const me=r;histCheck(r).then(k=>{const el=root.querySelector('#svck');if(!k||!el||G[gi].rows[si]!==me)return;const cur=dealCheck(r);
+      /* a warning from the other chains stays; history adds its own warning or a "lowest in N days" */
+      if(cur&&cur.cls==='warn'&&k.cls!=='warn')return;if(k.cls==='info'&&cur)return;el.hidden=false;el.className='svcheck '+k.cls;el.textContent=k.t})}
     root.querySelector('.x').onclick=close;
     root.querySelector('.tapzone.next').onclick=()=>go(1);root.querySelector('.tapzone.prev').onclick=()=>go(-1);
     const body=root.querySelector('.svhero');body.onpointerdown=()=>{pause()};body.onpointerup=()=>{resume()};body.onpointerleave=()=>{resume()};
@@ -3628,6 +3701,7 @@ function renderLists(){
     <p class="sub">כדי שבני המשפחה יוכלו להיכנס, שתף איתם את מוזיל (תפריט השיתוף של Claude) בהרשאת עריכה.</p></section>`;
   const alertsHtml=(()=>{const W=Object.entries(state.watch||{}).filter(([id])=>VB[id]);const AM=state.alertBy||'product';const A=state.chainAlerts||{};
     return `<section class="card"><h2>🔔 התראות</h2>
+    ${LN()?`<label class="row2" style="gap:10px;align-items:center"><input type="checkbox" id="pushOn" ${state.pushOn?'checked':''}> <span><b>התראות לטלפון</b><br><small class="sub">ירידות מחיר, מבצעים חדשים, ומבצעים על מוצרים ברשימה שנגמרים מחר</small></span></label>`:''}
     <div class="seg" role="group" aria-label="סוג התראה">${[['product','📦 לפי מוצר'],['chain','🏪 לפי רשת']].map(([k,l])=>`<button type="button" data-alertby="${k}" aria-pressed="${AM===k}">${l}</button>`).join('')}</div>
     ${AM==='chain'?`<p class="sub">בחר רשתות, ונודיע כשיש בהן מבצע חדש בהנחה שבחרת.</p>
       <div class="calerts">${followed().map(c=>{const a=A[c.id]||{};return `<div class="calert${a.on?' on':''}" style="--sc:var(${c.c})"><label class="row2" style="flex-wrap:nowrap"><input type="checkbox" data-ca="${c.id}" ${a.on?'checked':''} style="width:22px;height:22px"><span class="av">${c.ab}</span><b class="grow">${c.short}</b>
@@ -3659,6 +3733,7 @@ function renderLists(){
   $('screen').querySelectorAll('[data-sch]').forEach(b=>b.onclick=()=>openSched(b.dataset.sch));
   $('screen').querySelectorAll('[data-alertby]').forEach(b=>b.onclick=()=>{state.alertBy=b.dataset.alertby;update()});
   if($('wAdd'))$('wAdd').onclick=()=>openPriceCheck();if($('caShow'))$('caShow').onclick=openChainDeals;
+  if($('pushOn'))$('pushOn').onchange=e=>pushToggle(e.target.checked);
   const CA=()=>state.chainAlerts=state.chainAlerts||{};
   $('screen').querySelectorAll('[data-ca]').forEach(b=>b.onchange=()=>{const id=b.dataset.ca;const a=CA()[id]=CA()[id]||{pct:40};a.on=b.checked;
     if(a.on){const now=chainAlertDeals(true).filter(r=>r.cid===id);toast(`🔔 נתריע על מבצעים חדשים ב${CHB[id].short}${now.length?` · יש עכשיו ${now.length}`:''}`)}update()});
@@ -3700,11 +3775,17 @@ function savingsChartHtml(){
     <p class="chsum"><b class="num">${val(tot)||'0'}</b> ${M==='orders'?(tot===1?'הזמנה':'הזמנות'):'חיסכון'} ${span}${M==='saved'?` · ${nOf(totN,'הזמנה אחת','הזמנות')}`:''}</p>
     <div class="chbars" style="--n:${bins.length}" role="img" aria-label="${esc(`${M==='orders'?'הזמנות':'חיסכון'} ${pName}, ${span}: `+bins.map(B=>`${B.full} ${val(B.v)||'0'}`).join(', '))}">${bins.map((B,i)=>`<div class="chbar${i===bins.length-1?' cur':''}" title="${esc(B.full)}: ${nOf(B.n,'הזמנה אחת','הזמנות')} · הוצאה ${fmt(B.spend)} · חיסכון ${fmt(B.saved)}"><span class="num">${val(B.v)}</span><i style="height:${B.v?Math.max(3,Math.round(B.v/mx*100)):0}%"></i><small>${esc(B.lab)}</small></div>`).join('')}</div>
     <p class="sub">${cur.full}: ${nOf(cur.n,'הזמנה אחת','הזמנות')} · הוצאה ${fmt(cur.spend)} · חיסכון ${fmt(cur.saved)}. ${real.length?'':'<b>אלה נתוני דוגמה</b>, עד שתסמן קנייה ראשונה. '}החיסכון בכל הזמנה הוא ההפרש מהרשת היקרה לאותו סל, כולל מבצעים.</p></section>`}
+/* what the savings are worth, in things people buy, and the yearly pace from this month */
+function saveFun(all,month){if(!(all>=15))return '';const now=new Date(),day=now.getDate(),year=month>0&&day>=5?month/day*365:0;
+  const T=[[1500,'סופ״ש בצימר','סופ״שים בצימר'],[350,'ארוחה זוגית במסעדה','ארוחות זוגיות במסעדה'],[45,'כרטיס לקולנוע','כרטיסים לקולנוע'],[22,'מנת פלאפל','מנות פלאפל'],[14,'כוס קפה','כוסות קפה']];
+  const [v,one,many]=T.find(t=>all>=t[0]*1.5)||T[T.length-1];const n=Math.floor(all/v);
+  return `<div class="savefun"><span aria-hidden="true">🎉</span><span>זה כמו <b>${n===1?one:n+' '+many}</b>${year>=100?`<br><small>בקצב של החודש: <b>₪${Math.round(year).toLocaleString('he-IL')}</b> בשנה</small>`:''}</span></div>`}
 function renderOrders(){
   const now=new Date(),mStart=new Date(now.getFullYear(),now.getMonth(),1).getTime();
   const month=state.orders.filter(o=>o.ts>=mStart).reduce((a,o)=>a+(o.saved||0),0),all=state.orders.reduce((a,o)=>a+(o.saved||0),0);
   $('screen').innerHTML=`<section class="card"><h2>💰 החיסכון שלך עם מוזיל</h2>
     <div class="stats"><div class="stat"><div class="v num">${fmt(month)}</div><div class="l">חסכת החודש</div></div><div class="stat b"><div class="v num">${fmt(all)}</div><div class="l">חסכת מאז שהצטרפת</div></div><div class="stat k"><div class="v num">${state.orders.length}</div><div class="l">הזמנות</div></div></div>
+    ${saveFun(all,month)}
     <p class="sub">החיסכון מחושב מול הרשת היקרה ביותר לאותו סל, כולל מבצעים.</p>
     <button class="btn sm ghost" type="button" id="shareSave" style="align-self:flex-start">שתף עם חברים</button></section>
   ${savingsChartHtml()}
@@ -3885,7 +3966,32 @@ function chainLogos(){if(chainLogos.done)return;chainLogos.done=true;const css=[
     if(real&&f){const n=REAL.count,ch=(REAL.chains||[]).length||(typeof CH!=="undefined"?CH.length:0);shown=Math.min(n,Math.round(shown+Math.max(n/12,1)));f.textContent=`משווה ${shown.toLocaleString('he-IL')} מוצרים · ${ch} רשתות`}
     const el2=Date.now()-t0;if((real&&shown>=REAL.count&&el2>1600)||el2>5000)return setTimeout(bye,real?350:0);setTimeout(tick,60)};
   tick()})();
-(async function boot(){setTimeout(()=>{try{chainLogos()}catch(e){}},1500);
+/* ================= phone notifications (the Android app) =================
+   Local notifications through Capacitor: when the app opens it tells about a price drop on a watched product, new deals at
+   chains with alerts on, and deals on what this shopper buys; and it schedules "ends tomorrow" for deals on products in the
+   list, which arrive even when the app is closed. (Alerts while the app stays closed for days need a push server: Firebase.) */
+const LN=()=>window.Capacitor?.Plugins?.LocalNotifications||null;
+const nid32=s=>{let h=0;for(const ch of String(s))h=(h*31+ch.charCodeAt(0))|0;return Math.abs(h)%2000000000+1};
+async function pushSync(){const L=LN();if(!L||!state.pushOn||!REAL)return;
+  try{const pr=await L.checkPermissions();if(pr.display!=='granted')return}catch(e){return}
+  const sent=state.pushSent||(state.pushSent={});const now=Date.now();for(const k in sent)if(now-sent[k]>30*864e5)delete sent[k];
+  const msgs=[];
+  for(const d of priceDrops().slice(0,2)){const k='d|'+d.v.id+'|'+Math.round(d.to*100);if(sent[k])continue;sent[k]=now;msgs.push({title:'📉 ירד המחיר',body:`${vLabel(d.v)}: ${fmt(d.to)} ב${d.c.short} (היה ${fmt(d.from)})`,k})}
+  {const rows=chainAlertDeals(true).filter(r=>!sent['c|'+r.key]);if(rows.length){rows.forEach(r=>sent['c|'+r.key]=now);const by={};rows.forEach(r=>(by[r.cid]||=[]).push(r));
+    for(const [cid,R] of Object.entries(by).slice(0,2))msgs.push({title:`🔥 ${nOf(R.length,'מבצע חדש','מבצעים חדשים')} ב${CHB[cid].short}`,body:R.slice(0,3).map(r=>`${vLabel(r.v)} −${r.pct}%`).join(' · '),k:'c|'+cid})}}
+  {const mt=myTypes();if(mt.size){const rows=dealRows(followed().map(c=>c.id),30).filter(r=>mt.has(r.v.t)&&(!r.pr.club||state.clubs.includes(r.cid))&&!sent['m|'+r.key]).sort((a,b)=>b.pct-a.pct).slice(0,3);
+    if(rows.length){rows.forEach(r=>sent['m|'+r.key]=now);msgs.push({title:'🛒 במבצע ממה שאתה קונה',body:rows.map(r=>`${vLabel(r.v)} −${r.pct}% ב${CHB[r.cid].short}`).join(' · '),k:'m|'+rows[0].key})}}}
+  const at=[];/* deals on products in the list that end tomorrow: a reminder at 10:00 the day before */
+  {const ids=new Set(state.items.map(i=>i.v).filter(Boolean)),best=new Map();if(ids.size)for(const r of dealRows(followed().map(c=>c.id),10)){if(!ids.has(r.v.id)||!r.pr.end)continue;const o=best.get(r.v.id);if(!o||r.unit<o.unit)best.set(r.v.id,r)}
+  /* one reminder per product: its best deal, when it ends within two weeks */
+  for(const r of best.values()){const when=new Date(new Date(r.pr.end+'T10:00:00').getTime()-864e5);const k='e|'+r.key;if(when.getTime()<=now||when.getTime()>now+14*864e5||sent[k])continue;sent[k]=now;
+    at.push({id:nid32(k),title:'⏰ המבצע נגמר מחר',body:`${vLabel(r.v)} ב${CHB[r.cid].short}: ${fmt(r.unit)} במקום ${fmt(r.p)}`,schedule:{at:when}})}}
+  const list=[...msgs.slice(0,3).map(m=>({id:nid32(m.k+now),title:m.title,body:m.body})),...at.slice(0,10)];
+  if(list.length){try{await L.schedule({notifications:list})}catch(e){}}save()}
+async function pushToggle(on){const L=LN();if(!L)return;if(on){let pr;try{pr=await L.requestPermissions()}catch(e){pr=null}
+    if(!pr||pr.display!=='granted'){state.pushOn=false;save();update();toast('לא אושרו התראות. אפשר להפעיל אותן בהגדרות הטלפון');return}
+    state.pushOn=true;save();update();toast('🔔 התראות לטלפון פועלות');pushSync()}else{state.pushOn=false;save();update();toast('התראות לטלפון כבויות')}}
+(async function boot(){setTimeout(()=>{try{chainLogos()}catch(e){}},1500);setTimeout(()=>{pushSync().catch(()=>{})},8000);
   $('screen').innerHTML='<div class="empty">טוען מחירים אמיתיים…</div>';
   let loaded=false;
   if(state.real&&state.real.source!=='bundled'){try{const sum=await idbGet('summary');if(sum){applyReal(sum);REAL.source='file';loaded=true}}catch(e){}}
