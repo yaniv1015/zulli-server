@@ -615,13 +615,19 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 .stories{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none;width:0;min-width:100%;box-sizing:border-box}
 .storycard{min-width:0;overflow:hidden}
 .stories::-webkit-scrollbar{display:none}
-.story{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;width:74px;background:none;border:0;padding:0;color:var(--ink);font:inherit}
+.story{flex:none;display:flex;flex-direction:column;align-items:center;gap:10px;width:74px;background:none;border:0;padding:0;color:var(--ink);font:inherit}
 .story .ring{width:70px;height:70px;border-radius:50%;padding:3px;background:conic-gradient(#D7FF1F,#FF4B2B,#D7FF1F)}
 .story.seen .ring{background:var(--line)}
 .story .inner{width:100%;height:100%;border-radius:50%;background:var(--surface);border:3px solid var(--surface);display:grid;place-items:center;overflow:hidden;font-size:1.9rem;box-sizing:border-box}
 .story .inner .th{width:100%;height:100%;border-radius:50%;font-size:1.8rem}
 .story small{font-size:.74rem;line-height:1.15;text-align:center;max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .story .cnt{position:absolute}
+.story .ring{position:relative}
+.story .inner.hl{background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.75) 0,rgba(255,255,255,0) 42%),linear-gradient(145deg,var(--g1),var(--g2));border-color:var(--surface)}
+.story .hle{font-size:2.05rem;line-height:1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25));transform:rotate(-8deg);transition:transform .2s ease}
+.story:hover .hle,.story:focus-visible .hle{transform:rotate(0) scale(1.08)}
+.story .hlp{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);background:#FF4B2B;color:#fff;font-weight:900;font-size:.68rem;line-height:1;padding:3px 6px;border-radius:999px;border:2px solid var(--surface);white-space:nowrap;font-family:var(--display)}
+.story.seen .hlp{background:#8A8A99}
 .sview{position:fixed;inset:0;z-index:9000;background:#0B0B0F;color:#fff;display:flex;flex-direction:column;user-select:none;-webkit-user-select:none;overflow:hidden}
 .sview .bars{display:flex;gap:4px}
 .sview .bars i{flex:1;height:3px;border-radius:2px;background:rgba(11,11,15,.18);overflow:hidden}
@@ -3552,8 +3558,12 @@ function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)r
   for(const [id,name] of SHELVES){if(id==='other')continue;const rows=pick(by[id]||[],15);if(rows.length>=2)groups.push({id,e:name.split(' ')[0],n:name.split(' ').slice(1).join(' ').replace(/,.*$/,''),rows})}
   return groups.filter(g=>g.rows.length)}
 const storyKey=g=>g.rows.map(r=>r.key).join('~').slice(0,400);
+/* highlight covers: one bold icon on a bright gradient per department, and the best discount inside it */
+const HL={top:['🔥','#FFB800','#FF4B2B'],produce:['🥑','#C8F56A','#22B26B'],bakery:['🥐','#FFE0A8','#E58A2E'],dairy:['🧀','#FFF1A6','#F5B700'],
+  meat:['🥩','#FFB8A8','#E23D4B'],frozen:['🍦','#D9F7FF','#4FB8F0'],pantry:['🍝','#FFE7A3','#F08A24'],snacks:['🍫','#FFC6E6','#B85CF5'],
+  drink:['🥤','#A9F0FF','#2E6BFF'],baby:['🍼','#FFE1F0','#FF7DB8'],care:['🧴','#E6DDFF','#8B6CFF'],home:['🧼','#C9FFF0','#14B8A0'],other:['🛒','#E8E8EE','#8A8A99']};
 function storiesHtml(){const G=storyGroups();if(!G.length)return'';const seen=state.storySeen||{};
-  return `<div class="stories" role="list" aria-label="מבצעים לפי קטגוריה">${G.map((g,i)=>`<button type="button" class="story${seen[g.id]===storyKey(g)?' seen':''}" data-story="${i}" role="listitem" aria-label="${esc(g.n)}: ${g.rows.length} מבצעים"><span class="ring"><span class="inner">${g.id==='top'?'🔥':thumb(g.rows[0].v,g.e)}</span></span><small>${esc(g.n)}</small></button>`).join('')}</div>`}
+  return `<div class="stories" role="list" aria-label="מבצעים לפי קטגוריה">${G.map((g,i)=>`<button type="button" class="story${seen[g.id]===storyKey(g)?' seen':''}" data-story="${i}" role="listitem" aria-label="${esc(g.n)}: ${g.rows.length} מבצעים"><span class="ring"><span class="inner hl" style="--g1:${(HL[g.id]||HL.other)[1]};--g2:${(HL[g.id]||HL.other)[2]}"><span class="hle" aria-hidden="true">${(HL[g.id]||HL.other)[0]}</span></span><span class="hlp" dir="ltr">−${Math.max(...g.rows.map(r=>r.pct))}%</span></span><small>${esc(g.n)}</small></button>`).join('')}</div>`}
 function openStories(start){const G=storyGroups();if(!G[start])return;let gi=start,si=0,timer=0,t0=0,paused=false,left=0;const DUR=5000;
   const root=document.createElement('div');root.className='sview';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.appendChild(root);
   const prevFocus=document.activeElement;
