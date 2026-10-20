@@ -126,6 +126,8 @@ console.log(`photos: ${before} → ${after}`);
 mkdirSync('img', { recursive: true });
 chunks.forEach((c, i) => writeFileSync(`img/${String(i).padStart(3, '0')}.json`, JSON.stringify(c)));
 writeFileSync('img/misses.json', JSON.stringify(misses));
+// every barcode that has a photo, in one small file, so the app knows without loading the chunks (stories prefer these)
+writeFileSync('img/have.json', JSON.stringify(chunks.flatMap((c) => Object.keys(c)).sort().join(',')));
 const index = { updated: new Date().toISOString(), openHosts: 4, chunks: CHUNKS, count: after, added: { off: stats.off, rami: stats.rami }, misses: Object.keys(misses).length, rami: { todo: ramiCodes.filter(fresh).length, ...ramiInfo } };
 writeFileSync('img/index.json', JSON.stringify(index));
 console.log(JSON.stringify(index));
