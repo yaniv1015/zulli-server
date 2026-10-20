@@ -99,6 +99,7 @@ async function keep(bc, raw, src) {
   if (!w) { stats.miss++; misses[bc] = today; return false; }
   chunks[hdChunk(bc)][bc] = w.toString('base64'); delete misses[bc]; stats[src]++; stats.bytes += w.length; return true;
 }
+let info = {}; try { info = JSON.parse(readFileSync(`${PREV}/info.json`, 'utf8')); } catch {}
 let ramiDone = false; const ramiStat = { tried: 0, stopped: false };
 const ramiRun = (async () => {
   let next = 0, streak = 0;
@@ -114,11 +115,23 @@ const ramiRun = (async () => {
   ramiDone = true;
 })();
 // Carrefour's online store (self-point storefront): its product API gives the photo for a barcode
-async function fromCarrefour(bc) {
+// the brand and full name as Carrefour's store shows them: chains' price files often name the importer, not the maker
+// (a Samsung TV listed as "ELECTRO FRESCO טלוויזיה חכמה 65 UA"), so stories show the real brand next to the photo
+const strOf = (x) => typeof x === 'string' ? x : x && typeof x === 'object' ? (x['1']?.long || x['1']?.short || x['1'] || x.he || x.name || x.long || x.short || Object.values(x).find((y) => typeof y === 'string') || '') : '';
+function carInfo(p) {
+  if (!p) return null;
+  const brand = strOf(p.brand?.names) || strOf(p.brand?.name) || strOf(p.brand) || '';
+  const name = strOf(p.names?.['1']?.long ? { 1: p.names['1'].long } : p.names) || '';
+  return brand || name ? { brand: String(brand).trim().slice(0, 40), name: String(name).trim().slice(0, 120) } : null;
+}
+async function carProduct(bc) {
   const f = encodeURIComponent(JSON.stringify({ must: { term: { barcode: bc } } }));
   const r = await get(`https://www.carrefour.co.il/v2/retailers/1540/products?filters=${f}&appId=4`);
-  if (!r) return null; let url = null;
-  try { const p = JSON.parse(r.buf.toString()).products?.[0]; url = p?.image?.url || p?.images?.[0]?.url; } catch {}
+  try { return r ? JSON.parse(r.buf.toString()).products?.[0] || null : null; } catch { return null; }
+}
+async function fromCarrefour(bc) {
+  const p = await carProduct(bc); const inf = carInfo(p); if (inf) info[bc] = inf;
+  let url = p?.image?.url || p?.images?.[0]?.url;
   if (!url) return null;
   url = url.replace('{{size}}', 'large').replace(/\{\{extension[^}]*\}\}/, 'jpg');
   const im = await get(url); return im && im.type.startsWith('image/') && im.buf.length > 3000 ? im.buf : null;
@@ -143,10 +156,16 @@ const offRun = (async () => {
   }
 })();
 await Promise.all([ramiRun, carRun, offRun]);
+// brand and name for big electrical items on a deal at Carrefour, also when the photo came earlier or from elsewhere
+for (const bc of want.filter((b) => (best.get(b) || 0) >= 2 && sells(b, 'carrefour') && !info[b]).slice(0, 300)) {
+  const inf = carInfo(await carProduct(bc)); if (inf) info[bc] = inf; await sleep(150);
+}
 mkdirSync('img/hd', { recursive: true });
 chunks.forEach((c, i) => writeFileSync(`img/hd/${String(i).padStart(2, '0')}.json`, JSON.stringify(c)));
 for (const bc of Object.keys(misses)) if (today - misses[bc] >= 14) delete misses[bc];
 writeFileSync('img/hd/misses.json', JSON.stringify(misses));
+for (const bc of Object.keys(info)) if (!wantSet.has(bc)) delete info[bc];
+writeFileSync('img/hd/info.json', JSON.stringify(info));
 const all = chunks.flatMap((c) => Object.keys(c)).sort();
 writeFileSync('img/hd/have.json', JSON.stringify(all.join(',')));
 const report = { updated: new Date().toISOString(), hd: all.length, candidates: want.length, todo: todo.length, added: stats, rami: { todo: ramiTodo.length, ...ramiStat }, carrefour: carStat, off: offTodo.length, minutes: Math.round((Date.now() - t0) / 6e4) };
