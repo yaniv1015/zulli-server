@@ -3722,8 +3722,7 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
     root.querySelector('#stAdd').onclick=()=>{addItems([{t:r.v.t,v:r.v.id,q:r.pr.kind==='multi'?r.pr.n:1}]);save();toast(`${vLabel(r.v)} נוסף לרשימה`);go(1)};
     root.querySelector('#stCheck').onclick=()=>{close();openPriceCheck(r.v)};
     let sy=null;root.ontouchstart=e=>{sy=e.touches[0].clientY};root.ontouchend=e=>{if(sy!=null&&e.changedTouches[0].clientY-sy>90)close();sy=null};
-    /* time on screen: 5 s, the usual for a photo story, plus time to read: a long name, the deal's own wording, the deal check; at most 10 s */
-    {const words=(vLabel(r.v)+' '+(r.pr.kind==='multi'?r.pr.label:'')).split(/\s+/).length+(dealCheck(r)?4:0);DUR=Math.round(Math.min(10000,Math.max(5000,3000+words*180))/500)*500}
+    /* every story stays 7 seconds on screen */DUR=7000;
     paused=false;run(DUR);root.querySelector('.x').focus()};
   draw()}
 function renderDealsReal(){
