@@ -3555,13 +3555,21 @@ function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)r
   const pick=(rows,n)=>{if(!HAVE&&!HD)return rows.slice(0,n);rows=[...rows.filter(hdp),...rows.filter(r=>!hdp(r))];const a=rows.filter(pic);return a.length>=Math.min(5,rows.length)?a.slice(0,n):[...a,...rows.filter(r=>!pic(r))].slice(0,n)};
   const by={};for(const r of all){const a=storyShelf(r.v);(by[a]||=[]).push(r)}
   const groups=[{id:'top',e:'🔥',n:'הכי שווים',rows:pick(all,15)}];
+  /* electrical: products of the appliances and electronics departments on any deal (10%+), the biggest saving in shekels first,
+     so a vacuum cleaner comes before a phone cable */
+  const D=deptItems(),elecIds=new Set([...(D.appliances?.all||[]),...(D.phones?.all||[])].map(x=>x.v.id));
+  if(elecIds.size){const eb=new Map();for(const r of dealRows(fol,10)){if(!elecIds.has(r.v.id)||r.pr.club&&!state.clubs.includes(r.cid))continue;const o=eb.get(r.v.id);if(!o||o.p-o.unit<r.p-r.unit)eb.set(r.v.id,r)}
+    const en=new Set(),erows=[...eb.values()].sort((a,b)=>(b.p-b.unit)-(a.p-a.unit)).filter(r=>{const k=norm(vLabel(r.v)).split(/\s+/).slice(0,3).join(' ');if(en.has(k))return false;en.add(k);return true});
+    const rows=erows.slice(0,15);/* few electrical items have photos: keep the saving order */if(rows.length>=2)groups.push({id:'elec',e:'⚡',n:'מוצרי חשמל',rows})}
   for(const [id,name] of SHELVES){if(id==='other')continue;const rows=pick(by[id]||[],15);if(rows.length>=2)groups.push({id,e:name.split(' ')[0],n:name.split(' ').slice(1).join(' ').replace(/,.*$/,''),rows})}
-  return groups.filter(g=>g.rows.length)}
+  /* electrical and babies right after the best deals */
+  const rank=g=>({top:0,elec:1,baby:2})[g.id]??3;
+  return groups.filter(g=>g.rows.length).sort((a,b)=>rank(a)-rank(b))}
 const storyKey=g=>g.rows.map(r=>r.key).join('~').slice(0,400);
 /* highlight covers: one bold icon on a bright gradient per department, and the best discount inside it */
 const HL={top:['🔥','#FFB800','#FF4B2B'],produce:['🥑','#C8F56A','#22B26B'],bakery:['🥐','#FFE0A8','#E58A2E'],dairy:['🧀','#FFF1A6','#F5B700'],
   meat:['🥩','#FFB8A8','#E23D4B'],frozen:['🍦','#D9F7FF','#4FB8F0'],pantry:['🍝','#FFE7A3','#F08A24'],snacks:['🍫','#FFC6E6','#B85CF5'],
-  drink:['🥤','#A9F0FF','#2E6BFF'],baby:['🍼','#FFE1F0','#FF7DB8'],care:['🧴','#E6DDFF','#8B6CFF'],home:['🧼','#C9FFF0','#14B8A0'],other:['🛒','#E8E8EE','#8A8A99']};
+  drink:['🥤','#A9F0FF','#2E6BFF'],baby:['🍼','#FFE1F0','#FF7DB8'],care:['🧴','#E6DDFF','#8B6CFF'],home:['🧼','#C9FFF0','#14B8A0'],elec:['⚡','#FFF59E','#FF8A00'],other:['🛒','#E8E8EE','#8A8A99']};
 function storiesHtml(){const G=storyGroups();if(!G.length)return'';const seen=state.storySeen||{};
   return `<div class="stories" role="list" aria-label="מבצעים לפי קטגוריה">${G.map((g,i)=>`<button type="button" class="story${seen[g.id]===storyKey(g)?' seen':''}" data-story="${i}" role="listitem" aria-label="${esc(g.n)}: ${g.rows.length} מבצעים"><span class="ring"><span class="inner hl" style="--g1:${(HL[g.id]||HL.other)[1]};--g2:${(HL[g.id]||HL.other)[2]}"><span class="hle" aria-hidden="true">${(HL[g.id]||HL.other)[0]}</span></span><span class="hlp" dir="ltr">−${Math.max(...g.rows.map(r=>r.pct))}%</span></span><small>${esc(g.n)}</small></button>`).join('')}</div>`}
 function openStories(start){const G=storyGroups();if(!G[start])return;let gi=start,si=0,timer=0,t0=0,paused=false,left=0;const DUR=5000;
