@@ -34,14 +34,15 @@ jobs:
         run: |
           git fetch --depth 1 origin images || true
           mkdir -p prev && (git archive origin/images img | tar -x -C prev) || true
+      # sharp photos first, while Rami Levy's server still answers (it slows down after a few thousand requests)
+      - name: Sharp photos for products on a deal (stories)
+        run: node src/hd.js data/summary.json
       - name: Build images
         env:
           MIN_CHAINS: ${{ inputs.min_chains || '2' }}
         run: |
           printf '%s' "$MIN_CHAINS" | grep -Eq '^[0-9]{1,2}$' || { echo "min_chains must be a number"; exit 1; }
           node src/images.js data/summary.json "$MIN_CHAINS"
-      - name: Sharp photos for products on a deal (stories)
-        run: node src/hd.js data/summary.json
       - name: Publish to the "images" branch
         run: |
           git config user.name "zulli-bot"

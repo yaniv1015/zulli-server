@@ -65,7 +65,7 @@ for (const [bc, p] of Object.entries(sum.products)) {
   }
 }
 let haveThumb = new Set();
-try { haveThumb = new Set(String(JSON.parse(readFileSync('img/have.json', 'utf8'))).split(',')); } catch {}
+for (const f of ['img/have.json', 'prev/img/have.json']) { try { haveThumb = new Set(String(JSON.parse(readFileSync(f, 'utf8'))).split(',')); break; } catch {} }
 // a product with a regular photo, or one Rami sells, is likely to have a sharp one too
 const want = [...best.entries()].filter(([bc]) => haveThumb.has(bc) || sum.products[bc].p?.rami != null)
   .sort((a, b) => b[1] - a[1]).slice(0, HD_MAX).map(([bc]) => bc);
@@ -92,13 +92,13 @@ async function keep(bc, raw, src) {
   if (!w) { stats.miss++; misses[bc] = today; return false; }
   chunks[hdChunk(bc)][bc] = w.toString('base64'); delete misses[bc]; stats[src]++; stats.bytes += w.length; return true;
 }
-let ramiDone = false;
+let ramiDone = false; const ramiStat = { tried: 0, stopped: false };
 const ramiRun = (async () => {
   let next = 0, streak = 0;
   await Promise.all(Array.from({ length: 6 }, async () => {
     while (next < ramiTodo.length && !timeUp() && streak < 40) {
       const bc = ramiTodo[next++]; const raw = await fromRami(bc);
-      streak = raw ? 0 : streak + 1;
+      streak = raw ? 0 : streak + 1; ramiStat.tried++; if (streak >= 40) ramiStat.stopped = true;
       // Rami-sold product without a Rami shot: try the open databases
       if (raw) await keep(bc, raw, 'rami'); else offTodo.push(bc);
       await sleep(80);
@@ -120,4 +120,6 @@ for (const bc of Object.keys(misses)) if (today - misses[bc] >= 14) delete misse
 writeFileSync('img/hd/misses.json', JSON.stringify(misses));
 const all = chunks.flatMap((c) => Object.keys(c)).sort();
 writeFileSync('img/hd/have.json', JSON.stringify(all.join(',')));
-console.log(JSON.stringify({ hd: all.length, added: stats, minutes: Math.round((Date.now() - t0) / 6e4) }));
+const report = { updated: new Date().toISOString(), hd: all.length, candidates: want.length, todo: todo.length, added: stats, rami: { todo: ramiTodo.length, ...ramiStat }, off: offTodo.length, minutes: Math.round((Date.now() - t0) / 6e4) };
+writeFileSync('img/hd/index.json', JSON.stringify(report));
+console.log(JSON.stringify(report));
