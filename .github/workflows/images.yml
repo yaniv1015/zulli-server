@@ -40,6 +40,8 @@ jobs:
         run: |
           printf '%s' "$MIN_CHAINS" | grep -Eq '^[0-9]{1,2}$' || { echo "min_chains must be a number"; exit 1; }
           node src/images.js data/summary.json "$MIN_CHAINS"
+      - name: Sharp photos for products on a deal (stories)
+        run: node src/hd.js data/summary.json
       - name: Publish to the "images" branch
         run: |
           git config user.name "zulli-bot"

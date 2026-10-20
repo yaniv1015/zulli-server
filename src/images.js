@@ -48,10 +48,12 @@ const nCh = (p) => Object.keys(p.p || {}).length;
 // big-ticket electrical items (TVs, appliances) first: a photo matters most where models differ
 const BIG_RX = /טלוויזי|טלויזי|מסך\s*\d{2}|smart tv|מקרר|מכונת כביסה|מייבש כביסה|מדיח|תנור|מיקרוגל|שואב|מזגן|מאוורר|מעבד מזון|מכונת קפה|טוסטר|קומקום|בלנדר|מיקסר|אייפון|iphone|אייפד|ipad|טאבלט|גלקסי|אוזניות|רמקול|מגהץ|מייבש שיער|מחליק שיער|סיר לחץ|airfryer|נינג'ה|ninja/i;
 const big = (p) => Math.max(0, ...Object.values(p.p || {})) >= 150 && BIG_RX.test(p.n || '') && !/שידת|כורסא|קרם|קפסולות|טבליות|תרכיז|נוזל/.test(p.n || '');
-const rank = (a, b) => (big(b[1]) - big(a[1])) || (nCh(b[1]) - nCh(a[1]));
+// products on a deal of 30%+ next: they are what the deal stories show full-screen
+const onDeal = (p) => Object.entries(p.d || {}).some(([ch, d]) => d[0] === 'm' && d[1] && p.p?.[ch] && 1 - d[2] / d[1] / p.p[ch] >= 0.3);
+const rank = (a, b) => (big(b[1]) - big(a[1])) || (onDeal(b[1]) - onDeal(a[1])) || (nCh(b[1]) - nCh(a[1]));
 const ramiCodes = real.filter(([, p]) => p.p?.rami != null).sort(rank).map(([bc]) => bc);
 // 2) products Rami does not sell, in MIN_CHAINS+ chains: Open Food Facts, slowly (it allows ~100 product reads a minute)
-const offCodes = real.filter(([, p]) => p.p?.rami == null && (nCh(p) >= MIN_CHAINS || big(p))).sort(rank).map(([bc]) => bc);
+const offCodes = real.filter(([, p]) => p.p?.rami == null && (nCh(p) >= MIN_CHAINS || big(p) || onDeal(p))).sort(rank).map(([bc]) => bc);
 console.log(`rami: ${ramiCodes.length} · open food facts: ${offCodes.length}`);
 
 // Incremental: start from the photos already on the images branch (checked out into prev/), skip
