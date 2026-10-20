@@ -945,7 +945,7 @@ const thumb=(v,emo,cls='')=>`<span class="th ${cls}"${v&&v.bc&&/^\d{8,14}$/.test
 function loadChunk(n){if(!TH.chunks.has(n))TH.chunks.set(n,fetch(`img/${String(n).padStart(3,'0')}.json`).then(r=>r.ok?r.json():{}).catch(()=>({})));return TH.chunks.get(n)}
 let _thQ=0;function hydrateThumbs(){_thQ=0;TH.ready.then(ix=>{if(!ix)return;const els=[...document.querySelectorAll('[data-th]:not([data-thd])')];const by=new Map();
   for(const el of els){el.dataset.thd=1;const n=thChunk(el.dataset.th);(by.get(n)||by.set(n,[]).get(n)).push(el)}
-  for(const [n,list] of by)loadChunk(n).then(c=>{for(const el of list){const b=c[el.dataset.th];if(typeof b==='string'&&b.length<200000&&/^[A-Za-z0-9+/]+={0,2}$/.test(b)){/* only real base64: the image never reaches the page as HTML */const im=new Image();im.alt='';im.src='data:image/webp;base64,'+b;el.replaceChildren(im);el.classList.add('has')}}})})}
+  for(const [n,list] of by)loadChunk(n).then(c=>{for(const el of list){if(el.classList.contains('hires'))continue;const b=c[el.dataset.th];if(typeof b==='string'&&b.length<200000&&/^[A-Za-z0-9+/]+={0,2}$/.test(b)){/* only real base64: the image never reaches the page as HTML */const im=new Image();im.alt='';im.src='data:image/webp;base64,'+b;el.replaceChildren(im);el.classList.add('has')}}})})}
 new MutationObserver(()=>{if(!_thQ)_thQ=requestAnimationFrame(hydrateThumbs)}).observe(document.documentElement,{childList:true,subtree:true});
 /* name as shoppers read it: no leading junk, no company name glued in front, brand added only when the name lacks it */
 const vLabel=v=>{let n=String(v.n||'').replace(/^[\s\-*.·]+/,'').replace(/^(?:[^\s]+\s){1,3}בע\\?["״']?מ\s+/,'').replace(/\.$/,'').trim();
@@ -3470,6 +3470,17 @@ function promoSection(){
     ${rows.length>pick.length?'<button class="btn ghost" type="button" id="pmore">הצג עוד</button>':''}</section>`;
 }
 /* ================= deal stories: the best deals of each department, in circles like stories ================= */
+/* which barcodes have a photo (img/have.json, from the photo job): stories show products with a picture first */
+let HAVE=null;const haveReady=(async()=>{try{const r=await fetch('img/have.json');if(r.ok){const t=await r.json();HAVE=new Set(String(t).split(','));if(state.tab==='deals')update()}}catch(e){}})();
+/* a sharp picture for the full-screen story: the 600 px shot from Rami Levy's image server for what it sells,
+   else Open Food Facts' front photo; the small thumbnail stays until (and unless) it loads */
+const _hires=new Map();
+async function hiresUrl(v){const bc=v&&v.bc;if(!bc)return null;if(_hires.has(bc))return _hires.get(bc);let u=null;
+  if(v.rp&&v.rp.rami!=null)u=`https://img.rami-levy.co.il/product/${bc}/medium.jpg`;
+  else{try{const r=await fetch(`https://world.openfoodfacts.org/api/v2/product/${bc}.json?fields=image_front_url`);if(r.ok){const j=await r.json();u=j&&j.product&&j.product.image_front_url||null}}catch(e){}}
+  _hires.set(bc,u);return u}
+function sharpen(el,v){hiresUrl(v).then(u=>{if(!u||!document.contains(el))return;const im=new Image();im.alt='';im.referrerPolicy='no-referrer';
+  im.onload=()=>{if(!document.contains(el)||im.naturalWidth<200)return;el.replaceChildren(im);el.classList.add('has','hires')};im.src=u})}
 function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)return [];
   const best=new Map();for(const r of dealRows(fol,20)){const k=r.v.id;if(!best.has(k)||best.get(k).pct<r.pct)best.set(k,r)}
   const promo=new Set(),names=new Set();
@@ -3477,9 +3488,12 @@ function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)r
     /* one story per promotion ("10 ב-9.90" on many plates is one deal) and per product name (the same item under several barcodes) */
     const pk=r.cid+'|'+norm(String(r.pr.label||'')).replace(/\s+/g,' ').trim(),nk=norm(vLabel(r.v)).replace(/[^\p{L}\p{N}]+/gu,' ').trim().split(' ').slice(0,3).join(' ');
     if(promo.has(pk)||names.has(nk))return false;promo.add(pk);names.add(nk);return true});
+  /* products with a photo first; a group keeps photo-less ones only when it has few pictures */
+  const pic=r=>!!(HAVE&&r.v.bc&&HAVE.has(r.v.bc));
+  const pick=(rows,n)=>{if(!HAVE)return rows.slice(0,n);const a=rows.filter(pic);return a.length>=Math.min(5,rows.length)?a.slice(0,n):[...a,...rows.filter(r=>!pic(r))].slice(0,n)};
   const by={};for(const r of all){const a=shelfOf({t:r.v.t,v:r.v.id});(by[a]||=[]).push(r)}
-  const groups=[{id:'top',e:'🔥',n:'הכי שווים',rows:all.slice(0,15)}];
-  for(const [id,name] of SHELVES){const rows=(by[id]||[]).slice(0,15);if(rows.length>=2)groups.push({id,e:name.split(' ')[0],n:name.split(' ').slice(1).join(' ').replace(/,.*$/,''),rows})}
+  const groups=[{id:'top',e:'🔥',n:'הכי שווים',rows:pick(all,15)}];
+  for(const [id,name] of SHELVES){const rows=pick(by[id]||[],15);if(rows.length>=2)groups.push({id,e:name.split(' ')[0],n:name.split(' ').slice(1).join(' ').replace(/,.*$/,''),rows})}
   return groups.filter(g=>g.rows.length)}
 const storyKey=g=>g.rows.map(r=>r.key).join('~').slice(0,400);
 function storiesHtml(){const G=storyGroups();if(!G.length)return'';const seen=state.storySeen||{};
@@ -3503,6 +3517,7 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
         <div class="pr"><b>${fmt(r.unit)}</b>${r.pr.kind==='multi'?' ליח׳':''} &nbsp;<s>${fmt(r.p)}</s></div>${r.pr.kind==='multi'?`<small style="color:#C9C9D1">${esc(r.pr.label)}</small>`:''}
         <small style="color:#A9A9B3">${left!=null&&left>=0?(left===0?'נגמר היום':`עוד ${nOf(left,'יום אחד','ימים')}`):''}${r.pr.club?' · למועדון':''}</small></div>
       <div class="sact"><button class="btn y" type="button" id="stAdd">➕ הוסף לרשימה</button><button class="btn ghost" type="button" id="stCheck" style="color:#fff;border-color:#3A3A44">🏷️ איפה עוד?</button></div>`;
+    const stg=root.querySelector('.svstage .th');if(stg)sharpen(stg,r.v);
     root.querySelector('.x').onclick=close;
     root.querySelector('.tapzone.next').onclick=()=>go(1);root.querySelector('.tapzone.prev').onclick=()=>go(-1);
     const body=root.querySelector('.svhero');body.onpointerdown=()=>{pause()};body.onpointerup=()=>{resume()};body.onpointerleave=()=>{resume()};
