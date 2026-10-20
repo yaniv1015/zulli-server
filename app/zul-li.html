@@ -893,8 +893,12 @@ tropical|פירות טרופיים|🥭|מנגו,אננס,פפאיה,ליצ׳י,
 stonefruit|פירות גלעין ואגסים|🍑|אפרסק,שזיף,נקטרינה,משמש,דובדבן,אגס|אפרסקים,נקטרינות,שזיפים,משמשים,דובדבנים,אגסים|לק״ג:12.9
 cabbage|כרוב וכרובית|🥦|כרוב,ברוקולי,כרובית|כרוב לבן,כרוב סגול,כרובית,ברוקולי|לק״ג:6.9
 corn|תירס טרי|🌽|קלחי תירס,תירס טרי|קלחי תירס,תירס ארוז|4 יח׳:9.9
-roots|סלק ושורשים|🫚|סלק,צנון,לפת,סלרי|סלק,צנון,לפת,סלרי|לק״ג:5.9`;
+roots|סלק ושורשים|🫜|סלק,צנון,לפת,סלרי|סלק,צנון,לפת,סלרי|לק״ג:5.9`;
 TYPES.other=['מוצר','🛍️','other',[],1,null,null];
+/* 🫜 (root vegetable, Unicode 16) is missing on older phones; there it would show as an empty box, so fall back to a sprout */
+const NO_ROOT_EMOJI=(function(){try{const cv=document.createElement('canvas');cv.width=cv.height=40;const c=cv.getContext('2d');c.font='32px sans-serif';c.textBaseline='top';c.fillText('🫜',2,2);
+  const d=c.getImageData(0,0,40,40).data;let col=0;for(let i=0;i<d.length;i+=4)if(d[i+3]>100&&Math.max(d[i],d[i+1],d[i+2])-Math.min(d[i],d[i+1],d[i+2])>40)col++;
+  return col<20}catch(e){return false}})();
 const EXTRA_KW={banana:['בננה','בננות'],potato:['תפוח אדמה','תפוחי אדמה'],tomato:['עגבניה','עגבנייה','עגבניות'],spreads:['ריבת','ממרח'],beer:['היינקן','קרלסברג','גולדסטאר','טובורג','קורונה','בירה'],bodycare:['סטיק','דאו','רולאון','רול און','דאודורנט','סבון','ג׳ל רחצה','קרם ידיים'],
   tp:['גליל','גלילים'],candy:['קינדר','מסטיק','סוכריה','סוכריות'],chocolate:['שוקולד','פרה','מקופלת','טעמי','ריטר','מילקה'],snacks:['תפוציפס','דוריטוס','צ׳יטוס','פופקורן','אפרופו','חטיף'],
   softdrinks:['ספרייט','פאנטה','שוופס','סודה','פריגת'],juice:['מיץ','נקטר','פרימור'],water:['נביעות','מי עדן','עין גדי'],oral:['קולגייט','סנסודיין','משחת שיניים','מברשת שיניים'],
@@ -917,7 +921,7 @@ const EXTRA_KW={banana:['בננה','בננות'],potato:['תפוח אדמה','ת
     if(own)OWN.forEach((c,ci)=>variants.split(',').slice(0,4).forEach((v,vi)=>{if((ci+vi)%2)return;const [s,p]=S[0];V.push({id:nid(),t:id,b:OWN_NAME[c],n:v,s,base:Math.round(p*.78*10)/10,own:c,pik:false,gen:true})}));
   }
   for(const line of GEN_PRODUCE.split('\n')){
-    const [id,name,icon,kw,kinds,sizes]=line.split('|');
+    const [id,name,icon0,kw,kinds,sizes]=line.split('|');const icon=icon0==='🫜'&&NO_ROOT_EMOJI?'🌱':icon0;
     if(!TYPES[id])TYPES[id]=[name,icon,'produce',kw.split(','),1,1,1];
     for(const k of kinds.split(','))for(const [s,p] of sizesOf(sizes))V.push({id:nid(),t:id,b:'',n:k,s,base:Math.round(p*(1+((h(k)%21)-8)/100)*10)/10,own:null,pik:false,gen:true});
   }
