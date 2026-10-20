@@ -178,6 +178,11 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:.88rem;font-weight:
 .pills{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
 .pill{font-size:.76rem;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--bg);color:var(--muted)}
 .pill.good{background:var(--good-soft);color:var(--good)}
+.sso{display:flex;flex-direction:column;gap:10px}
+.ssob{min-height:50px;border-radius:14px;font:inherit;font-weight:800;font-size:1.02rem;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.ssob.a{background:#0B0B0F;color:#fff;border-color:#0B0B0F}.ssob.m{background:var(--bg)}
+.ssob:disabled{opacity:.6}
+.ordiv{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.9rem}.ordiv::before,.ordiv::after{content:'';flex:1;height:1px;background:var(--line)}
 .savefun{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,#F4FFC2,#E2FF6B);color:#0B0B0F;border-radius:14px;padding:10px 14px;font-size:1rem}
 .savefun>span:first-child{font-size:1.6rem}.savefun small{color:#3A3A44}
 .pill.warnp{background:#FFF1E0;color:#A64B00}
@@ -2100,12 +2105,42 @@ const phoneOk=x=>/^05\d{8}$/.test(String(x||'').replace(/[\s\-]/g,''));
 const phoneFmt=x=>{const d=String(x||'').replace(/\D/g,'');return d.length===10?d.slice(0,3)+'-'+d.slice(3):x};
 const emailOk=x=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(x||'').trim());
 const nameOk=x=>String(x||'').trim().split(/\s+/).filter(w=>w.length>=2).length>=2;
+/* ================= sign in with Google / Apple / email =================
+   Phone app: the Capacitor Firebase Authentication plugin (needs google-services.json in the build).
+   Web: the Firebase JS SDK from jsDelivr, configured by firebase-config.json next to the app (apiKey, authDomain, projectId, appId).
+   Without either, the buttons say the sign-in is not connected yet, and the form below still works. */
+const SSO_NAME={google:'Google',apple:'Apple',email:'מייל'};
+let _fbCfg;async function fbConfig(){if(_fbCfg!==undefined)return _fbCfg;try{const r=await fetch('firebase-config.json');_fbCfg=r.ok?await r.json():null}catch(e){_fbCfg=null}return _fbCfg}
+const fbPlugin=()=>window.Capacitor?.Plugins?.FirebaseAuthentication||null;
+async function authReady(){return !!(fbPlugin()||await fbConfig())}
+let _fb=null;function loadFirebase(cfg){return _fb||(_fb=(async()=>{const add=src=>new Promise((ok,bad)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>bad(new Error('load'));document.head.appendChild(s)});
+  await add('https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js');await add('https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-auth-compat.js');
+  if(!firebase.apps.length)firebase.initializeApp(cfg);return firebase.auth()})().catch(e=>{_fb=null;throw e}))}
+const fbUser=u=>u&&{uid:u.uid,name:u.displayName||'',email:u.email||'',phone:(u.phoneNumber||'').replace(/^\+972/,'0')};
+async function ssoSignIn(kind,email){const P=fbPlugin();
+  if(P){if(kind==='google')return fbUser((await P.signInWithGoogle()).user);if(kind==='apple')return fbUser((await P.signInWithApple()).user);
+    if(!emailOk(email||''))throw Object.assign(new Error('email'),{code:'need-email'});await P.sendSignInLinkToEmail({email,actionCodeSettings:{url:'https://mozil.app/login',handleCodeInApp:true}});localStorage.setItem('mozilLinkEmail',email);return {pending:email}}
+  const cfg=await fbConfig();if(!cfg)throw Object.assign(new Error('no config'),{code:'no-config'});const auth=await loadFirebase(cfg);
+  if(kind==='google')return fbUser((await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())).user);
+  if(kind==='apple'){const pr=new firebase.auth.OAuthProvider('apple.com');pr.addScope('email');pr.addScope('name');return fbUser((await auth.signInWithPopup(pr)).user)}
+  if(!emailOk(email||''))throw Object.assign(new Error('email'),{code:'need-email'});
+  await auth.sendSignInLinkToEmail(email,{url:location.href.split('#')[0],handleCodeInApp:true});try{localStorage.setItem('mozilLinkEmail',email)}catch(e){}return {pending:email}}
+/* coming back from the email link: finish the sign-in */
+(async()=>{try{if(!/[?&]oobCode=/.test(location.href))return;const cfg=await fbConfig();if(!cfg)return;const auth=await loadFirebase(cfg);if(!auth.isSignInWithEmailLink(location.href))return;
+  const email=localStorage.getItem('mozilLinkEmail')||prompt('לאיזה מייל נשלח הקישור?');if(!email)return;const u=fbUser((await auth.signInWithEmailLink(email,location.href)).user);
+  Object.assign(state.profile,{email:u.email,authBy:'email',uid:u.uid,emailVerified:true});save();toast('✓ המייל אומת');history.replaceState(null,'',location.pathname)}catch(e){}})();
 async function openRegister(after,welcome){const P=state.profile;const ce=await claudeEmail();const d={name:P.name||'',email:P.email||ce||'',phone:P.phone||''};
   const draw=body=>{const verified=ce&&d.email.trim().toLowerCase()===ce.toLowerCase();
     body.innerHTML=`${welcome?`<div class="welcome"><svg viewBox="0 0 1024 1024" class="wicon" aria-hidden="true"><rect width="1024" height="1024" rx="236" fill="#D7FF1F"/><path d="M392 196h240a28 28 0 0 1 28 28v330h132a22 22 0 0 1 16 37L528 868a22 22 0 0 1-32 0L216 591a22 22 0 0 1 16-37h132V224a28 28 0 0 1 28-28z" fill="#0B0B0F"/><circle cx="512" cy="300" r="46" fill="#FF4B2B"/></svg>
         <b class="wt">ברוך הבא למוזיל</b><span class="sub">אותה קנייה. פחות כסף.</span>
         <ul class="wl"><li>🛒 משווים את הרשימה שלך ב-24 רשתות</li><li>📍 מחירי הסניף הקרוב אליך, כולל מבצעים</li><li>🔔 התראה כשמוצר שאתה קונה יורד במחיר</li></ul></div>
         <p class="sub">כמה פרטים, ואנחנו מתחילים. הכתובת קובעת אילו סניפים נשווה בשבילך.</p>`:`<p class="sub">כל השדות חובה. הפרטים נשמרים אצלך ומשמשים להזמנות ולחשבוניות.</p>`}
+      ${P.registered&&P.authBy?`<div class="banner">מחובר עם ${esc(SSO_NAME[P.authBy]||P.authBy)}${P.email?' · '+esc(P.email):''}</div>`:`<div class="sso" role="group" aria-label="התחברות מהירה">
+        <button type="button" class="ssob g" data-sso="google">המשך עם Google</button>
+        <button type="button" class="ssob a" data-sso="apple">המשך עם Apple</button>
+        <button type="button" class="ssob m" data-sso="email">✉️ המשך עם מייל</button></div>
+      <div id="ssoMsg" class="sub" hidden></div>
+      <div class="ordiv"><span>או מלא פרטים</span></div>`}
       <label class="f">שם מלא<input type="text" id="rName" value="${esc(d.name)}" autocomplete="name" placeholder="שם פרטי ושם משפחה"></label>
       <label class="f">אימייל<input type="email" id="rEmail" value="${esc(d.email)}" autocomplete="email" dir="ltr" placeholder="name@example.com"></label>
       <small class="sub" id="rEmailSt">${verified?'✅ מאומת: זה המייל של חשבון Claude שלך':''}</small>
@@ -2117,6 +2152,13 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
       <button class="btn y big" type="button" id="rSave">${P.registered?'שמור פרטים':welcome?'🚀 בואו נתחיל':'✓ סיום הרשמה'}</button>
       ${welcome?'<button class="link" type="button" id="rSkip" style="align-self:center">אירשם אחר כך</button>':''}`;
     if($('rSkip'))$('rSkip').onclick=()=>{closeSheet();toast('אפשר להירשם בכל זמן מלשונית החשבון')};
+    body.querySelectorAll('[data-sso]').forEach(b=>b.onclick=async()=>{grab();const kind=b.dataset.sso,msg=$('ssoMsg');msg.hidden=true;
+      if(kind==='email'&&!(await authReady())){$('rEmail').focus();$('rEmail').scrollIntoView({block:'center',behavior:'smooth'});msg.hidden=false;msg.textContent='מלא את המייל ואת שאר הפרטים למטה.';return}
+      b.disabled=true;const old=b.textContent;b.textContent='מתחבר…';
+      try{const u=await ssoSignIn(kind,d.email);if(u&&u.pending){msg.hidden=false;msg.textContent=`שלחנו קישור כניסה ל-${u.pending}. פתח אותו מהטלפון הזה.`;return}
+        if(u){d.name=u.name||d.name;d.email=u.email||d.email;d.phone=u.phone||d.phone;Object.assign(P,{authBy:kind,uid:u.uid,emailVerified:!!u.email});save();draw(body);toast(`✓ התחברת עם ${SSO_NAME[kind]} · נשאר להשלים כתובת ואישור תנאים`)}}
+      catch(err){msg.hidden=false;msg.innerHTML=err&&err.code==='no-config'?`ההתחברות עם ${SSO_NAME[kind]} תפעל כשנחבר את חשבון Firebase של מוזיל. בינתיים אפשר להירשם עם הפרטים למטה.`:`ההתחברות בוטלה או נכשלה. אפשר לנסות שוב, או להירשם עם הפרטים למטה.`}
+      finally{b.disabled=false;b.textContent=old}});
     const grab=()=>{d.name=$('rName').value.trim();d.email=$('rEmail').value.trim();d.phone=$('rPhone').value.trim()};
     $('rEmail').oninput=()=>{grab();const v=ce&&d.email.toLowerCase()===ce.toLowerCase();$('rEmailSt').textContent=v?'✅ מאומת: זה המייל של חשבון Claude שלך':''};
     $('rAddr').onclick=()=>{grab();Object.assign(P,{name:d.name,email:d.email,phone:d.phone});save();_afterAddr=()=>openRegister(after,welcome);openLocation()};
