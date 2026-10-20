@@ -634,6 +634,11 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 .sview .svstage .th{width:min(62vw,230px);height:min(62vw,230px,34vh);background:#fff;border:0;border-radius:32px;font-size:6rem;padding:18px;box-sizing:border-box;box-shadow:0 22px 44px -12px rgba(11,11,15,.35),0 0 0 6px rgba(255,255,255,.45);transform:rotate(-3deg);transition:width .35s ease,height .35s ease}
 .sview .svstage .th.has{background:#fff;border:0}
 .sview .svstage .th.hires{width:min(74vw,300px);height:min(74vw,300px,40vh);padding:14px}
+.sview .svstage .th.svtext{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;color:#0B0B0F;padding:22px;background:linear-gradient(160deg,#fff 0%,#fff 62%,#F3F6E8 100%)}
+.sview .svtext .svtag{font-size:.82rem;font-weight:700;color:#3A3A44;background:#EEF3D4;border-radius:999px;padding:4px 12px}
+.sview .svtext b{font-size:1.75rem;font-weight:900;line-height:1.12;letter-spacing:-.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.sview .svtext .svrest{font-size:.95rem;font-weight:600;color:#55555F;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sview .svtext .svsize{font-size:.85rem;font-weight:800;color:#FF4B2B}
 .sview .svstage .th img{width:100%;height:100%;object-fit:contain;animation:svpop .3s ease}
 @keyframes svpop{from{opacity:.3}to{opacity:1}}
 .sview .sinfo{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:34px 18px 8px;min-height:0}
@@ -946,8 +951,9 @@ const thChunk=bc=>Number(String(bc).slice(-4))%(TH.index?.chunks||128);
 const TV_RX=/(?<!שידת |כורסאת |כורסת |מעמד ל?|זרוע ל?)(?:טלוויזי|טלויזי|טלביזי)|מסך\s*(?:טלו?וויז?יי?ה\s*)?\d{2}|smart tv/i;
 function tvInch(n){n=String(n);let m=n.match(/(\d{2})\s*(?:אינץ|inch|["”“])|["”“]\s*(\d{2})/i);if(m){const x=m[1]||m[2];if(+x>=19&&+x<=100)return x}
   for(const x of n.matchAll(/(?<![\d.A-Za-z-])(\d{2})(?![\d.%A-Za-z])/g))if(+x[1]>=24&&+x[1]<=100)return x[1];return ''}
+function oilArt(){return `<svg viewBox="0 0 40 64" class="tvart oilart"><path d="M16 2h8v8l2 4v0c5 4 8 9 8 15v29a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V29c0-6 3-11 8-15l2-4z" fill="#E9C33B"/><path d="M16 2h8v6h-8z" fill="#2F6B2F"/><path d="M8 34h24v16H8z" fill="#2F6B2F"/><circle cx="20" cy="42" r="4.5" fill="#E9C33B"/><path d="M11 22c1-3 3-5 5-6" stroke="#fff" stroke-opacity=".55" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>`}
 function tvArt(v){const inch=tvInch(v.n);return `<svg viewBox="0 0 64 52" class="tvart"><rect x="3" y="4" width="58" height="36" rx="3" fill="#0B0B0F"/><rect x="6" y="7" width="52" height="30" rx="1.5" fill="url(#tvg)"/><defs><linearGradient id="tvg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2E6BFF"/><stop offset="1" stop-color="#D7FF1F"/></linearGradient></defs><path d="M26 40h12l3 7H23z" fill="#0B0B0F"/>${inch?`<text x="32" y="27" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" font-family="sans-serif">${inch}″</text>`:''}</svg>`}
-const thumb=(v,emo,cls='')=>`<span class="th ${cls}"${v&&v.bc&&/^\d{8,14}$/.test(v.bc)?` data-th="${v.bc}"`:''} aria-hidden="true">${v&&v.n&&TV_RX.test(v.n)&&!/שידת|כורסא|קרם/.test(v.n)?tvArt(v):emo}</span>`;
+const thumb=(v,emo,cls='')=>`<span class="th ${cls}"${v&&v.bc&&/^\d{8,14}$/.test(v.bc)?` data-th="${v.bc}"`:''} aria-hidden="true">${v&&v.n&&TV_RX.test(v.n)&&!/שידת|כורסא|קרם/.test(v.n)?tvArt(v):v&&v.t==='oil'&&emo==='🫒'?oilArt():emo}</span>`;
 function loadChunk(n){if(!TH.chunks.has(n))TH.chunks.set(n,fetch(`img/${String(n).padStart(3,'0')}.json`).then(r=>r.ok?r.json():{}).catch(()=>({})));return TH.chunks.get(n)}
 let _thQ=0;function hydrateThumbs(){_thQ=0;TH.ready.then(ix=>{if(!ix)return;const els=[...document.querySelectorAll('[data-th]:not([data-thd])')];const by=new Map();
   for(const el of els){el.dataset.thd=1;const n=thChunk(el.dataset.th);(by.get(n)||by.set(n,[]).get(n)).push(el)}
@@ -3481,12 +3487,22 @@ let HAVE=null;const haveReady=(async()=>{try{const r=await fetch('img/have.json'
 /* a sharp picture for the full-screen story: the 600 px shot from Rami Levy's image server for what it sells,
    else Open Food Facts' front photo; the small thumbnail stays until (and unless) it loads */
 const _hires=new Map();
+let HD=null;const hdReady=(async()=>{try{const r=await fetch('img/hd/have.json');if(r.ok){HD=new Set(String(await r.json()).split(','));if(state.tab==='deals')update()}}catch(e){}})();
+const _hdChunks=new Map();
+function hdData(bc){if(!HD||!HD.has(bc))return Promise.resolve(null);const n=Number(String(bc).slice(-4))%32;
+  if(!_hdChunks.has(n))_hdChunks.set(n,fetch(`img/hd/${String(n).padStart(2,'0')}.json`).then(r=>r.ok?r.json():{}).catch(()=>({})));
+  return _hdChunks.get(n).then(c=>c[bc]?'data:image/webp;base64,'+c[bc]:null)}
 async function hiresUrl(v){const bc=v&&v.bc;if(!bc)return null;if(_hires.has(bc))return _hires.get(bc);let u=null;
   if(v.rp&&v.rp.rami!=null)u=`https://img.rami-levy.co.il/product/${bc}/medium.jpg`;
   else{try{const r=await fetch(`https://world.openfoodfacts.org/api/v2/product/${bc}.json?fields=image_front_url`);if(r.ok){const j=await r.json();u=j&&j.product&&j.product.image_front_url||null}}catch(e){}}
   _hires.set(bc,u);return u}
-function sharpen(el,v){hiresUrl(v).then(u=>{if(!u||!document.contains(el))return;const im=new Image();im.alt='';im.referrerPolicy='no-referrer';
-  im.onload=()=>{if(!document.contains(el)||im.naturalWidth<200)return;el.replaceChildren(im);el.classList.add('has','hires')};im.src=u})}
+function sharpen(el,v){hdData(v&&v.bc).then(d=>d||hiresUrl(v)).then(u=>{if(!u||!document.contains(el))return;const im=new Image();im.alt='';im.referrerPolicy='no-referrer';
+  im.onload=()=>{if(!document.contains(el)||im.naturalWidth<200)return;el.classList.remove('svtext');el.replaceChildren(im);el.classList.add('has','hires')};im.src=u})}
+/* no photo anywhere: a typographic card (the name, big) instead of a lone emoji */
+const noPic=v=>!(v&&v.bc&&((HAVE&&HAVE.has(v.bc))||(HD&&HD.has(v.bc))))&&!(v&&v.n&&TV_RX.test(v.n))&&(HAVE!=null||HD!=null);
+function textCard(v){const n=vLabel(v).replace(/\s+\d+(?:[.,]\d+)?\s*(?:גרם|ג׳|ג'|ק״ג|קג|מ״ל|מ"ל|מל|ליטר|ל׳|יח׳|יחידות)(?=\s|$).*$/,'');const words=n.split(/\s+/);
+  const head=words.slice(0,3).join(' '),rest=words.slice(3).join(' ');const t=TYPES[v.t]||TYPES.other;
+  return `<span class="th svtext" aria-hidden="true">${v.t==='other'?'':`<span class="svtag">${v.t==='oil'?'':esc(t[1])+' '}${esc(t[0])}</span>`}<b>${esc(head)}</b>${rest?`<span class="svrest">${esc(rest)}</span>`:''}${v.s?`<span class="svsize">${esc(v.s)}</span>`:''}</span>`}
 function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)return [];
   const best=new Map();for(const r of dealRows(fol,20)){const k=r.v.id;if(!best.has(k)||best.get(k).pct<r.pct)best.set(k,r)}
   const promo=new Set(),names=new Set();
@@ -3495,8 +3511,8 @@ function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)r
     const pk=r.cid+'|'+norm(String(r.pr.label||'')).replace(/\s+/g,' ').trim(),nk=norm(vLabel(r.v)).replace(/[^\p{L}\p{N}]+/gu,' ').trim().split(' ').slice(0,3).join(' ');
     if(promo.has(pk)||names.has(nk))return false;promo.add(pk);names.add(nk);return true});
   /* products with a photo first; a group keeps photo-less ones only when it has few pictures */
-  const pic=r=>!!(HAVE&&r.v.bc&&HAVE.has(r.v.bc));
-  const pick=(rows,n)=>{if(!HAVE)return rows.slice(0,n);const a=rows.filter(pic);return a.length>=Math.min(5,rows.length)?a.slice(0,n):[...a,...rows.filter(r=>!pic(r))].slice(0,n)};
+  const hdp=r=>!!(HD&&r.v.bc&&HD.has(r.v.bc));const pic=r=>hdp(r)||!!(HAVE&&r.v.bc&&HAVE.has(r.v.bc));
+  const pick=(rows,n)=>{if(!HAVE&&!HD)return rows.slice(0,n);rows=[...rows.filter(hdp),...rows.filter(r=>!hdp(r))];const a=rows.filter(pic);return a.length>=Math.min(5,rows.length)?a.slice(0,n):[...a,...rows.filter(r=>!pic(r))].slice(0,n)};
   const by={};for(const r of all){const a=shelfOf({t:r.v.t,v:r.v.id});(by[a]||=[]).push(r)}
   const groups=[{id:'top',e:'🔥',n:'הכי שווים',rows:pick(all,15)}];
   for(const [id,name] of SHELVES){const rows=pick(by[id]||[],15);if(rows.length>=2)groups.push({id,e:name.split(' ')[0],n:name.split(' ').slice(1).join(' ').replace(/,.*$/,''),rows})}
@@ -3517,9 +3533,9 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
   const draw=()=>{const g=G[gi],r=g.rows[si],c=CHB[r.cid];const left=r.pr.end?Math.ceil((new Date(r.pr.end)-Date.now())/864e5):null;
     root.innerHTML=`<div class="svhero"><div class="bars" aria-hidden="true">${g.rows.map((_,i)=>`<i class="${i<si?'done':i===si?'cur':''}"><b></b></i>`).join('')}</div>
       <div class="svhead"><span class="av" style="--sc:var(${c.c})">${c.ab}</span><div><b>${esc(g.e+' '+g.n)}</b><br><small>${esc(c.name)}${r.pr.club?' · '+esc(c.club):''}</small></div><button class="x" type="button" aria-label="סגור">✕</button></div>
-      <div class="svstage">${thumb(r.v,TYPES[r.v.t][1])}</div><span class="pct">−${r.pct}%</span>
+      <div class="svstage">${noPic(r.v)?textCard(r.v):thumb(r.v,TYPES[r.v.t][1])}</div><span class="pct">−${r.pct}%</span>
       <button class="tapzone prev" type="button" aria-label="הקודם"></button><button class="tapzone next" type="button" aria-label="הבא"></button></div>
-      <div class="sinfo"><div class="nm">${esc(vLabel(r.v))}${r.v.s?` <small style="color:#C9C9D1">${esc(r.v.s)}</small>`:''}</div>
+      <div class="sinfo"><div class="nm">${esc(vLabel(r.v))}${r.v.s&&!vLabel(r.v).includes(r.v.s)?` <small style="color:#C9C9D1">${esc(r.v.s)}</small>`:''}</div>
         <div class="pr"><b>${fmt(r.unit)}</b>${r.pr.kind==='multi'?' ליח׳':''} &nbsp;<s>${fmt(r.p)}</s></div>${r.pr.kind==='multi'?`<small style="color:#C9C9D1">${esc(r.pr.label)}</small>`:''}
         <small style="color:#A9A9B3">${left!=null&&left>=0?(left===0?'נגמר היום':`עוד ${nOf(left,'יום אחד','ימים')}`):''}${r.pr.club?' · למועדון':''}</small></div>
       <div class="sact"><button class="btn y" type="button" id="stAdd">➕ הוסף לרשימה</button><button class="btn ghost" type="button" id="stCheck" style="color:#fff;border-color:#3A3A44">🏷️ איפה עוד?</button></div>`;
