@@ -660,16 +660,22 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 .sview .svhead{display:flex;align-items:center;gap:10px;margin-top:12px;color:#0B0B0F;position:relative;z-index:3}.sview .svhead small{color:#3A3A44}
 .sview .svhead .x{margin-inline-start:auto;width:40px;height:40px;border-radius:50%;border:0;background:none;color:#0B0B0F;font-size:1.25rem;opacity:.7}
 .sview .svhero{position:relative;height:clamp(250px,50vh,480px);min-height:0;flex:none;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 0;background:radial-gradient(120% 90% at 50% 40%,#F6FFD6 0%,#E4FF72 55%,#D7FF1F 100%);border-radius:0 0 36px 36px;display:flex;flex-direction:column}
-.sview .svstage{flex:1;display:grid;place-items:center;min-height:0;padding:6px 0 30px}
-.sview .svstage .th{width:min(62vw,230px);height:min(62vw,230px,30vh);background:#fff;border:0;border-radius:32px;font-size:6rem;padding:18px;box-sizing:border-box;box-shadow:0 22px 44px -12px rgba(11,11,15,.35),0 0 0 6px rgba(255,255,255,.45);transform:rotate(-3deg);transition:width .35s ease,height .35s ease}
-.sview .svstage .th.has{background:#fff;border:0}
-.sview .svstage .th.hires{width:min(66vw,260px,30vh);height:min(66vw,260px,30vh);padding:14px}
-.sview .svstage .th.svtext{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;color:#0B0B0F;padding:22px;background:linear-gradient(160deg,#fff 0%,#fff 62%,#F3F6E8 100%)}
+.sview .svstage{flex:1;display:grid;place-items:center;min-height:0;padding:6px 0 30px;position:relative}
+/* poster look: the product floats on the lime light (its white background melts in), the discount huge behind it, a soft shadow under it */
+.sview .svstage::before{content:'';position:absolute;left:50%;top:46%;width:min(82vw,340px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.95) 0,rgba(255,255,255,.55) 38%,rgba(255,255,255,0) 68%);pointer-events:none}
+.sview .svstage::after{content:'';position:absolute;bottom:30px;left:50%;width:min(52vw,220px);height:22px;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(60,70,0,.35) 0,rgba(60,70,0,0) 70%);pointer-events:none}
+.sview .svstage .th{position:relative;width:min(72vw,280px);height:min(72vw,280px,32vh);background:transparent;border:0;border-radius:0;font-size:6.5rem;padding:0;box-sizing:border-box;box-shadow:none;transition:width .35s ease,height .35s ease}
+/* the float moves the picture itself: a moving or stacked box around it would stop the white from melting into the light */
+.sview .svstage .th>img,.sview .svstage .th>.tvart{animation:svpop .3s ease,svfloat 4.5s ease-in-out .3s infinite}
+@keyframes svfloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(1deg)}}
+.sview .svstage .th.has{background:transparent;border:0}
+.sview .svstage .th.hires{width:min(76vw,300px,34vh);height:min(76vw,300px,34vh);padding:0}
+.sview .svstage .th.svtext{transform:rotate(-3deg);border-radius:28px;box-shadow:0 22px 44px -12px rgba(11,11,15,.35);width:min(62vw,230px);height:min(62vw,230px,30vh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;color:#0B0B0F;padding:22px;background:linear-gradient(160deg,#fff 0%,#fff 62%,#F3F6E8 100%)}
 .sview .svtext .svtag{font-size:.82rem;font-weight:700;color:#3A3A44;background:#EEF3D4;border-radius:999px;padding:4px 12px}
 .sview .svtext b{font-size:1.75rem;font-weight:900;line-height:1.12;letter-spacing:-.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .sview .svtext .svrest{font-size:.95rem;font-weight:600;color:#55555F;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .sview .svtext .svsize{font-size:.85rem;font-weight:800;color:#FF4B2B}
-.sview .svstage .th img{width:100%;height:100%;object-fit:contain;animation:svpop .3s ease}
+.sview .svstage .th img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
 @keyframes svpop{from{opacity:.3}to{opacity:1}}
 .sview .sinfo{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;gap:10px;text-align:center;padding:34px 18px 8px;min-height:0}
 
@@ -683,9 +689,9 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 .sview .tapzone.next{inset-inline-end:0}.sview .tapzone.prev{inset-inline-start:0}
 .sview .sact{display:flex;gap:10px;justify-content:center;padding:0 14px calc(18px + env(safe-area-inset-bottom,0px))}
 .sview .sact .btn{min-height:48px}
-@media (prefers-reduced-motion:reduce){.sview .bars i b{transition:none!important}}
+@media (prefers-reduced-motion:reduce){.sview .bars i b{transition:none!important}.sview .svstage .th>img,.sview .svstage .th>.tvart{animation:none}}
 /* short screens (and the page inside the Claude app's frame): a smaller hero and tighter text so everything fits above the buttons */
-@media (max-height:780px){.sview .svhero{height:clamp(230px,44vh,420px)}.sview .svstage{padding:2px 0 26px}.sview .svstage .th,.sview .svstage .th.hires{width:min(56vw,26vh);height:min(56vw,26vh)}
+@media (max-height:780px){.sview .svhero{height:clamp(230px,44vh,420px)}.sview .svstage{padding:2px 0 26px}.sview .svstage .th,.sview .svstage .th.hires{width:min(64vw,30vh);height:min(64vw,30vh)}.sview .svstage::before{width:min(70vw,34vh)}
   .sview .sinfo{gap:6px;padding-top:40px}.sview .nm{font-size:1.08rem}.sview .pr b{font-size:1.65rem}.sview .svchain{padding:5px 14px;font-size:.92rem}.sview .svchain .av{width:28px;height:28px}
   .sview .svcheck{font-size:.85rem;padding:4px 10px}.sview .sact .btn{min-height:44px}}
 .sheet.full{max-height:none;height:100%;border-radius:0}
