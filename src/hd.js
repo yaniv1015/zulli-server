@@ -2,17 +2,19 @@
 //
 // The regular thumbnails (img/NN.json, 112 px) are fine in lists but blurry when a story blows them up
 // to half the screen. This keeps a second, larger set only for products on a strong deal right now:
-//   img/hd/NN.json = { "<barcode>": "<base64 webp, 360 px>" }, NN = barcode's last 4 digits % HD_CHUNKS
+//   img/hd/NNN.json = { "<barcode>": "<base64 webp, up to 360 px>" }, NNN = barcode's last 4 digits % HD_CHUNKS
+// The photos are cut out here, once: the white around the product is made transparent and cropped away, so the app shows
+// them on its dark story without any work on the phone. Small chunks (a few photos each) so a story loads only what it shows.
 //   img/hd/have.json = the barcodes in the set, comma-joined (the app checks it before loading a chunk)
 // Products that left the deals are dropped, so the set stays small (HD_MAX photos at most).
 // Sources: Rami Levy's 600 px shot for what it sells, else the Open Food Facts family's front photo.
 // Retailer photos belong to the retailer; get permission before a public launch.
 //
 // Usage: node src/hd.js [path/to/summary.json]   (run after images.js, from the same folder)
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import sharp from 'sharp';
 
-export const HD_CHUNKS = 32;
+export const HD_CHUNKS = 128;
 const hdChunk = (bc) => Number(String(bc).slice(-4)) % HD_CHUNKS;
 const SUMMARY = process.argv[2] || 'data/summary.json';
 const SIZE = 360, QUALITY = 74;
@@ -46,11 +48,31 @@ async function fromOpen(bc) {
   }
   return null;
 }
+// white background → transparent: flood fill from the edges over near-white pixels, soft edge, crop to the product
+async function cutout(input) {
+  const { data, info } = await sharp(input).flatten({ background: '#ffffff' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const W = info.width, H = info.height, a = data, seen = new Uint8Array(W * H), q = new Int32Array(W * H); let qh = 0, qt = 0;
+  const white = (i) => { const r = a[i * 4], g = a[i * 4 + 1], b = a[i * 4 + 2]; return Math.min(r, g, b) >= 228 && Math.max(r, g, b) - Math.min(r, g, b) < 28; };
+  const push = (i) => { if (!seen[i] && white(i)) { seen[i] = 1; q[qt++] = i; } };
+  for (let x = 0; x < W; x++) { push(x); push((H - 1) * W + x); } for (let y = 0; y < H; y++) { push(y * W); push(y * W + W - 1); }
+  while (qh < qt) { const i = q[qh++], x = i % W, y = (i / W) | 0; if (x > 0) push(i - 1); if (x < W - 1) push(i + 1); if (y > 0) push(i - W); if (y < H - 1) push(i + W); }
+  if (qt >= W * H * 0.04) for (let i = 0; i < W * H; i++) {
+    if (seen[i]) { a[i * 4 + 3] = 0; continue; }
+    const x = i % W, y = (i / W) | 0;
+    if ((x > 0 && seen[i - 1]) || (x < W - 1 && seen[i + 1]) || (y > 0 && seen[i - W]) || (y < H - 1 && seen[i + W])) { const m = Math.min(a[i * 4], a[i * 4 + 1], a[i * 4 + 2]); a[i * 4 + 3] = m > 200 ? Math.round(255 * (1 - (m - 200) / 55) * 0.85) : 255; }
+  }
+  let x0 = W, y0 = H, x1 = -1, y1 = -1;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (a[(y * W + x) * 4 + 3] > 24) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 < 0) return null;
+  const m = Math.round(Math.max(x1 - x0, y1 - y0) * 0.03); x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(W - 1, x1 + m); y1 = Math.min(H - 1, y1 + m);
+  return sharp(a, { raw: { width: W, height: H, channels: 4 } }).extract({ left: x0, top: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 })
+    .resize(SIZE, SIZE, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 80, alphaQuality: 90 }).toBuffer();
+}
 async function hd(buf) {
-  const img = sharp(buf); const m = await img.metadata();
+  const m = await sharp(buf).metadata();
   if ((m.width || 0) < 250 && (m.height || 0) < 250) return null;   // not sharper than what we have
-  return img.trim({ threshold: 12 }).resize(SIZE, SIZE, { fit: 'contain', background: '#ffffff', withoutEnlargement: false })
-    .flatten({ background: '#ffffff' }).webp({ quality: QUALITY }).toBuffer();
+  // work at up to twice the final size, so the cut edge stays clean
+  return cutout(await sharp(buf).resize(SIZE * 2, SIZE * 2, { fit: 'inside', withoutEnlargement: true }).toBuffer());
 }
 
 const BIG_RX = /טלוויזי|טלויזי|מסך\s*\d{2}|מקרר|מכונת כביסה|מייבש|מדיח|תנור|מיקרוגל|שואב|מזגן|מאוורר|מעבד מזון|מכונת קפה|טוסטר|קומקום|בלנדר|מיקסר|מיחם|אוזניות|רמקול|מגהץ|מחליק|מייבש שיער|סיר לחץ|airfryer|נינג'ה|ninja|טאבלט|סמארטפון|גלקסי|אייפון|שעון חכם|קורקינט/i;
@@ -80,11 +102,20 @@ const PREV = 'prev/img/hd';
 const chunks = Array.from({ length: HD_CHUNKS }, () => ({}));
 let misses = {}; try { misses = JSON.parse(readFileSync(`${PREV}/misses.json`, 'utf8')); } catch {}
 let kept = 0;
-for (let i = 0; i < HD_CHUNKS; i++) {
-  const f = `${PREV}/${String(i).padStart(2, '0')}.json`;
-  let c = {}; try { if (existsSync(f)) c = JSON.parse(readFileSync(f, 'utf8')); } catch {}
-  for (const [bc, b] of Object.entries(c)) if (wantSet.has(bc)) { chunks[i][bc] = b; kept++; }
+// earlier runs: any chunk layout (32 two-digit files before, 128 three-digit files now); photos stored before the cut-out
+// existed (index without "cut") are cut now, from the stored picture
+let prevIx = {}; try { prevIx = JSON.parse(readFileSync(`${PREV}/index.json`, 'utf8')); } catch {}
+let recut = 0;
+for (const f of (existsSync(PREV) ? readdirSync(PREV) : []).filter((n) => /^\d+\.json$/.test(n))) {
+  let c = {}; try { c = JSON.parse(readFileSync(`${PREV}/${f}`, 'utf8')); } catch {}
+  for (const [bc, b] of Object.entries(c)) {
+    if (!wantSet.has(bc)) continue;
+    let v = b;
+    if (!prevIx.cut) { try { const w = await cutout(Buffer.from(b, 'base64')); if (w) { v = w.toString('base64'); recut++; } } catch {} }
+    chunks[hdChunk(bc)][bc] = v; kept++;
+  }
 }
+console.log(`re-cut ${recut}`);
 const today = Math.floor(Date.now() / 864e5);
 const todo = want.filter((bc) => chunks[hdChunk(bc)][bc] == null && !(misses[bc] && today - misses[bc] < 14));
 console.log(`kept ${kept} · to fetch ${todo.length}`);
@@ -161,13 +192,13 @@ for (const bc of want.filter((b) => (best.get(b) || 0) >= 2 && sells(b, 'carrefo
   const inf = carInfo(await carProduct(bc)); if (inf) info[bc] = inf; await sleep(150);
 }
 mkdirSync('img/hd', { recursive: true });
-chunks.forEach((c, i) => writeFileSync(`img/hd/${String(i).padStart(2, '0')}.json`, JSON.stringify(c)));
+chunks.forEach((c, i) => writeFileSync(`img/hd/${String(i).padStart(3, '0')}.json`, JSON.stringify(c)));
 for (const bc of Object.keys(misses)) if (today - misses[bc] >= 14) delete misses[bc];
 writeFileSync('img/hd/misses.json', JSON.stringify(misses));
 for (const bc of Object.keys(info)) if (!wantSet.has(bc)) delete info[bc];
 writeFileSync('img/hd/info.json', JSON.stringify(info));
 const all = chunks.flatMap((c) => Object.keys(c)).sort();
 writeFileSync('img/hd/have.json', JSON.stringify(all.join(',')));
-const report = { updated: new Date().toISOString(), hd: all.length, candidates: want.length, todo: todo.length, added: stats, rami: { todo: ramiTodo.length, ...ramiStat }, carrefour: carStat, off: offTodo.length, minutes: Math.round((Date.now() - t0) / 6e4) };
+const report = { updated: new Date().toISOString(), chunks: HD_CHUNKS, cut: true, hd: all.length, candidates: want.length, todo: todo.length, added: stats, rami: { todo: ramiTodo.length, ...ramiStat }, carrefour: carStat, off: offTodo.length, minutes: Math.round((Date.now() - t0) / 6e4) };
 writeFileSync('img/hd/index.json', JSON.stringify(report));
 console.log(JSON.stringify(report));
