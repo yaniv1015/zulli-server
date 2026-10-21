@@ -1130,7 +1130,9 @@ const thumb=(v,emo,cls='')=>`<span class="th ${cls}"${v&&v.bc&&/^\d{8,14}$/.test
 function loadChunk(n){if(!TH.chunks.has(n))TH.chunks.set(n,fetch(`img/${String(n).padStart(3,'0')}.json`).then(r=>r.ok?r.json():{}).catch(()=>({})));return TH.chunks.get(n)}
 let _thQ=0;function hydrateThumbs(){_thQ=0;TH.ready.then(ix=>{if(!ix)return;const els=[...document.querySelectorAll('[data-th]:not([data-thd])')];const by=new Map();
   for(const el of els){el.dataset.thd=1;const n=thChunk(el.dataset.th);(by.get(n)||by.set(n,[]).get(n)).push(el)}
-  for(const [n,list] of by)loadChunk(n).then(c=>{for(const el of list){if(el.classList.contains('hires'))continue;const b=c[el.dataset.th];if(typeof b==='string'&&b.length<200000&&/^[A-Za-z0-9+/]+={0,2}$/.test(b)){/* only real base64: the image never reaches the page as HTML */const im=new Image();im.alt='';im.src='data:image/webp;base64,'+b;el.replaceChildren(im);el.classList.add('has')}}})})}
+  for(const [n,list] of by)loadChunk(n).then(c=>{for(const el of list){if(el.classList.contains('hires'))continue;const b=c[el.dataset.th];if(typeof b==='string'&&b.length<200000&&/^[A-Za-z0-9+/]+={0,2}$/.test(b)){/* only real base64: the image never reaches the page as HTML */const im=new Image();im.alt='';im.src='data:image/webp;base64,'+b;el.replaceChildren(im);el.classList.add('has')}
+    /* no small photo: the sharp one (deal products), when there is one */
+    else if(typeof hdData==='function'){const bc=el.dataset.th;hdData(bc).then(u=>{if(u&&document.contains(el)&&!el.classList.contains('has')){const im=new Image();im.alt='';im.src=u;el.replaceChildren(im);el.classList.add('has')}})}}})})}
 new MutationObserver(()=>{if(!_thQ)_thQ=requestAnimationFrame(hydrateThumbs)}).observe(document.documentElement,{childList:true,subtree:true});
 /* name as shoppers read it: no leading junk, no company name glued in front, brand added only when the name lacks it */
 /* brand and name from Carrefour's store (img/hd/info.json, photo job) for products whose price files name the importer */
