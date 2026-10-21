@@ -3375,6 +3375,7 @@ For each item give:
 - size: a weight or volume written next to it ("150 גרם", "1 ליטר", "500"), else "". A number with a unit, or a number of 100 and more, is a size, never the quantity.
 - qty: how many units, only from a small count written with the item ("x2", "2 ", "×3", "שניים"); 1 if not written. Never more than 20.
 - sure: false when the handwriting of this item is hard to read, so the shopper checks it; true otherwise.
+Words that often appear on Israeli shopping lists (the store's product kinds), to help read unclear handwriting; use one only when the writing really matches it: ${Object.values(TYPES).map(t=>t[0]).filter(n=>n&&n!=='מוצר').slice(0,400).join(', ')}.
 Reply with only JSON: {"items": [{"name": string, "size": string, "qty": number, "sure": boolean}]}. If the image has no shopping list, reply {"items": []}.`,{images:img,signal:ctl.signal,modelTier:'complex'});
         const items=(r&&Array.isArray(r.items)?r.items:[]).filter(i=>i&&String(i.name||'').trim());
         if(!items.length){$('lpStatus').innerHTML='<div class="unk">לא מצאנו מוצרים בתמונה. ודא שהרשימה כולה בתמונה, חדה ומוארת.</div>';return}
