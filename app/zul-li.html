@@ -3352,7 +3352,7 @@ function openListPhoto(){
     <div id="lpRes" style="display:flex;flex-direction:column;gap:10px"></div>`,()=>{
     const show=(lines,note)=>{
       $('lpStatus').innerHTML=note||'';
-      $('lpRes').innerHTML=`<label class="f" for="lpText">זה מה שקראנו (${nOf(lines.split('\n').filter(Boolean).length,'מוצר אחד','מוצרים')}). אפשר לתקן, להוסיף או למחוק שורות. כמות כותבים בסוגריים, למשל (2):</label>
+      $('lpRes').innerHTML=`<label class="f" for="lpText">זה מה שקראנו (${nOf(lines.split('\n').filter(Boolean).length,'מוצר אחד','מוצרים')}). אפשר לתקן, להוסיף או למחוק שורות. כמות כותבים בסוף השורה, למשל "- 2 יח׳":</label>
         <textarea id="lpText" style="min-height:180px">${esc(lines)}</textarea>
         <button class="btn big y" type="button" id="lpAdd">הוסף לרשימה שלי</button><div id="lpUnk"></div>`;
       $('lpAdd').onclick=()=>{const txt=$('lpText').value.replace(/❓\s*/g,'').trim();if(!txt){toast('אין מוצרים להוספה');return}
@@ -3381,7 +3381,7 @@ Words that often appear on Israeli shopping lists (the store's product kinds), t
 Reply with only JSON: {"items": [{"name": string, "size": string, "qty": number, "sure": boolean}]}. If the image has no shopping list, reply {"items": []}.`,{images:img,signal:ctl.signal,modelTier:'complex'});
         const items=(r&&Array.isArray(r.items)?r.items:[]).filter(i=>i&&String(i.name||'').trim());
         if(!items.length){$('lpStatus').innerHTML='<div class="unk">לא מצאנו מוצרים בתמונה. ודא שהרשימה כולה בתמונה, חדה ומוארת.</div>';return}
-        const line=i=>{let q=Math.round(+i.qty||1);if(!(q>=1&&q<=20))q=1;const sz=String(i.size||'').trim();const nm=String(i.name).replace(/\s+/g,' ').trim();return nm+(sz&&!nm.includes(sz)?' '+sz:'')+(q>1?' ('+q+')':'')};
+        const line=i=>{let q=Math.round(+i.qty||1);if(!(q>=1&&q<=20))q=1;const sz=String(i.size||'').trim();const nm=String(i.name).replace(/\s+/g,' ').trim();return nm+(sz&&!nm.includes(sz)?' '+sz:'')+(q>1?' - '+q+' יח׳':'')};
         const unsure=items.filter(i=>i.sure===false).map(i=>String(i.name).replace(/\s+/g,' ').trim());
         /* hard-to-read lines are named in plain words above the list, not marked inside it */
         show(items.map(line).join('\n'),unsure.length?`<div class="banner">✏️ <b>כדאי לבדוק:</b> ${unsure.slice(0,8).map(esc).join(' · ')}<br><small>הכתב בשורות האלה לא היה ברור. אם משהו לא נכון, תקן אותו ברשימה למטה.</small></div>`:'');
