@@ -1092,7 +1092,7 @@ const NO_ROOT_EMOJI=(function(){try{const cv=document.createElement('canvas');cv
   const d=c.getImageData(0,0,40,40).data;let col=0;for(let i=0;i<d.length;i+=4)if(d[i+3]>100&&Math.max(d[i],d[i+1],d[i+2])-Math.min(d[i],d[i+1],d[i+2])>40)col++;
   return col<20}catch(e){return false}})();
 const EXTRA_KW={banana:['בננה','בננות'],potato:['תפוח אדמה','תפוחי אדמה'],tomato:['עגבניה','עגבנייה','עגבניות'],spreads:['ריבת','ממרח'],beer:['היינקן','קרלסברג','גולדסטאר','טובורג','קורונה','בירה'],bodycare:['סטיק','דאו','רולאון','רול און','דאודורנט','סבון','ג׳ל רחצה','קרם ידיים'],
-  tp:['גליל','גלילים'],candy:['קינדר','מסטיק','סוכריה','סוכריות'],chocolate:['שוקולד','פרה','מקופלת','טעמי','ריטר','מילקה'],snacks:['תפוציפס','דוריטוס','צ׳יטוס','פופקורן','אפרופו','חטיף'],
+  tp:['גלילים'],candy:['קינדר','מסטיק','סוכריה','סוכריות','חמצוץ','לקריץ'],chocolate:['שוקולד','פרה','מקופלת','טעמי','ריטר','מילקה'],snacks:['תפוציפס','דוריטוס','צ׳יטוס','פופקורן','אפרופו','חטיף'],
   softdrinks:['ספרייט','פאנטה','שוופס','סודה','פריגת'],juice:['מיץ','נקטר','פרימור'],water:['נביעות','מי עדן','עין גדי'],oral:['קולגייט','סנסודיין','משחת שיניים','מברשת שיניים'],
   cleaners:['אקונומיקה','סנו','מסיר','מנקה'],paper:['מגבונים','ממחטות','מפיות','נייר סופג'],bags:['שקית','שקיות','ניילון'],household:['סוללה','סוללות','נר','נרות']};
 
@@ -2388,7 +2388,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='132';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='133';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
