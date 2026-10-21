@@ -860,6 +860,25 @@ nav.bn .badge{background:var(--coral);color:#fff}
 .rfpic b{font-size:.9rem;line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .rfpic .num{font-weight:900}.rfpic small{color:var(--muted)}
 .rfpic:active{transform:scale(.98)}
+/* bigger product photos (sharp source loaded for the larger ones) */
+.th.ico{width:64px;height:64px;font-size:1.9rem;border-radius:14px}
+.th.thv{width:76px;height:76px;font-size:2rem;border-radius:14px}
+.srow .th.thc,.vopt .th.thc{width:52px;height:52px;font-size:1.6rem;border-radius:12px}
+.th.thbig{width:132px;height:132px;font-size:3.2rem;border-radius:18px}
+.rfpic .th{height:156px}
+.th.has{padding:3px;box-sizing:border-box}
+.th.has.hires{padding:2px}
+/* accessibility */
+#readFab{position:fixed;inset-inline-start:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:60;width:58px;height:58px;border-radius:50%;border:0;background:var(--lime,#D7FF1F);color:#0B0B0F;font-size:1.6rem;box-shadow:0 8px 24px -6px rgba(0,0,0,.45)}
+#readFab.on{background:var(--coral,#FF4B2B);color:#fff;animation:pulse 1.2s ease-in-out infinite}
+.readmode .reading{outline:3px solid var(--coral,#FF4B2B);outline-offset:2px;border-radius:6px}
+.a11yz{display:flex;gap:6px;flex-wrap:wrap}.a11yz button{flex:1;min-width:70px;min-height:48px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-weight:800}
+.a11yz button[aria-checked="true"]{background:var(--btn-bg,#0B0B0F);color:var(--btn-ink,#fff);border-color:transparent}
+html[data-contrast="1"]{--muted:var(--ink)!important;--line:#3a3a44!important}
+html[data-contrast="1"] .sub,html[data-contrast="1"] small{color:var(--ink)!important;opacity:1!important}
+html[data-contrast="1"] .card,html[data-contrast="1"] .btn,html[data-contrast="1"] input,html[data-contrast="1"] select{border-width:2px!important}
+@media (prefers-color-scheme:dark){html[data-contrast="1"]{--line:#c9c9d2!important}}
+@keyframes pulse{50%{transform:scale(1.08)}}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -1144,9 +1163,16 @@ const thumb=(v,emo,cls='')=>`<span class="th ${cls}"${v&&v.bc&&/^\d{8,14}$/.test
 function loadChunk(n){if(!TH.chunks.has(n))TH.chunks.set(n,fetch(`img/${String(n).padStart(3,'0')}.json`).then(r=>r.ok?r.json():{}).catch(()=>({})));return TH.chunks.get(n)}
 let _thQ=0;function hydrateThumbs(){_thQ=0;TH.ready.then(ix=>{if(!ix)return;const els=[...document.querySelectorAll('[data-th]:not([data-thd])')];const by=new Map();
   for(const el of els){el.dataset.thd=1;const n=thChunk(el.dataset.th);(by.get(n)||by.set(n,[]).get(n)).push(el)}
-  for(const [n,list] of by)loadChunk(n).then(c=>{for(const el of list){if(el.classList.contains('hires'))continue;const b=c[el.dataset.th];if(typeof b==='string'&&b.length<200000&&/^[A-Za-z0-9+/]+={0,2}$/.test(b)){/* only real base64: the image never reaches the page as HTML */const im=new Image();im.alt='';im.src='data:image/webp;base64,'+b;el.replaceChildren(im);el.classList.add('has')}
+  for(const [n,list] of by)loadChunk(n).then(c=>{for(const el of list){if(el.classList.contains('hires'))continue;const b=c[el.dataset.th];if(typeof b==='string'&&b.length<200000&&/^[A-Za-z0-9+/]+={0,2}$/.test(b)){/* only real base64: the image never reaches the page as HTML */const im=new Image();im.alt='';im.src='data:image/webp;base64,'+b;el.replaceChildren(im);el.classList.add('has');sharpSoon(el)}
     /* no small photo: the sharp one (deal products), when there is one */
     else if(typeof hdData==='function'){const bc=el.dataset.th;hdData(bc).then(u=>{if(u&&document.contains(el)&&!el.classList.contains('has')){const im=new Image();im.alt='';im.src=u;el.replaceChildren(im);el.classList.add('has')}})}}})})}
+/* the small photos are 112 px: a thumbnail shown larger than ~56 px gets the sharp photo (the deal photo, or the chain's own 600 px
+   photo), loaded when it scrolls into view; the small one stays until the sharp one has arrived */
+const _sharpIO=typeof IntersectionObserver==='function'?new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){_sharpIO.unobserve(e.target);sharpThumb(e.target)}},{rootMargin:'200px'}):null;
+function sharpSoon(el){if(el.closest('.sview')||el.classList.contains('hires'))return;requestAnimationFrame(()=>{if(el.offsetWidth<56)return;_sharpIO?_sharpIO.observe(el):sharpThumb(el)})}
+function sharpThumb(el){const bc=el.dataset.th;const v=bc&&(BYBC[bc]||V.find(x=>x.bc===bc));if(!v)return;
+  Promise.resolve(typeof hdData==='function'?hdData(bc):null).then(d=>d||(v.rp&&v.rp.rami!=null?`https://img.rami-levy.co.il/product/${bc}/medium.jpg`:null)).then(u=>{if(!u||!document.contains(el))return;
+    const im=new Image();im.alt='';im.referrerPolicy='no-referrer';im.decoding='async';im.onload=()=>{if(!document.contains(el)||im.naturalWidth<150)return;el.replaceChildren(im);el.classList.add('has','hires')};im.src=u})}
 new MutationObserver(()=>{if(!_thQ)_thQ=requestAnimationFrame(hydrateThumbs)}).observe(document.documentElement,{childList:true,subtree:true});
 /* name as shoppers read it: no leading junk, no company name glued in front, brand added only when the name lacks it */
 /* brand and name from Carrefour's store (img/hd/info.json, photo job) for products whose price files name the importer */
@@ -1673,7 +1699,7 @@ function parseList(text){
 }
 function bumpFreq(a){state.freq=state.freq||{};const k=a.v?a.v:'t:'+a.t;const f=state.freq[k]||{n:0,ts:0};f.n++;f.ts=Date.now();state.freq[k]=f}
 function addItems(arr,src){const keys=[];if(arr.length)state.done=null;arr.forEach(bumpFreq);
-  for(const a of arr){const ex=state.items.find(i=>i.t===a.t&&i.v===a.v&&(i.bh||'')===(a.bh||'')&&(i.sz||'')===(a.sz||'')&&(i.v||norm(i.hint||'')===norm(a.hint||'')));if(ex){ex.q+=a.q;keys.push(ex.k)}else{const k=nid();state.items.push({k,...a});keys.push(k)}}
+  for(const a of arr){const ex=state.items.find(i=>i.t===a.t&&i.v===a.v&&(i.bh||'')===(a.bh||'')&&(i.sz||'')===(a.sz||'')&&(i.v||!i.hint||!a.hint||norm(i.hint)===norm(a.hint)||norm(i.hint)===norm(TYPES[i.t][0])||norm(a.hint)===norm(TYPES[a.t][0])));/* «חלב» from the favorites is the same line as «חלב» written */if(ex){ex.q+=a.q;keys.push(ex.k)}else{const k=nid();state.items.push({k,...a});keys.push(k)}}
   if(arr.length)log(arr.length===1?`הוסיף ${arr[0].v?vLabel(VB[arr[0].v]):TYPES[arr[0].t][0]}${src?' ('+src+')':''}`:`הוסיף ${nOf(arr.length,'מוצר אחד','מוצרים')}${src?' ('+src+')':''}`);
   return keys;
 }
@@ -1792,7 +1818,8 @@ function dueLists(){return state.lists.filter(l=>l.sched?.on&&l.items.length&&((
 const VARIANT_FLAGS=['דיאט','זירו','zero','לייט','light','ללא סוכר','ללא גלוטן','ללא לקטוז','אורגני','טבעוני','מופחת','דל','לימון','תות','וניל','שוקולד','אפרסק','ענבים','תפוז','תפוח','מנגו','אננס','פירות יער','קרמל','קפה','מנטה','דבש','צ׳ילי','חריף','שום','בצל','עגבני','פסיפלורה','אבטיח','בננה','קוקוס','לבנדר','רימון','נטול','מוגז','בטעם','מתוק'];
 function variantKey(v){const n=norm(v.n);const pct=(n.match(/\d+(?:\.\d+)?\s*%/g)||[]).map(x=>x.replace(/\s/g,'')).sort().join(',');
   return pct+'|'+VARIANT_FLAGS.filter(f=>n.includes(norm(f))).join(',')}
-function sameVariantSwap(cid,t,q,from){let best=null;for(const v of ofType(t)){if(!allowed(v)||v.s!==from.s||v.id===from.id||variantKey(v)!==variantKey(from))continue;const L=lineAt(cid,v.id,q);if(L&&(!best||L.tot<best.L.tot))best={v,L}}return best}
+const _vk=new Map();const vKey=v=>{let k=_vk.get(v.id);if(k===undefined){k=variantKey(v);_vk.set(v.id,k)}return k};
+function sameVariantSwap(cid,t,q,from){if(t==='other')return null;/* 'שונות' mixes everything: no swap inside it (and scanning it froze every tap) */let best=null;const fk=vKey(from);for(const v of ofType(t)){if(v.s!==from.s||v.id===from.id||!allowed(v)||vKey(v)!==fk)continue;const L=lineAt(cid,v.id,q);if(L&&(!best||L.tot<best.L.tot))best={v,L}}return best}
 function swapsFor(r){
   const out=[];for(const L of r.lines){if(!L.it.v||VB[L.vid].weighted)continue;const ch=sameVariantSwap(r.c.id,L.it.t,L.q,VB[L.vid]);
     if(ch&&L.tot-ch.L.tot>=0.5)out.push({it:L.it,from:VB[L.vid],to:ch.v,save:L.tot-ch.L.tot})}
@@ -2395,7 +2422,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='134';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='135';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -3034,7 +3061,8 @@ function openPicker(key){
     /* the usual products first (sold in most of your chains, with what you wrote), not the cheapest odd one (a single roll, wet wipes) */
     const fol=followed().map(c=>c.id),nCh=v=>v.rp?fol.filter(c=>v.rp[c]!=null).length:0;
     const hsc=new Map((it.hint?findProducts(it.hint,{limit:300}):[]).map(x=>[x.v.id,x.score]));
-    const vs=ofType(it.t).map(v=>({v,ch:cheapestOf(v.id),ok:allowed(v)})).filter(x=>x.ch).sort((a,b)=>(b.ok-a.ok)||((hsc.get(b.v.id)??-99)-(hsc.get(a.v.id)??-99))||(Math.min(nCh(b.v),6)-Math.min(nCh(a.v),6))||(a.ch.p-b.ch.p));
+    const base=it.t==='other'?findProducts(it.hint||(it.v?vLabel(VB[it.v]).split(' ').slice(0,3).join(' '):''),{limit:150}).map(x=>x.v):ofType(it.t);/* 'שונות' holds tens of thousands of unrelated products: only the ones like this one */
+    const vs=base.map(v=>({v,ch:cheapestOf(v.id),ok:allowed(v)})).filter(x=>x.ch).sort((a,b)=>(b.ok-a.ok)||((hsc.get(b.v.id)??-99)-(hsc.get(a.v.id)??-99))||(Math.min(nCh(b.v),6)-Math.min(nCh(a.v),6))||(a.ch.p-b.ch.p));
     const brands=['הכל',...new Set(vs.map(x=>x.v.own?'מותגי הבית':x.v.b).filter(goodBrand))].slice(0,16);
     /* a search here looks in every product, not only this kind: «מעדן הגולן בטעם שוקולד» is found from «שוקולד» */
     const found=pq.trim()?findProducts(pq,{limit:80}).map(x=>({v:x.v,ch:cheapestOf(x.v.id),ok:allowed(x.v)})).filter(x=>x.ch):null;
@@ -4440,7 +4468,7 @@ const LEGAL={
   <h3>מנוי פרימיום</h3><p>מתחדש חודשית וניתן לביטול בכל עת, בהתאם לחוק הגנת הצרכן.</p></div>`]
 };
 /* account: location and payment stay open; every other card shows only its title until tapped */
-function accordion(root){const order=[...(state.profile.registered?[]:['👤']),'📍','🎟️','💳','👤','🥗','🏪','🔔','📊','⭐','🔒'];
+function accordion(root){const order=[...(state.profile.registered?[]:['👤']),'♿','📍','🎟️','💳','👤','🥗','🏪','🔔','📊','⭐','🔒'];
   const secs=[...root.children].filter(x=>x.tagName==='SECTION');const key=sec=>sec.querySelector('h2')?.textContent.trim()||'';
   secs.sort((a,b)=>{const ia=order.findIndex(o=>key(a).startsWith(o)),ib=order.findIndex(o=>key(b).startsWith(o));return (ia<0?99:ia)-(ib<0?99:ib)}).forEach(x=>root.appendChild(x));
   state.accOpen=state.accOpen||[];
@@ -4449,6 +4477,46 @@ function accordion(root){const order=[...(state.profile.registered?[]:['👤']),
     const head=h.closest('.row2')||h;head.classList.add('acchead');
     const btn=document.createElement('button');btn.type='button';btn.className='accbtn';btn.setAttribute('aria-expanded',open);btn.innerHTML=h.innerHTML+'<span class="chev" aria-hidden="true">⌄</span>';h.innerHTML='';h.appendChild(btn);
     btn.onclick=()=>{const o=!sec.classList.contains('open');sec.classList.toggle('open',o);btn.setAttribute('aria-expanded',o);state.accOpen=o?[...state.accOpen,k]:state.accOpen.filter(x=>x!==k);save()}})}
+/* ================= accessibility: a bigger app, high contrast, text read aloud =================
+   Size: the whole app is scaled (zoom on the page), so text, buttons and photos all grow and the layout reflows.
+   Reading: with «הקראת טקסט» on, a tap on any text reads it aloud, a long press on a button reads it without pressing it,
+   and the 🔊 button reads the open screen. In the Android app the phone's own Hebrew voice is used (TextToSpeech plugin). */
+const A11Y_SIZES=[[1,'רגיל'],[1.15,'גדול'],[1.3,'גדול מאוד'],[1.5,'ענק']];
+function a11y(){return state.a11y||(state.a11y={zoom:1,contrast:false,read:false,rate:1})}
+function applyA11y(){const a=a11y(),R=document.documentElement;R.style.zoom=a.zoom&&a.zoom!==1?String(a.zoom):'';R.dataset.contrast=a.contrast?'1':'';R.classList.toggle('readmode',!!a.read);
+  let f=document.getElementById('readFab');if(a.read&&!f){f=document.createElement('button');f.id='readFab';f.type='button';f.setAttribute('aria-label','הקרא את המסך');f.textContent='🔊';f.onclick=e=>{e.stopPropagation();speaking?stopSpeak():speak(screenText())};document.body.appendChild(f)}else if(!a.read&&f){f.remove();stopSpeak()}}
+let speaking=false;
+function hebVoice(){try{return speechSynthesis.getVoices().find(v=>/^he|^iw/i.test(v.lang))||null}catch(e){return null}}
+async function speak(text){text=String(text||'').replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu,' ').replace(/₪\s?([\d.,]+)/g,'$1 שקלים').replace(/([\d.,]+)\s?₪/g,'$1 שקלים').replace(/%/g,' אחוז').replace(/\s+/g,' ').trim().slice(0,1800);if(!text)return;
+  stopSpeak();speaking=true;const fab=document.getElementById('readFab');if(fab)fab.classList.add('on');const done=()=>{speaking=false;const f=document.getElementById('readFab');if(f)f.classList.remove('on')};
+  const TTS=window.Capacitor?.Plugins?.TextToSpeech;
+  if(TTS){try{await TTS.speak({text,lang:'he-IL',rate:a11y().rate||1,pitch:1,volume:1,category:'playback'})}catch(e){toast('לא הצלחנו להקריא. בדוק שיש קול עברי בהגדרות הדיבור של הטלפון')}done();return}
+  if(!('speechSynthesis' in window)){done();toast('הדפדפן הזה לא יודע להקריא טקסט');return}
+  const u=new SpeechSynthesisUtterance(text);u.lang='he-IL';u.rate=a11y().rate||1;const v=hebVoice();if(v)u.voice=v;else if(speechSynthesis.getVoices().length)toast('אין קול עברי במכשיר, ההקראה עלולה לא להישמע. אפשר להוסיף קול עברי בהגדרות');
+  u.onend=done;u.onerror=done;speechSynthesis.speak(u)}
+function stopSpeak(){speaking=false;try{window.Capacitor?.Plugins?.TextToSpeech?.stop()}catch(e){}try{speechSynthesis.cancel()}catch(e){}const f=document.getElementById('readFab');if(f)f.classList.remove('on')}
+/* what the 🔊 button reads: the open window if there is one, otherwise the screen */
+function screenText(){const sh=document.querySelector('#sheetRoot .sheet')||document.querySelector('.sview')||$('screen');if(!sh)return '';
+  const parts=[];sh.querySelectorAll('h1,h2,h3,p,li,label,button,b,.sub,small').forEach(e=>{if(e.closest('[hidden]')||!e.offsetParent)return;if(e.parentElement&&e.parentElement.closest('h1,h2,h3,p,li,label,button'))return;const t=(e.getAttribute('aria-label')||e.innerText||'').trim();if(t&&t.length>1&&!parts.includes(t))parts.push(t)});
+  return parts.join('. ')}
+function readOf(el){const blk=el.closest('[aria-label]')&&el.closest('button,a')?el.closest('button,a'):el.closest('h1,h2,h3,p,li,label,.srow,.drow,.vopt,.rfpic,.rfopt,.item,.card>div,small,b,span')||el;return (blk.getAttribute&&blk.getAttribute('aria-label'))||blk.innerText||''}
+(function(){let lp=0,lpEl=null,fired=false;
+  document.addEventListener('pointerdown',e=>{if(!a11y().read)return;const b=e.target.closest('button,a,[role=button]');if(!b||b.id==='readFab')return;fired=false;lpEl=b;clearTimeout(lp);lp=setTimeout(()=>{fired=true;speak(b.getAttribute('aria-label')||b.innerText);b.classList.add('reading');setTimeout(()=>b.classList.remove('reading'),1200)},550)},true);
+  const cancel=()=>clearTimeout(lp);document.addEventListener('pointerup',cancel,true);document.addEventListener('pointercancel',cancel,true);document.addEventListener('pointermove',e=>{if(lpEl&&(Math.abs(e.movementX)+Math.abs(e.movementY))>6)cancel()},true);
+  document.addEventListener('click',e=>{if(!a11y().read)return;if(fired){fired=false;e.preventDefault();e.stopPropagation();return}/* the long press read the button: no press */
+    if(e.target.closest('button,a,input,select,textarea,[role=button],summary,#readFab'))return;const t=readOf(e.target).trim();if(!t||t.length>400)return;/* a tap on empty space is not a request to read the whole page */const el=e.target;el.classList.add('reading');setTimeout(()=>el.classList.remove('reading'),1200);speak(t)},true)})();
+try{speechSynthesis&&speechSynthesis.getVoices()}catch(e){}
+function a11yCard(){const a=a11y();return `<section class="card" id="a11yCard"><h2>♿ נגישות</h2>
+  <p class="sub">הגדלה של כל האפליקציה, ניגודיות חזקה והקראת טקסט לאנשים עם לקויות ראייה או קריאה.</p>
+  <label class="f">גודל האפליקציה</label><div class="seg a11yz" role="radiogroup" aria-label="גודל האפליקציה">${A11Y_SIZES.map(([z,t])=>`<button type="button" role="radio" data-a11yz="${z}" aria-checked="${(a.zoom||1)===z}" style="font-size:${z}rem">${t}</button>`).join('')}</div>
+  <div class="toggle"><label for="a11yC"><b>ניגודיות גבוהה</b><br><small class="sub">טקסט כהה יותר וקווים בולטים</small></label><input type="checkbox" id="a11yC" ${a.contrast?'checked':''}></div>
+  <div class="toggle"><label for="a11yR"><b>🔊 הקראת טקסט</b><br><small class="sub">לחיצה על טקסט מקריאה אותו · לחיצה ארוכה על כפתור מקריאה אותו בלי ללחוץ · כפתור 🔊 מקריא את המסך</small></label><input type="checkbox" id="a11yR" ${a.read?'checked':''}></div>
+  ${a.read?`<label class="f" for="a11yRate">מהירות ההקראה</label><input type="range" id="a11yRate" min="0.6" max="1.4" step="0.1" value="${a.rate||1}"><button class="btn sm ghost" type="button" id="a11yTest" style="align-self:flex-start">▶️ נסה הקראה</button>`:''}
+</section>`}
+document.addEventListener('click',e=>{const z=e.target.closest('[data-a11yz]');if(z){a11y().zoom=+z.dataset.a11yz;save();applyA11y();renderAccount();toast('גודל: '+A11Y_SIZES.find(x=>x[0]===a11y().zoom)[1]);return}
+  if(e.target.id==='a11yTest')speak('שלום, ככה נשמעת ההקראה במוזיל. אותה קנייה, פחות כסף.')});
+document.addEventListener('change',e=>{if(e.target.id==='a11yC'){a11y().contrast=e.target.checked;save();applyA11y()}else if(e.target.id==='a11yR'){a11y().read=e.target.checked;save();applyA11y();renderAccount();if(a11y().read)speak('הקראת טקסט פועלת. לחץ על טקסט כדי לשמוע אותו.')}else if(e.target.id==='a11yRate'){a11y().rate=+e.target.value;save()}});
+
 function renderAccount(){
   const p=state.profile,P=state.pref;
   $('screen').innerHTML=`
@@ -4461,6 +4529,7 @@ function renderAccount(){
       <button class="btn sm ghost" type="button" id="regEdit" style="align-self:flex-start">✏️ עדכון פרטים</button>`
       :`<p class="sub">כדי להזמין צריך להירשם: שם מלא, מייל, טלפון וכתובת מגורים.</p><button class="btn k" type="button" id="regOpen">📝 הרשמה</button>`}
     <div class="fgrid"><label class="f">שפה<select id="plang"><option value="he">עברית</option><option disabled>English (בקרוב)</option><option disabled>العربية (בקרוב)</option><option disabled>Русский (בקרוב)</option></select></label></div></section>
+  ${a11yCard()}
   <section class="card"><h2>🎟️ מועדונים וקופונים</h2>
     <p class="sub">${state.clubs.length?`חבר ב: ${state.clubs.filter(id=>CHB[id]).map(id=>CHB[id].club).join(', ')}`:'עוד לא סימנת מועדונים'} · ${(state.coupons||[]).filter(couponLive).length} קופונים פעילים</p>
     <button class="btn" type="button" id="openClubs">ניהול מועדונים וקופונים</button></section>
@@ -4606,7 +4675,7 @@ async function pushSync(){const L=LN();if(!L||!state.pushOn||!REAL)return;
 async function pushToggle(on){const L=LN();if(!L)return;if(on){let pr;try{pr=await L.requestPermissions()}catch(e){pr=null}
     if(!pr||pr.display!=='granted'){state.pushOn=false;save();update();toast('לא אושרו התראות. אפשר להפעיל אותן בהגדרות הטלפון');return}
     state.pushOn=true;save();update();toast('🔔 התראות לטלפון פועלות');pushSync()}else{state.pushOn=false;save();update();toast('התראות לטלפון כבויות')}}
-(async function boot(){setTimeout(()=>{try{chainLogos()}catch(e){}},1500);setTimeout(()=>{pushSync().catch(()=>{})},8000);
+(async function boot(){try{applyA11y()}catch(e){}setTimeout(()=>{try{chainLogos()}catch(e){}},1500);setTimeout(()=>{pushSync().catch(()=>{})},8000);
   $('screen').innerHTML='<div class="empty">טוען מחירים אמיתיים…</div>';
   let loaded=false;
   if(state.real&&state.real.source!=='bundled'){try{const sum=await idbGet('summary');if(sum){applyReal(sum);REAL.source='file';loaded=true}}catch(e){}}
