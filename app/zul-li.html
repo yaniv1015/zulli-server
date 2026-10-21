@@ -846,6 +846,9 @@ nav.bn .badge{background:var(--coral);color:#fff}
 .promocard b,.promocard summary,.promocard .dline b,.promocard p{color:inherit}.promocard .dline b{color:#fff}.promocard summary{color:var(--lime)}.promocard .clubpick,.promocard .brands button{color:#F2F2EE}.promocard .brands button{background:#14161B;border-color:#2A2D35}
 .sview.neo .th.hdwait{border-radius:24px;background:radial-gradient(circle at 50% 45%,rgba(159,244,255,.18),transparent 60%);animation:hdpulse 1.1s ease-in-out infinite}
 @keyframes hdpulse{50%{opacity:.45}}
+.lpost .vwrap{aspect-ratio:9/16;max-height:72vh;background:#000;border-radius:16px;overflow:hidden;display:grid;place-items:center}
+.lpost iframe{width:100%;height:100%;border:0}
+.lfallback{color:#fff;font-weight:800;font-size:1.1rem;text-decoration:none;padding:20px}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -2546,17 +2549,43 @@ function openBudget(){openSheet('💰 תקציב חודשי לסופר',`<p clas
 /* ================= voice: say the list ("חלב, עגבניות ולחם") ================= */
 function voiceToList(text){/* "עגבניות ולחם" → two products; "וופל"/"ויטמין" stay whole */
   try{sxIndex()}catch(e){}const known=w=>{const t=sxCanon(w);return !!(SX.voc&&SX.voc.has(t))};
-  return String(text||'').replace(/\s+(ו|וגם)\s+/g,', ').replace(/\s+ו([א-ת]{2,})/g,(m,rest)=>/* split "ולחם" unless "ו…" is itself a word ("וופל") */known('ו'+rest)&&!known(rest)?m:', '+rest).replace(/(^|\s)(וגם|גם|בבקשה|תוסיף|להוסיף|צריך|צריכים|תרשום)(?=\s|$)/g,' ').trim()}
+  return String(text||'').replace(/\s+(ו|וגם)\s+/g,', ').replace(/\s+ו([א-ת]{2,})/g,(m,rest)=>/* split "ולחם" unless "ו…" is itself a word ("וופל") */known('ו'+rest)&&!known(rest)?m:', '+rest).replace(/(^|\s)(וגם|גם|בבקשה|תוסיף|להוסיף|צריך|צריכים|תרשום)(?=\s|$)/g,' ').trim().split(/\s*,\s*/).map(splitSpoken).join(', ')}
+/* spoken lists come without commas ("חלב ביצים לחם"): a chunk is cut where a second product name begins.
+   Product names are the kinds of the catalog and their keywords, up to 3 words ("גבינה צהובה" stays one); other words
+   (brands, sizes, "1%") stay with the product before them. */
+let _kw=null;function kwSet(){if(_kw)return _kw;_kw=new Set();for(const [id,t] of Object.entries(TYPES)){if(id==='other')continue;for(const k of [t[0],...(t[3]||[])])if(k&&String(k).length>=2)_kw.add(norm(k))}return _kw}
+const NUMW={'שניים':2,'שתיים':2,'שני':2,'שתי':2,'שלושה':3,'שלוש':3,'ארבעה':4,'ארבע':4,'חמישה':5,'חמש':5,'שישה':6,'שש':6,'שבעה':7,'שבע':7,'שמונה':8,'תשעה':9,'תשע':9,'עשרה':10,'עשר':10};
+function splitSpoken(chunk){chunk=String(chunk).replace(/(^|\s)(שניים|שתיים|שני|שתי|שלושה|שלוש|ארבעה|ארבע|חמישה|חמש|שישה|שש|שבעה|שבע|שמונה|תשעה|תשע|עשרה|עשר)(?=\s|$)/g,(m,a,n)=>a+'x'+NUMW[n]);
+  const w=String(chunk).split(/\s+/).filter(Boolean);if(w.length<2)return chunk;const K=kwSet();const out=[];let cur=[],has=false;
+  for(let i=0;i<w.length;){let len=0;for(let L=Math.min(3,w.length-i);L>=1;L--)if(K.has(norm(w.slice(i,i+L).join(' ')))){len=L;break}
+    if(len&&has){out.push(cur.join(' '));cur=[];has=false}
+    if(len){cur.push(...w.slice(i,i+len));has=true;i+=len}else{cur.push(w[i]);i++}}
+  if(cur.length)out.push(cur.join(' '));return out.join(', ')}
 let _rec=null;
+/* deals on what was said: every deal (10%+) at the shopper's chains on products whose name has those words */
+function openDealSearch(term){const ws=norm(term).split(/\s+/).filter(w=>w.length>=2);const seen=new Set();
+  const rows=dealRows(followed().map(c=>c.id),10).filter(r=>{const n=norm(vLabel(r.v));return ws.length&&ws.every(w=>n.includes(w))}).sort((a,b)=>b.pct-a.pct).filter(r=>{const k=r.v.id;if(seen.has(k))return false;seen.add(k);return true}).slice(0,40);
+  openSheet(`🔥 מבצעים על "${esc(term)}"`,rows.length?`<ul class="dlist">${rows.map(r=>`<li class="drow">${thumb(r.v,TYPES[r.v.t][1],'thv')}<div class="grow"><b>${esc(vLabel(r.v))}</b><span class="dline"><b>${CHB[r.cid].short}</b> · ${esc(r.pr.label)}</span><span class="row2" style="gap:4px"><span class="pill mega">−${r.pct}%</span><button class="btn sm" type="button" data-dsa="${r.v.id}">+ הוסף</button></span></div></li>`).join('')}</ul>`:`<p>לא מצאנו כרגע מבצעים על "${esc(term)}" ברשתות שלך.</p><button class="btn" type="button" id="dsPc">🔍 בדוק את המחיר בכל הרשתות</button>`,()=>{
+    document.querySelectorAll('[data-dsa]').forEach(b=>b.onclick=()=>{const v=VB[b.dataset.dsa];addItems([{t:v.t,v:v.id,q:1}],'מבצע');save();update();toast(vLabel(v)+' נוסף לרשימה')});
+    if($('dsPc'))$('dsPc').onclick=()=>{closeSheet();openPriceCheck(null,term)}})}
+/* speak into one search box: what is said is written there */
+function voiceInto(inp,done){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){toast('אפשר ללחוץ על המיקרופון במקלדת ולהכתיב');inp&&inp.focus();return}
+  const r=new SR();r.lang='he-IL';r.interimResults=true;let t='';toast('🎤 מקשיב…');r.onresult=e=>{t='';for(const x of e.results)t+=x[0].transcript;if(inp)inp.value=t};
+  r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){toast('אין גישה למיקרופון. אפשר להכתיב דרך המקלדת');inp&&inp.focus()}};r.onend=()=>{if(t.trim())done(t.trim())};try{r.start()}catch(e){toast('לא הצלחתי להפעיל את המיקרופון')}}
+
 function startVoice(btn){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   const fallback=why=>{openPaste();setTimeout(()=>{const u=$('paste');if(u)u.insertAdjacentHTML('beforebegin',`<p class="okline">🎤 ${why} אפשר ללחוץ על המיקרופון במקלדת של הטלפון ולהכתיב את הרשימה כאן, ואז "הוסף לרשימה".</p>`)},60)};
   if(!SR)return fallback('הדפדפן הזה לא מאפשר הכתבה בתוך האפליקציה.');
   if(_rec){try{_rec.stop()}catch(e){}return}
   const r=new SR();_rec=r;r.lang='he-IL';r.interimResults=true;r.continuous=false;r.maxAlternatives=1;let final='',got=false;
-  btn.classList.add('on');btn.setAttribute('aria-pressed','true');toast('🎤 מקשיב… אמור את המוצרים');
+  btn.classList.add('on');btn.setAttribute('aria-pressed','true');toast('🎤 מקשיב… אמור מוצרים לרשימה, "כמה עולה…" או "מבצעים על…"');
   r.onresult=e=>{let t='';for(const x of e.results)t+=x[0].transcript;final=t;got=true;const q=$('q');if(q)q.value=t};
   r.onerror=e=>{_rec=null;btn.classList.remove('on');if(e.error==='not-allowed'||e.error==='service-not-allowed')fallback('אין גישה למיקרופון כאן.');else if(e.error==='no-speech')toast('לא שמעתי. נסה שוב')};
   r.onend=()=>{_rec=null;btn.classList.remove('on');btn.setAttribute('aria-pressed','false');if(!got||!final.trim())return;
+    {const t=final.trim();const pm=t.match(/^(?:כמה עולה|כמה עולים|מה המחיר של|מה מחיר|מחיר של|מחיר|בדוק מחיר(?: של)?|חפש(?: את)?|תחפש(?: את)?)\s+(.+)$/);
+      const dm=t.match(/^(?:(?:יש |תראה |הראה |חפש |תמצא )?(?:לי )?(?:מבצע|מבצעים)(?: על| של| ב| ל)?)\s+(.+)$/)||t.match(/^(.+?)\s+במבצע$/);
+      const q0=$('q');if(pm){if(q0)q0.value='';openPriceCheck(null,pm[1].trim());toast('🔍 מחפש: '+pm[1]);return}
+      if(dm){if(q0)q0.value='';openDealSearch(dm[1].trim());return}}
     const{out,unknown}=parseList(voiceToList(final));const q=$('q');if(q)q.value='';
     if(!out.length){toast(`לא זיהיתי מוצרים ב"${final}"`);return}
     addItems(out,'מהקול');update();toast(`🎤 נוספו ${nOf(out.length,'מוצר אחד','מוצרים')}${unknown.length?` · לא זוהה: ${unknown.join(', ')}`:''}`)};
@@ -2710,13 +2739,14 @@ function renderFeed(){feedStart();const S=$('screen');const me=FAM.me;
       ${open?`<div class="cmts">${cms.map(c=>`<div class="cmt"><b>${esc(feedName(c.by))}</b> ${esc(c.text)}${me&&(c.by===me||FEED.owner)?` <button class="link danger" type="button" data-cdel="${esc(c.by+':'+c.id)}">מחק</button>`:''}</div>`).join('')||'<small class="sub">אין עדיין תגובות. תהיה הראשון.</small>'}
         <form class="cform" data-cform="${esc(p.key)}"><input type="text" maxlength="400" placeholder="כתוב תגובה…" aria-label="תגובה" autocomplete="off"><button class="btn sm" type="submit">שלח</button></form></div>`:''}</div></article>`};
   const keepV=new Map([...S.querySelectorAll('video[data-vk]')].map(v=>[v.dataset.vk,v]));
-  S.innerHTML=`<section class="card"><div class="row2 spread"><h2>🎬 מתכונים בווידאו</h2>${canUp?'<button class="btn sm y" type="button" id="feedUp">➕ העלה סרטון</button>':''}</div>
+  S.innerHTML=`<section class="card"><div class="row2 spread"><h2>🎬 מתכונים בווידאו</h2><span class="row2" style="gap:6px"><button class="btn sm" type="button" id="feedLink">🔗 הדבק קישור</button>${canUp?'<button class="btn sm y" type="button" id="feedUp">➕ העלה סרטון</button>':''}</span></div>
       <p class="sub">${canUp?'סרטוני מתכונים של הגולשים. העלה סרטון קצר מהטלפון, וכל מי שפותח את האפליקציה יראה אותו, יגיב וישים לב ❤️ או אש 🔥.':'סרטוני מתכונים של הגולשים. אפשר לשים ❤️ 🔥 😋 👏 ולהגיב. העלאת סרטונים פתוחה כרגע רק למי שיש לו הרשאת עריכה באפליקציה.'}</p>
-      ${FEED.err==='nodb'?'<div class="unk">הפיד עובד כשהאפליקציה פתוחה בתוך Claude.</div>':FEED.err==='db'?'<div class="unk">לא הצלחנו לטעון את הפיד. נסה לרענן.</div>':''}</section>
+      ${FEED.err==='nodb'?((state.links||[]).length?'':'<div class="sub">סרטון מטיקטוק, אינסטגרם או פייסבוק? לחץ "🔗 הדבק קישור", והוא יישמר כאן עם רשימת מצרכים.</div>'):FEED.err==='db'?'<div class="unk">לא הצלחנו לטעון את הפיד. נסה לרענן.</div>':''}</section>
     <div class="vfeed">${FEED.posts.map(post).join('')||(FEED.db&&!FEED.err?`<div class="emptybox"><div style="font-size:2.4rem" aria-hidden="true">🎬</div><b>עוד אין סרטונים</b><span class="sub">${canUp?'העלה את הסרטון הראשון: מתכון קצר מהמטבח שלך.':'כשיעלו סרטוני מתכונים הם יופיעו כאן.'}</span></div>`:'')}</div>`;
   /* the same <video> element stays in place, so playback goes on */
   S.querySelectorAll('video[data-vk]').forEach(nv=>{const ov=keepV.get(nv.dataset.vk);if(ov&&ov!==nv)nv.replaceWith(ov);else watchVideo(nv)});
-  if($('feedUp'))$('feedUp').onclick=openFeedUpload;
+  if($('feedUp'))$('feedUp').onclick=openFeedUpload;$('feedLink').onclick=()=>openLinkSave();
+  {const box=document.createElement('div');box.innerHTML=linksHtml();const first=S.querySelector('section.card');if(box.firstElementChild&&first)first.after(box.firstElementChild);bindLinks(S)}
   S.querySelectorAll('[data-rx]').forEach(b=>b.onclick=async()=>{const k=b.dataset.rx,e=b.dataset.e;const me=await feedMe();const cur=me?(FEED.rx[k]||{})[me]:null;
     (FEED.rx[k]||={});if(me){if(cur===e)delete FEED.rx[k][me];else FEED.rx[k][me]=e}renderFeed();
     await feedWrite('rcr',d=>{const r={...(d.r||{})};if(cur===e)delete r[k];else r[k]=e;return{r}})});
@@ -2822,6 +2852,62 @@ function qtyFor(item,amount){const a=String(amount||'').replace(',','.').trim();
   const v=it.v?VB[it.v]:null;/* a bare count ("ביצים 6") is units of the product only when it is sold one by one */
   if(v&&(/^1 יח/.test(v.s||'')||!v.s)&&(/^\d+(\.\d+)?$/.test(a)||/יח/.test(a)))it.q=Math.max(1,Math.round(n));
   return it}
+
+/* ================= recipe links from TikTok, Instagram, Facebook, YouTube =================
+   The video stays on its site (it is embedded, not copied); the link, the title and the ingredients are saved in the
+   shopper's own feed (on this phone, state.links). Ingredients: from the post's text the shopper pastes, or, without it,
+   Claude's estimate from the dish name. */
+function linkInfo(u){u=String(u||'').trim();let m;
+  if(m=u.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/i)||u.match(/tiktok\.com\/(?:v|embed(?:\/v2)?)\/(\d+)/i))return{site:'tiktok',name:'טיקטוק',embed:`https://www.tiktok.com/embed/v2/${m[1]}`,url:u};
+  if(/(vm|vt)\.tiktok\.com\//i.test(u)||/tiktok\.com\/t\//i.test(u))return{site:'tiktok',name:'טיקטוק',embed:null,url:u};
+  if(m=u.match(/instagram\.com\/(?:[^/]+\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/i))return{site:'instagram',name:'אינסטגרם',embed:`https://www.instagram.com/${m[1]==='p'?'p':'reel'}/${m[2]}/embed`,url:u};
+  if(/(facebook\.com|fb\.watch)\//i.test(u))return{site:'facebook',name:'פייסבוק',embed:`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(u)}&show_text=false`,url:u};
+  if(m=u.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/i))return{site:'youtube',name:'יוטיוב',embed:`https://www.youtube.com/embed/${m[1]}`,url:u};
+  if(/^https?:\/\//i.test(u))return{site:'web',name:'האתר',embed:null,url:u};return null}
+/* the title of a TikTok or YouTube post, through their public oEmbed (when the network allows it) */
+async function linkTitle(L){try{const api=L.site==='tiktok'?`https://www.tiktok.com/oembed?url=${encodeURIComponent(L.url)}`:L.site==='youtube'?`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(L.url)}`:null;if(!api)return '';
+  const r=await fetch(api);if(!r.ok)return '';const j=await r.json();return String(j.title||'').slice(0,300)}catch(e){return ''}}
+async function aiTextIngredients(dish,text,signal){if(!SAMPLE)throw{code:'unavailable'};
+  const r=await SAMPLE.json(`A shopper in Israel saved a cooking video${dish?` called «${String(dish).slice(0,80)}»`:''}.${text?` The post's text:\n«${String(text).slice(0,2500)}»\n`:''}
+List the ingredients needed to make this dish, in Hebrew, as they are called on Israeli supermarket shelves (plain and generic). If the post's text lists ingredients, use exactly those; otherwise give the usual ingredients of the dish.
+For each: name, amount (Hebrew, rough, or ""), pantry (true for salt, pepper, oil, sugar, flour, common spices, water).
+Also give dish (the dish name in Hebrew) and note (one short Hebrew sentence: from the post's text, or an estimate from the dish name).
+If this is not food, reply {"ok": false}. Reply with only JSON: {"ok": true, "dish": string, "note": string, "ingredients": [{"name": string, "amount": string, "pantry": boolean}]}`,{signal,modelTier:'default'});
+  if(!r||r.ok===false||!Array.isArray(r.ingredients)||!r.ingredients.length)throw{code:'nofood'};
+  return{dish:String(r.dish||dish||'').slice(0,60),note:String(r.note||'').slice(0,160),ingredients:r.ingredients.filter(x=>x&&String(x.name||'').trim()).slice(0,30).map(x=>({name:String(x.name).trim().slice(0,60),amount:String(x.amount||'').slice(0,30),seen:false,pantry:!!x.pantry}))}}
+const ingrRows=txt=>String(txt||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>({...splitIngr(l),seen:false,pantry:/^(מלח|פלפל שחור|שמן|סוכר|קמח|מים|תבלינים?)$/.test(splitIngr(l).name)}));
+function openLinkSave(prefill){let busy=false,ai=null;
+  openSheet('🔗 שמירת מתכון מקישור',`<div class="upbox"><p class="sub">הדבק קישור לסרטון מתכון מטיקטוק, אינסטגרם, פייסבוק או יוטיוב. הסרטון יישמר בפיד שלך, ומוזיל יכין רשימת מצרכים.</p>
+    <label class="f" for="lkUrl">הקישור</label><div class="row2" style="flex-wrap:nowrap"><input type="url" id="lkUrl" dir="ltr" placeholder="https://www.tiktok.com/@…/video/…" value="${esc(prefill||'')}" style="flex:1;min-width:0"><button class="btn ghost" type="button" id="lkPaste" style="white-space:nowrap">📋 הדבק</button></div>
+    <div id="lkSite" class="sub"></div>
+    <label class="f" for="lkTitle">שם המתכון</label><input type="text" id="lkTitle" maxlength="80" placeholder="למשל: פסטה רוזה ב-10 דקות" autocomplete="off">
+    <label class="f" for="lkText">טקסט הפוסט <small class="sub">(לא חובה · העתק את התיאור מתחת לסרטון, ונזהה ממנו את המצרכים בדיוק)</small></label><textarea id="lkText" maxlength="2500" placeholder="המצרכים: 500 גרם פסטה, שמנת…"></textarea>
+    <button class="btn ghost" type="button" id="lkAi">✨ זהה מצרכים</button><div id="lkAiSt" class="sub"></div>
+    <label class="f" for="lkIngr">מצרכים <small class="sub">(מוצר בשורה)</small></label><textarea id="lkIngr" maxlength="1500"></textarea>
+    <button class="btn y big" type="button" id="lkGo">💾 שמור בפיד שלי</button></div>`,()=>{
+    const chk=async()=>{const L=linkInfo($('lkUrl').value);const st=$('lkSite');if(!L){st.textContent='';return null}
+      st.innerHTML=`✓ ${esc(L.name)}${L.embed?'':' · הסרטון ייפתח באתר עצמו'}`;if(!$('lkTitle').value.trim()){const t=await linkTitle(L);if(t&&!$('lkTitle').value.trim())$('lkTitle').value=t.replace(/#\S+/g,'').trim().slice(0,80);if(t&&!$('lkText').value.trim())$('lkText').value=t}return L};
+    $('lkUrl').oninput=()=>{clearTimeout(chk.t);chk.t=setTimeout(chk,400)};if(prefill)chk();
+    $('lkPaste').onclick=async()=>{try{const t=await navigator.clipboard.readText();if(t){$('lkUrl').value=t.trim();chk()}}catch(e){$('lkUrl').focus();toast('לחץ לחיצה ארוכה בשדה ובחר "הדבק"')}};
+    $('lkAi').onclick=async()=>{const title=$('lkTitle').value.trim(),text=$('lkText').value.trim();if(!title&&!text){toast('כתוב שם מתכון או הדבק את טקסט הפוסט');$('lkTitle').focus();return}
+      const st=$('lkAiSt');$('lkAi').disabled=true;st.textContent='✨ מזהה מצרכים…';
+      try{ai=await aiTextIngredients(title,text);$('lkIngr').value=ai.ingredients.map(x=>x.name+(x.amount?' '+x.amount:'')).join('\n');if(!title&&ai.dish)$('lkTitle').value=ai.dish;st.textContent=`✓ ${nOf(ai.ingredients.length,'מצרך אחד','מצרכים')}. ${ai.note} אפשר לתקן.`}
+      catch(e){st.innerHTML=`<b class="warn">${e?.code==='unavailable'?'זיהוי אוטומטי עובד כשהאפליקציה פתוחה בתוך Claude. אפשר לכתוב את המצרכים ידנית.':e?.code==='nofood'?'לא זיהינו מתכון. כתוב את המצרכים ידנית.':'הזיהוי נכשל, נסה שוב.'}</b>`}finally{const b=$('lkAi');if(b)b.disabled=false}};
+    $('lkGo').onclick=async()=>{if(busy)return;const L=linkInfo($('lkUrl').value);if(!L){toast('הדבק קישור לסרטון');$('lkUrl').focus();return}
+      const title=$('lkTitle').value.trim().slice(0,80)||'מתכון מ'+L.name;let ingr=$('lkIngr').value.trim().slice(0,1500);
+      if(!ingr&&SAMPLE){busy=true;$('lkGo').textContent='✨ מזהה מצרכים ושומר…';try{ai=await aiTextIngredients(title,$('lkText').value.trim());ingr=ai.ingredients.map(x=>x.name+(x.amount?' '+x.amount:'')).join('\n')}catch(e){}busy=false}
+      (state.links||(state.links=[])).unshift({id:nid(),url:L.url,site:L.site,embed:L.embed,title,ingr,ts:Date.now()});state.links=state.links.slice(0,100);save();
+      closeSheet();toast('💾 נשמר בפיד שלך');if(state.tab!=='feed')go('feed');else renderFeed();
+      if(ingr)setTimeout(()=>openIngrSheet({dish:title,note:ai?ai.note:'',ingredients:ingrRows(ingr),written:!ai},null),350)}})}
+function linksHtml(){const L=state.links||[];if(!L.length)return '';
+  return `<section class="card"><h2>💾 המתכונים ששמרתי</h2><div class="vfeed">${L.map(x=>`<article class="post lpost"><div class="vwrap">${x.embed?`<iframe src="${esc(x.embed)}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="${esc(x.title)}"></iframe>`:`<a class="lfallback" href="${esc(x.url)}" target="_blank" rel="noopener">▶️ צפה בסרטון</a>`}</div>
+    <div class="pb"><div class="row2 spread"><b>${esc(x.title)}</b><a class="link" href="${esc(x.url)}" target="_blank" rel="noopener">פתח ב${esc(linkInfo(x.url)?.name||'אתר')} ↗</a></div>
+    ${x.ingr?`<details><summary class="sub">🧾 מצרכים</summary><div class="ingr">${esc(x.ingr)}</div></details>`:''}
+    <div class="row2"><button class="btn sm" type="button" data-lkadd="${esc(x.id)}">🛒 הוסף מצרכים לסל</button><button class="link danger" type="button" data-lkdel="${esc(x.id)}">מחק</button></div></div></article>`).join('')}</div></section>`}
+function bindLinks(S){S.querySelectorAll('[data-lkdel]').forEach(b=>b.onclick=()=>{state.links=(state.links||[]).filter(x=>x.id!==b.dataset.lkdel);save();renderFeed()});
+  S.querySelectorAll('[data-lkadd]').forEach(b=>b.onclick=async()=>{const x=(state.links||[]).find(y=>y.id===b.dataset.lkadd);if(!x)return;
+    if(!x.ingr){if(!SAMPLE){toast('אין מצרכים שמורים למתכון הזה');return}b.disabled=true;b.textContent='✨ מזהה מצרכים…';try{const r=await aiTextIngredients(x.title,'');x.ingr=r.ingredients.map(i=>i.name+(i.amount?' '+i.amount:'')).join('\n');save();openIngrSheet(r,null)}catch(e){toast('לא הצלחנו לזהות מצרכים')}finally{renderFeed()}return}
+    openIngrSheet({dish:x.title,note:'',ingredients:ingrRows(x.ingr),written:true},null)})}
 
 function openFeedUpload(){let file=null,busy=false;
   openSheet('🎬 העלאת סרטון מתכון',`<div class="upbox"><p class="sub">סרטון קצר מהטלפון, עד 20MB (בערך דקה). הסרטון יוצג לכל מי שפותח את האפליקציה.</p>
@@ -3111,8 +3197,9 @@ function openPriceCheck(startV,startQ){
     if(words.length)for(const x of findProducts(q,{fids,limit:60}))if(fids.some(c=>x.v.rp&&x.v.rp[c]!=null)||(x.v.bc&&x.v.bc===q.trim()))cand.push(x);
     const res=cand.slice(0,25).map(({v})=>({v,best:priceRows(v,fol)[0]})).filter(x=>x.best);
     body.innerHTML=`<label class="f" for="pcQ">איזה מוצר לבדוק?</label>
-      <div class="row2" style="flex-wrap:nowrap"><input type="search" id="pcQ" value="${esc(q)}" placeholder="שם מוצר, מותג או ברקוד" autocomplete="off" style="flex:1;min-width:0"><button class="btn ghost" type="button" id="pcScan" aria-label="סריקת ברקוד" style="min-width:48px">▥</button></div>
+      <div class="row2" style="flex-wrap:nowrap"><input type="search" id="pcQ" value="${esc(q)}" placeholder="שם מוצר, מותג או ברקוד" autocomplete="off" style="flex:1;min-width:0"><button class="btn ghost" type="button" id="pcScan" aria-label="סריקת ברקוד" style="min-width:48px">▥</button><button class="btn ghost" type="button" id="pcMic" aria-label="חיפוש בקול" style="min-width:48px">🎤</button></div>
       <div class="pcres" aria-live="polite">${!words.length?'<p class="sub">כתוב לפחות מילה אחת, או סרוק ברקוד.</p>':res.length?res.slice(0,25).map(({v,best})=>`<button type="button" class="rfprod" data-pc="${v.id}">${thumb(v,TYPES[v.t][1],'thv')}<span class="grow"><b>${esc(vLabel(v))}</b><small>${esc(v.s||'')}</small></span><span class="num">מ-${fmt(best.best)}<small>ב${best.c.short}</small></span></button>`).join(''):'<div class="unk">לא מצאנו מוצר כזה. נסה מילה אחרת.</div>'}</div>`;
+    if(body.querySelector('#pcMic'))body.querySelector('#pcMic').onclick=()=>voiceInto(body.querySelector('#pcQ'),t=>{q=t;draw(body)});
     const i=body.querySelector('#pcQ');let tmr=0;i.oninput=e=>{const el=e.target;clearTimeout(tmr);tmr=setTimeout(()=>{q=el.value;redrawKeep(body,'#pcQ',draw)},250)};
     body.querySelector('#pcScan').onclick=()=>{closeSheet();openScan()};
     body.querySelectorAll('[data-pc]').forEach(b=>b.onclick=()=>{picked=VB[b.dataset.pc];draw(body);body.closest('.sheet')?.scrollTo?.(0,0)});
