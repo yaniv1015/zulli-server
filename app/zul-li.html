@@ -1672,14 +1672,41 @@ function addItems(arr,src){const keys=[];if(arr.length)state.done=null;arr.forEa
 }
 
 /* ================= evaluation ================= */
+/* one reference product for a line the shopper has not picked yet: every chain is priced on the SAME product (or, when a chain
+   lacks it, the same kind in the same size), never on whatever happens to be cheapest under that heading in each chain.
+   Chosen from the words written: the product whose name holds those words and that most chains sell. */
+const _ref=new Map();const hintStems=h=>norm(String(h||'')).replace(/[\d%.,]+/g,' ').split(/\s+/).filter(w=>w.length>=2&&!/^(יח|גרמ|גר|ליטר|קג|מל|של|עמ|בלי|מארז|חבילה)$/.test(w)).map(w=>w.length>4?w.replace(/(ות|ימ)$/,''):w);
+function refOf(it){if(it.v)return it.v;const key=it.t+'|'+(it.hint||'')+'|'+(it.sz||'')+'|'+(it.bh||'')+'|'+JSON.stringify(it.fx||null);if(_ref.has(key))return _ref.get(key);
+  const produce=TYPES[it.t]?.[2]==='produce';const size=it.sz||refSize(it.t);
+  let pool=ofType(it.t).filter(v=>v.real&&allowed(v)&&v.rp&&(!it.fx||fxMatch(v,it.fx))&&(!it.bh||v.b===it.bh)&&(!produce||size!=='לק״ג'||plainProduce(v,it.t)));
+  const pool0=pool.slice(),all=pool0;const st=hintStems(it.hint),full=norm(String(it.hint||'')).split(/\s+/).filter(w=>w.length>=2);const sc=v=>{const n=norm(vLabel(v)),ws=n.split(/\s+/);return st.filter(w=>n.includes(w)).length*3+(st[0]&&n.startsWith(st[0])?2:0)+full.filter(w=>ws.includes(w)).length};
+  if(st.length){const best=Math.max(0,...pool.map(sc));if(best>0)pool=pool.filter(v=>sc(v)===best)}
+  if(it.sz){const p2=pool.filter(v=>v.s===it.sz||sizeKey(v)===it.sz);if(p2.length)pool=p2}
+  const nCh=v=>Object.keys(v.rp).length,med=v=>{const a=Object.values(v.rp).sort((x,y)=>x-y);return a[a.length>>1]};
+  /* widely sold first, then the plainest name: «עוף» is chicken, not breaded chicken strips */
+  const mx=Math.max(0,...pool.map(nCh)),wide=v=>nCh(v)>=Math.max(2,mx*.85);const nw=v=>norm(v.n).split(/\s+/).length;
+  const hw=norm(String(it.hint||'')).split(/\s+/),odd=v=>norm(vLabel(v)).split(/\s+/).filter(w=>MODS.some(m=>w.startsWith(m))&&!hw.some(h=>h.startsWith(w.slice(0,3)))).length;
+  pool.sort((a,b)=>odd(a)-odd(b)||wide(b)-wide(a)||(b.s===size)-(a.s===size)||nw(a)-nw(b)||nCh(b)-nCh(a)||med(a)-med(b));
+  const id=pool[0]?pool[0].id:null;_ref.set(key,id);if(id){const sw=v=>{const n=norm(vLabel(v));return st.filter(w=>n.includes(w)).length},top=sw(pool[0]);const lead=st[0]&&norm(vLabel(pool[0])).startsWith(st[0])?st[0]:null;_refPool.set(id,(produce&&size==='לק״ג'?all:pool0).filter(v=>(sw(v)>=top||(produce&&size==='לק״ג'))&&(!lead||norm(vLabel(v)).startsWith(lead))))}return id}
+const _refPool=new Map();
+/* a stand-in agrees with the product on what changes it: flavored, sparkling, diet, wet, frozen… and, for products sold «1 יח׳»,
+   on the numbers in the name (12 eggs are not 30, a 32-roll pack is not one roll) */
+const MODS=['בטעמ','מוגז','דיאט','זירו','לח','ללא','קפוא','מעושנ','בשמנ','במימ','מתוק','חריפ','אורגני','מלא','לילדימ','מיני','נמס','טורקי','רביעי','שישי','מארז'];
+function sameMods(v,r){const a=norm(vLabel(v)),b=norm(vLabel(r)),ws=x=>new Set(x.split(/\s+/));const A=ws(a),B=ws(b);
+  if(MODS.some(m=>[...A].some(w=>w.startsWith(m))!==[...B].some(w=>w.startsWith(m))))return false;
+  if(/יח/.test(r.s||'')&&!/^\d/.test(r.s||'1')||r.s==='1 יח׳'){const nums=x=>(x.match(/\d+/g)||[]).filter(n=>n!=='1').sort().join(',');if(nums(a)!==nums(b))return false}
+  return true}
 function basketAt(c){
   let sub=0,lines=[],missing=[],subs=0,promos=0,est=0,hints=[],wsum=0,regular=0;const needMin=[];
   for(const it of state.items){
-    let vid=it.v,L=vid?lineAt(c.id,vid,it.q):null,auto=!vid,isSub=false;
-    if(!L&&!it.v&&(it.bh||it.sz||it.fx)){const ch=cheapestTypeAt(c.id,it.t,it.q,it.sz||null,it.bh||null,undefined,null,it.fx||null);if(ch){vid=ch.v.id;L=ch.L}}
-    if(!L){const ch=cheapestTypeAt(c.id,it.t,it.q,it.v?VB[it.v].s:refSize(it.t),null,undefined,it.v?VB[it.v]:null);if(ch){vid=ch.v.id;L=ch.L;if(it.v)isSub=true}}
+    const rid=refOf(it),rv=rid&&VB[rid];let vid=rid,L=vid?lineAt(c.id,vid,it.q):null,auto=!it.v,isSub=false;
+    if(!L&&rv){/* the same kind in the same size, among products whose names hold the same words */const kl=kindOf(rv),pool=it.v?null:_refPool.get(rid),rps=Object.values(rv.rp||{}).sort((x,y)=>x-y),refHi=rps.length?rps[rps.length>>1]*2.5:1e9;/* a stand-in far dearer than the product itself is a different product (onion flakes for onions) */let ch=null;
+      if(pool){for(const v of pool){if(v.id===rid||(v.s!==rv.s&&sizeKey(v)!==sizeKey(rv))||(kl&&kindOf(v)!==kl))continue;const l=lineAt(c.id,v.id,it.q);if(!sameMods(v,rv))continue;if(l&&l.p<=refHi&&(!ch||l.tot<ch.L.tot))ch={v,L:l}}}
+      else ch=cheapestTypeAt(c.id,it.t,it.q,rv.s,it.bh||null,undefined,rv,it.fx||null);
+      if(ch){vid=ch.v.id;L=ch.L;isSub=true}}
+    if(!L&&!rv){const ch=cheapestTypeAt(c.id,it.t,it.q,it.sz||refSize(it.t),it.bh||null,undefined,null,it.fx||null);if(ch){vid=ch.v.id;L=ch.L}}
     if(!L){missing.push(it);/* a missing product is counted at its highest price elsewhere, so a chain that lacks it never looks cheapest for it */
-      const mv=it.v&&VB[it.v];const hi=mv&&mv.rp?Math.max(...Object.values(mv.rp)):mv?mv.base:Math.max(0,...ofType(it.t).slice(0,20).map(v=>v.base||0));est+=(hi||0)*it.q;continue}
+      const mv=rv;const hi=mv&&mv.rp?Math.max(...Object.values(mv.rp)):mv?mv.base:Math.max(0,...ofType(it.t).slice(0,20).map(v=>v.base||0));est+=(hi||0)*it.q;continue}
     if(L.applied&&L.promo&&L.promo.min)needMin.push({vid,q:it.q,i:lines.length});
     sub+=L.tot;regular+=L.p*it.q;if(L.applied)promos++;if(isSub)subs++;if(L.hint&&!auto)hints.push({it,vid,hint:L.hint,kind:L.promo.kind});
     if(VB[vid].weighted)wsum+=L.tot;
@@ -1696,7 +1723,7 @@ function basketAt(c){
 function evaluate(){
   const res=followed().map(basketAt);
   const score=r=>state.mode==='cheap'?r.eff:state.mode==='fast'?r.slotH*1000+r.eff:r.eff+state.hour*r.slotH;
-  res.forEach(r=>r.score=score(r)+(r.rankMin?1e6:0));res.sort((a,b)=>a.score-b.score);return res;
+  res.forEach(r=>r.score=score(r)+(r.rankMin?1e6:0)+(r.missing.length?1e5:0)); /* a chain that has the whole list comes before one that lacks part of it */res.sort((a,b)=>a.score-b.score);return res;
 }
 /* buy in two chains: each product from whichever of the two is cheaper, paying both delivery fees and meeting both minimums.
    Only chains with published delivery terms take part, so the saving is real. */
@@ -2102,7 +2129,7 @@ function openCompare(){if(state.raceBy==='branch')return openBranchRace();
   const draw=body=>{
     // "cheapest": strictly by price, low to high (a chain that is missing products counts their estimated cost);
     // the trophy goes to the cheapest chain you can actually order from (not below its minimum)
-    const ev=evaluate();const res=state.mode==='fast'?ev:ev.slice().sort((a,b)=>a.eff-b.eff);const w=res.find(r=>!r.rankMin)||res[0];if(!w){closeSheet();return}
+    const ev=evaluate();const res=state.mode==='fast'?ev:ev.slice().sort((a,b)=>(!!a.missing.length-!!b.missing.length)||(a.missing.length?a.eff-b.eff:a.show-b.show));const w=res.find(r=>!r.rankMin)||res[0];if(!w){closeSheet();return}
     const max=Math.max(...res.map(r=>r.show)),min=Math.min(...res.map(r=>r.show));const sw=swapsFor(w);const swTot=sw.reduce((a,s)=>a+s.save,0);
     const pos=USERPOS;
     body.innerHTML=`${raceSeg('chain')}<div class="seg" role="group" aria-label="איך להשוות?">${[['address','📍 לפי הכתובת שלי'],['city','🏙️ לפי העיר']].map(([m,l])=>`<button type="button" data-cmpby="${m}" aria-pressed="${(state.cmpBy||'address')===m}">${l}</button>`).join('')}</div>
@@ -2120,7 +2147,7 @@ function openCompare(){if(state.raceBy==='branch')return openBranchRace();
       <button class="btn ghost" type="button" id="cmpBranch">🏪 בדיקת הסל בסניף מסוים</button>
       <div class="race">${res.map((r,i)=>{const pct=max===min?100:35+65*(r.show-min)/(max-min);
         return `<div class="rrow${r===w?' first':''}" style="--sc:var(${r.c.c})"><div class="rhead"><span class="av">${r.c.ab}</span>
-          <span class="rname">${r===w?'🏆 ':''}<span class="rank num">${i+1}.</span> ${r.c.name}<small>${r.c.noDelivery||r.c.pickup?'🏪':'🚚 '+slotLabel(r.slotH)+' ·'} ${feeLine(r)}</small><small>${BR[r.c.id]?esc(brLabel(r.c)):state.cmpBy==='city'&&!branchesOf(r.c,cmpCity()).length?`אין לרשת סניף ב${esc(cmpCity())} · מחיר רגיל ברשת`:AUTO[r.c.id]&&AUTO[r.c.id].how==='near'?`📍 הסניף הקרוב: ${esc(AUTO[r.c.id].nb)} · ${AUTO[r.c.id].exact?'':'כ-'}${Math.round(AUTO[r.c.id].km)} ק״מ · מחיר רגיל ברשת`:'מחיר רגיל ברשת'}${allBranches(r.c).length?` · <button class="link" type="button" data-pickbr="${r.c.id}">${BR[r.c.id]?'החלף':'בחר סניף'}</button>`:''}</small></span><span class="rtotal num">${r.lines.length?fmt(r.show):'—'}${!state.withFee&&r.fee?`<small class="sub">+ משלוח ${fmt(r.fee)}</small>`:''}</span></div>
+          <span class="rname">${r===w?'🏆 ':''}<span class="rank num">${i+1}.</span> ${r.c.name}<small>${r.c.noDelivery||r.c.pickup?'🏪':'🚚 '+slotLabel(r.slotH)+' ·'} ${feeLine(r)}</small><small>${BR[r.c.id]?esc(brLabel(r.c)):state.cmpBy==='city'&&!branchesOf(r.c,cmpCity()).length?`אין לרשת סניף ב${esc(cmpCity())} · מחיר רגיל ברשת`:AUTO[r.c.id]&&AUTO[r.c.id].how==='near'?`📍 הסניף הקרוב: ${esc(AUTO[r.c.id].nb)} · ${AUTO[r.c.id].exact?'':'כ-'}${Math.round(AUTO[r.c.id].km)} ק״מ · מחיר רגיל ברשת`:'מחיר רגיל ברשת'}${allBranches(r.c).length?` · <button class="link" type="button" data-pickbr="${r.c.id}">${BR[r.c.id]?'החלף':'בחר סניף'}</button>`:''}</small></span><span class="rtotal num">${r.lines.length?fmt(r.show):'—'}${r.missing.length&&r.lines.length?`<small class="sub">בלי ${nOf(r.missing.length,'מוצר חסר','מוצרים חסרים')}</small>`:''}${!state.withFee&&r.fee?`<small class="sub">+ משלוח ${fmt(r.fee)}</small>`:''}</span></div>
           <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
           ${r.missing.length||r.belowMin||r.subs?`<div class="pills">${r.missing.length?`<span class="pill warn">${r.missing.length===1?'חסר מוצר אחד':`חסרים ${nOf(r.missing.length,'מוצר אחד','מוצרים')}`}</span>`:''}${r.subs?`<span class="pill y">${r.subs===1?'תחליף אחד':r.subs+' תחליפים'}</span>`:''}${r.coupon?`<span class="pill good">🎟️ קופון −${fmt(r.coupon.off)}</span>`:''}${r.promos?`<span class="pill good">${r.promos===1?'מבצע אחד':r.promos+' מבצעים'}</span>`:''}${r.belowMin?`<span class="pill warn">${state.withFee?'':'למשלוח: '}חסר ${fmt(r.c.min-r.sub)} למינימום הזמנה (${fmt(r.c.min)})</span>`:''}</div>`:''}
           <button class="btn sm ${r===w?'y':'ghost'}" type="button" data-checkout="${r.c.id}">הזמן מ${r.c.short}</button></div>`}).join('')}</div>
@@ -2361,7 +2388,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='131';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='132';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
