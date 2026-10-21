@@ -768,6 +768,82 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 .sview.neo .tapzone{top:150px}
 @media (max-height:780px){.sview.neo{--cs:min(46vw,23vh)}.sview.neo .bars{margin-top:12px}.sview.neo .svhead{margin-top:6px}.sview.neo .pr b{font-size:1.75rem}.sview.neo .nm{font-size:1.05rem}.sview.neo .svtitle b{font-size:clamp(1.6rem,8vw,2.1rem)}.sview.neo .svtitle small{font-size:.92rem}.sview.neo .pr b{font-size:1.9rem}.sview.neo .bolt{height:64px}}
 @media (prefers-reduced-motion:reduce){.sview.neo .bolt path,.sview.neo .neonpct{animation:none}}
+
+/* ================= מוזיל design language =================
+   One system for every screen: ink (#0B0B0F) for structure and primary actions, lime (#D7FF1F) for "you are here" and
+   good news, coral (#FF4B2B) for deals and urgency; white cards with soft depth on a warm paper background.
+   Deal moments (stories, market-breakers, the bottom bar) get the neon-on-ink treatment. */
+:root{--lime:#D7FF1F;--lime-soft:#F1FFC2;--coral:#FF4B2B;--ink0:#0B0B0F;
+  --bg:#F3F4EE;--surface:#FFFFFF;--ink:#0B0B0F;--muted:#5B5E66;--line:#E4E6DD;
+  --accent:#0B0B0F;--accent-soft:#F1FFC2;--tag:#FF4B2B;--tag-ink:#FFFFFF;--brand:#0B0B0F;--brand2:#FF4B2B;
+  --good:#2E6E00;--good-soft:#EAF9C4;--warn:#E5361B;--warn-soft:#FFE7E1;
+  --btn-bg:#0B0B0F;--btn-ink:#FFFFFF;--on-lime:#0B0B0F;--card-sh:0 1px 0 rgba(11,11,15,.04),0 10px 28px -18px rgba(11,11,15,.28);
+  --hero-a:#0B0B0F;--hero-b:#14161B;--hero-c:#2A3300;--hero-dot:#D7FF1F;--hero-ink:#FFFFFF}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#07080A;--surface:#121318;--ink:#F2F2EE;--muted:#A2A5AE;--line:#262830;
+  --accent:#D7FF1F;--accent-soft:#1E2410;--good:#B6FF3B;--good-soft:#1C2410;--warn:#FF6A4D;--warn-soft:#2E1410;
+  --btn-bg:#D7FF1F;--btn-ink:#0B0B0F;--card-sh:0 0 0 1px rgba(255,255,255,.03),0 14px 30px -20px rgba(0,0,0,.8)}}
+:root[data-theme="dark"]{--bg:#07080A;--surface:#121318;--ink:#F2F2EE;--muted:#A2A5AE;--line:#262830;
+  --accent:#D7FF1F;--accent-soft:#1E2410;--good:#B6FF3B;--good-soft:#1C2410;--warn:#FF6A4D;--warn-soft:#2E1410;
+  --btn-bg:#D7FF1F;--btn-ink:#0B0B0F;--card-sh:0 0 0 1px rgba(255,255,255,.03),0 14px 30px -20px rgba(0,0,0,.8)}
+body{background:var(--bg)}
+/* cards: rounder, lighter border, soft depth */
+.card{border-radius:22px;border-color:var(--line);box-shadow:var(--card-sh)}
+.card h2,.sheet h2,h2{font-family:var(--display);letter-spacing:-.2px}
+/* buttons: ink pills (lime in the dark), coral for "go buy", outline ghosts */
+.btn{background:var(--btn-bg);color:var(--btn-ink);border-radius:14px;transition:transform .12s ease,box-shadow .12s ease}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn.y{background:linear-gradient(180deg,#FF6B47,#FF4B2B 60%,#E8381A);color:#fff;box-shadow:0 3px 0 #9E2410,0 10px 22px -10px rgba(255,75,43,.7)}
+.btn.y:active{box-shadow:0 1px 0 #9E2410}
+.btn.k{background:var(--ink);color:var(--bg)}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{border-color:var(--ink)}
+.link{color:var(--ink);text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
+:root[data-theme="dark"] .link{color:var(--lime);text-decoration-color:rgba(215,255,31,.35)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .link{color:var(--lime);text-decoration-color:rgba(215,255,31,.35)}}
+/* chips and segmented controls */
+.chip{border:1.5px solid var(--line);background:var(--surface);font-weight:700}
+.chip:hover{background:var(--lime-soft);border-color:var(--ink)}
+:root[data-theme="dark"] .chip:hover{background:#1E2410}
+.seg{background:var(--surface);border:1.5px solid var(--line);border-radius:16px}
+.seg button[aria-pressed=true],.seg button[aria-selected=true],.seg.two button[aria-checked="true"]{background:var(--btn-bg);color:var(--btn-ink);box-shadow:0 6px 14px -8px rgba(11,11,15,.6)}
+/* banners and alerts: lime for info, coral for urgent */
+.banner{background:var(--lime-soft);color:var(--ink);border-inline-start:4px solid var(--lime);border-radius:12px}
+:root[data-theme="dark"] .banner{background:#1E2410;color:var(--ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .banner,:root:not([data-theme="light"]) .chip:hover{background:#1E2410}}
+.locline{border:0;background:var(--surface);box-shadow:var(--card-sh),inset 4px 0 0 var(--lime);border-radius:16px}
+.alertslim{border-radius:16px}
+.addbox{border-top:0;box-shadow:var(--card-sh),inset 0 4px 0 var(--lime)}
+.helper{background:var(--surface);border-radius:16px}
+.helper.wide{background:var(--btn-bg);color:var(--btn-ink);border-color:transparent}
+/* pills */
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.mega{background:var(--coral);box-shadow:0 0 0 2px rgba(255,75,43,.15)}
+.pill.y{background:var(--coral);color:#fff}
+/* list rows */
+.it3{border-radius:18px;border:1px solid var(--line);border-inline-start:5px solid var(--cc);box-shadow:var(--card-sh)}
+.step3 button[data-inc]{background:var(--btn-bg);color:var(--btn-ink)}
+:root:not([data-theme=dark]) .step3 button[data-inc]{color:var(--lime)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .step3 button[data-inc]{color:var(--btn-ink)}}
+/* stats: the savings in brand colors */
+.stat{background:var(--lime);color:var(--on-lime)}.stat.b{background:var(--ink);color:var(--lime)}.stat.k{background:var(--coral);color:#fff}
+.plan{background:radial-gradient(120% 120% at 100% 0,#2A3300,#0B0B0F 60%);border:0}
+.plan .price{color:var(--lime)}
+/* bottom navigation: ink bar with a lime "you are here" */
+nav.bn{background:#0B0B0F;border-top:0;box-shadow:0 -10px 30px -18px rgba(0,0,0,.6)}
+nav.bn button{color:#8E929B}
+nav.bn button[aria-current=page]{color:#0B0B0F;background:var(--lime);box-shadow:0 0 18px -4px rgba(215,255,31,.65)}
+nav.bn .badge{background:var(--coral);color:#fff}
+/* deal moments: the market-breakers card in neon on ink */
+.promocard{background:radial-gradient(120% 80% at 100% 0,#2A1008,#0B0B0F 55%)!important;color:#F2F2EE;border:0!important}
+.promocard h2{color:#fff}.promocard .sub,.promocard .dline{color:#C9CBD1}
+.promocard .drow{border-bottom-color:#22242B}.promocard .drow .grow>b{color:#fff}
+.promocard .seg{background:#14161B;border-color:#2A2D35}.promocard .seg button{color:#C9CBD1}.promocard .seg button[aria-pressed=true]{background:var(--lime);color:#0B0B0F}
+.promocard .link{color:var(--lime);text-decoration-color:rgba(215,255,31,.35)}
+.promocard .pill.good{background:rgba(182,255,59,.12);color:#B6FF3B}.promocard .pill.warnp{background:rgba(255,106,77,.14);color:#FF8A73}
+.promocard .btn.dadd{background:var(--lime);color:#0B0B0F}
+.promocard .thv{background:#fff;border-radius:12px}
+.promocard s{color:#FF6A4D}
+.promocard b,.promocard summary,.promocard .dline b,.promocard p{color:inherit}.promocard .dline b{color:#fff}.promocard summary{color:var(--lime)}.promocard .clubpick,.promocard .brands button{color:#F2F2EE}.promocard .brands button{background:#14161B;border-color:#2A2D35}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -3764,7 +3840,7 @@ function promoSection(){
   if(mineC.length){const keep=rows.filter(r=>mineC.includes(r.cid));rows.length=0;rows.push(...keep)}
   rows.sort((a,b)=>((a.v.t==='other')-(b.v.t==='other'))||(b.pct-a.pct));/* food and household groceries first */const seen=new Set(),pick=[];/* groceries first */for(const r of rows){const k=r.v.id+r.cid;if(seen.has(k))continue;seen.add(k);pick.push(r);if(pick.length>=(state.promoN||20))break}
   const nClub=state.clubs.length;
-  return `<section class="card"><h2>🚨 שוברי שוק</h2>
+  return `<section class="card promocard"><h2>🚨 שוברי שוק</h2>
     <p class="sub"><b>${rows.length}</b> מבצעים של <b>40% ומעלה</b> מהמחיר הרגיל, ברשתות שלך. <button class="link" type="button" id="pclubs">${nClub?'המועדונים שלי':'סמן מועדונים'}</button></p>
     <details class="more"><summary>איך בחרנו?</summary><p class="sub">מתוך קבצי המבצעים שהרשתות מפרסמות לפי חוק שקיפות המחירים. ההנחה מחושבת ליחידה, לעומת המחיר הרגיל באותה רשת. מבצעי מועדון נספרים רק אם סימנת שאתה חבר.</p></details>
     <div class="seg" role="group" aria-label="סינון מבצעים">${[['all','הכל'],['club','למועדון'],['mine','מהרשימה שלי']].map(([k,l])=>`<button type="button" data-pf="${k}" aria-pressed="${F===k}">${l}</button>`).join('')}</div>
