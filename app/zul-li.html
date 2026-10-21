@@ -718,7 +718,7 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 @media (prefers-reduced-motion:reduce){.splash *,.splash .sic::after{animation:none!important}}
 
 /* ================= story: neon showcase ================= */
-.sview.neo{background:radial-gradient(80% 45% at 50% 34%,rgba(79,227,255,.12),transparent 62%),radial-gradient(60% 34% at 50% 60%,rgba(255,46,46,.14),transparent 70%),repeating-linear-gradient(135deg,rgba(255,255,255,.022) 0 2px,transparent 2px 24px),#06070A;color:#fff;--cs:min(58vw,240px,30vh)}
+.sview.neo{--cs:min(52vw,230px,28vh);background:radial-gradient(80% 45% at 50% 34%,rgba(79,227,255,.12),transparent 62%),radial-gradient(60% 34% at 50% 60%,rgba(255,46,46,.14),transparent 70%),repeating-linear-gradient(135deg,rgba(255,255,255,.022) 0 2px,transparent 2px 24px),#06070A;color:#fff}
 .sview.neo .svhero{background:none;border-radius:0;height:auto;flex:1;min-height:0;display:flex;flex-direction:column;padding-bottom:6px}
 .sview.neo .bolt{position:absolute;top:0;left:0;width:100%;height:84px;pointer-events:none;opacity:.95}
 .sview.neo .bolt .b1{animation:bflick 2.6s steps(1) infinite}.sview.neo .bolt .b2{animation:bflick 1.9s steps(1) .4s infinite}.sview.neo .bolt .b3{animation:bflick 1.3s steps(1) .2s infinite}
@@ -730,21 +730,21 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 .sview.neo .svtitle b{font-family:var(--display);font-weight:900;font-size:clamp(1.9rem,9vw,2.7rem);line-height:1.05;letter-spacing:-.5px;background:linear-gradient(180deg,#FFF6E0 0%,#FFC46B 42%,#FF6A1F 56%,#FFB25C 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:1px rgba(110,30,0,.55);filter:drop-shadow(0 3px 0 #4A1500) drop-shadow(0 0 14px rgba(255,106,31,.45))}
 .sview.neo .svtitle .te{-webkit-text-fill-color:initial;color:initial;-webkit-text-stroke:0}
 .sview.neo .svtitle small{color:#B6FF3B;font-weight:800;font-size:1.05rem;text-shadow:0 0 10px rgba(182,255,59,.45)}
-.sview.neo .svstage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(var(--cs)*0.14) 0 0;min-height:0}
+.sview.neo .svstage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(var(--cs)*0.2) 0 0;min-height:0;overflow:visible}
 .sview.neo .svstage::before,.sview.neo .svstage::after{display:none}
-.sview.neo .case{position:relative;width:var(--cs);height:calc(var(--cs)*1.12);z-index:1;background:linear-gradient(90deg,rgba(79,227,255,.26) 0,rgba(255,255,255,.07) 10%,rgba(255,255,255,0) 26%,rgba(255,255,255,0) 74%,rgba(255,255,255,.07) 90%,rgba(79,227,255,.26) 100%);border-inline:2px solid #8FF3FF;box-shadow:-8px 0 18px -8px #4FE3FF,8px 0 18px -8px #4FE3FF;border-radius:0 0 50% 50%/0 0 12% 12%}
+.sview.neo .case{position:relative;flex:none;width:var(--cs);height:calc(var(--cs)*1.38);z-index:1;background:linear-gradient(90deg,rgba(79,227,255,.26) 0,rgba(255,255,255,.07) 10%,rgba(255,255,255,0) 26%,rgba(255,255,255,0) 74%,rgba(255,255,255,.07) 90%,rgba(79,227,255,.26) 100%);border-inline:2px solid #8FF3FF;box-shadow:-8px 0 18px -8px #4FE3FF,8px 0 18px -8px #4FE3FF;border-radius:0 0 50% 50%/0 0 12% 12%}
 .sview.neo .case::before{content:'';position:absolute;left:-2px;right:-2px;top:-11%;height:22%;border:2px solid #9FF4FF;border-radius:50%;box-shadow:0 0 12px #4FE3FF,inset 0 0 10px rgba(79,227,255,.35);background:rgba(79,227,255,.05)}
 .sview.neo .case::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 18%,rgba(255,255,255,.10) 22%,transparent 30%);pointer-events:none;border-radius:inherit}
-.sview.neo .prod{position:absolute;inset:6% 9% 9%;display:grid;place-items:center}
+.sview.neo .prod{position:absolute;inset:3% -4% 5%;display:grid;place-items:center}
 .sview.neo .svstage .th,.sview.neo .svstage .th.hires{width:100%;height:100%;padding:0;background:transparent}
 .sview.neo .svstage .th img{mix-blend-mode:normal;filter:drop-shadow(0 10px 14px rgba(0,0,0,.6))}
-.sview.neo .svstage .th.nocut img{border-radius:18px;background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.08),0 0 30px rgba(79,227,255,.35)}
+.sview.neo .svstage .th.nocut img{border-radius:18px}
 .sview.neo .svstage .th.svtext{transform:none;width:100%;height:auto;max-height:100%;background:rgba(255,255,255,.06);border:1px solid rgba(159,244,255,.35);color:#fff;box-shadow:0 0 24px rgba(79,227,255,.18) inset}
 .sview.neo .svtext .svtag{background:rgba(182,255,59,.15);color:#B6FF3B}.sview.neo .svtext .svrest{color:#C9C9D1}.sview.neo .svtext .svsize{color:#FF6A4D}
-.sview.neo .podium{position:relative;margin-top:calc(var(--cs)*-0.13);width:calc(var(--cs)*1.32);height:calc(var(--cs)*0.42);border-radius:50%;background:radial-gradient(ellipse at 50% 28%,#3A0C0C 0,#14080A 55%,#08080B 75%);border:3px solid #FF2E2E;box-shadow:0 0 16px #FF2E2E,0 0 34px rgba(255,46,46,.5),inset 0 0 22px rgba(255,46,46,.55);display:grid;place-items:center}
+.sview.neo .podium{position:relative;flex:none;margin-top:calc(var(--cs)*-0.13);width:calc(var(--cs)*1.45);height:calc(var(--cs)*0.42);border-radius:50%;background:radial-gradient(ellipse at 50% 28%,#3A0C0C 0,#14080A 55%,#08080B 75%);border:3px solid #FF2E2E;box-shadow:0 0 16px #FF2E2E,0 0 34px rgba(255,46,46,.5),inset 0 0 22px rgba(255,46,46,.55);display:grid;place-items:center}
 .sview.neo .podium::before{content:'';position:absolute;left:8%;right:8%;top:-14%;height:44%;border-radius:50%;border:2px solid #7FEFFF;box-shadow:0 0 10px #4FE3FF;background:radial-gradient(ellipse,#101820 0,#06070A 70%)}
 .sview.neo .podium::after{content:'';position:absolute;inset:-12% -9% -16%;border-radius:50%;border:2px solid rgba(255,46,46,.4);border-top-color:transparent;box-shadow:0 8px 18px -8px rgba(255,46,46,.6);pointer-events:none}
-.sview.neo .neonpct{position:relative;margin-top:14%;font-family:var(--display);font-weight:900;font-size:calc(var(--cs)*0.19);letter-spacing:-1px;color:#FFE9E9;text-shadow:0 0 3px #fff,0 0 10px #FF2E2E,0 0 22px #FF2E2E,0 0 42px #FF0000;animation:neonp 3s ease-in-out infinite}
+.sview.neo .neonpct{position:relative;margin-top:14%;font-family:var(--display);font-weight:900;font-size:calc(var(--cs)*0.22);letter-spacing:-1px;color:#FFE9E9;text-shadow:0 0 3px #fff,0 0 10px #FF2E2E,0 0 22px #FF2E2E,0 0 42px #FF0000;animation:neonp 3s ease-in-out infinite}
 @keyframes neonp{50%{text-shadow:0 0 3px #fff,0 0 8px #FF2E2E,0 0 16px #FF2E2E,0 0 30px #FF0000}}
 .sview.neo .pct{display:none}
 .sview.neo .sinfo{flex:none;justify-content:flex-start;padding-top:12px;gap:8px;overflow:visible}
@@ -760,7 +760,7 @@ input.need{border-color:var(--warn)!important;box-shadow:0 0 0 3px var(--warn-so
 .sview.neo #stAdd:active,.sview.neo #stCheck:active{transform:translateY(3px);box-shadow:0 1px 0 #000}
 .sview.neo .svrep{color:#B6FF3B}
 .sview.neo .tapzone{top:150px}
-@media (max-height:780px){.sview.neo{--cs:min(50vw,25vh)}.sview.neo .bars{margin-top:22px}.sview.neo .svtitle b{font-size:clamp(1.6rem,8vw,2.1rem)}.sview.neo .svtitle small{font-size:.92rem}.sview.neo .pr b{font-size:1.9rem}.sview.neo .bolt{height:64px}}
+@media (max-height:780px){.sview.neo{--cs:min(46vw,23vh)}.sview.neo .bars{margin-top:22px}.sview.neo .svtitle b{font-size:clamp(1.6rem,8vw,2.1rem)}.sview.neo .svtitle small{font-size:.92rem}.sview.neo .pr b{font-size:1.9rem}.sview.neo .bolt{height:64px}}
 @media (prefers-reduced-motion:reduce){.sview.neo .bolt path,.sview.neo .neonpct{animation:none}}
 </style>
 
@@ -3790,7 +3790,7 @@ async function hiresUrl(v){const bc=v&&v.bc;if(!bc)return null;if(_hires.has(bc)
   if(v.rp&&v.rp.rami!=null)u=`https://img.rami-levy.co.il/product/${bc}/medium.jpg`;
   else{try{const r=await fetch(`https://world.openfoodfacts.org/api/v2/product/${bc}.json?fields=image_front_url`);if(r.ok){const j=await r.json();u=j&&j.product&&j.product.image_front_url||null}}catch(e){}}
   _hires.set(bc,u);return u}
-function sharpen(el,v){hdData(v&&v.bc).then(d=>d||hiresUrl(v)).then(u=>{if(!u||!document.contains(el))return;const im=new Image();im.alt='';im.referrerPolicy='no-referrer';
+function sharpen(el,v){hdData(v&&v.bc).then(d=>d||hiresUrl(v)).then(u=>{if(!u||!document.contains(el))return;const im=new Image();im.alt='';im.referrerPolicy='no-referrer';if(!/^data:/.test(u))im.crossOrigin='anonymous';/* readable pixels, so the white can be cleared; a server without CORS just keeps the thumbnail */
   im.onload=()=>{if(!document.contains(el)||im.naturalWidth<200)return;el.classList.remove('svtext');el.replaceChildren(im);el.classList.add('has','hires')};im.src=u})}
 /* no photo anywhere: a typographic card (the name, big) instead of a lone emoji */
 const noPic=v=>!(v&&v.bc&&((HAVE&&HAVE.has(v.bc))||(HD&&HD.has(v.bc))))&&!(v&&v.n&&TV_RX.test(v.n))&&(HAVE!=null||HD!=null);
@@ -3833,7 +3833,7 @@ const BOLT_SVG=`<svg class="bolt" viewBox="0 0 400 90" preserveAspectRatio="none
 /* product photos come on white; on the dark story the white around the product is cleared: a flood fill from the edges over
    near-white pixels, with a soft edge. Works on the photos the app ships (data: URLs); others keep a light disc behind them. */
 const _cut=new Map();
-function cutoutSrc(src){if(_cut.has(src))return _cut.get(src);const pr=new Promise(ok=>{const im=new Image();im.onload=()=>{try{
+function cutoutSrc(src){if(_cut.has(src))return _cut.get(src);const pr=new Promise(ok=>{const im=new Image();if(!/^data:/.test(src))im.crossOrigin='anonymous';im.onload=()=>{try{
     const W=Math.min(480,im.naturalWidth),H=Math.round(im.naturalHeight*W/im.naturalWidth),cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0,W,H);
     const d=x.getImageData(0,0,W,H),a=d.data,seen=new Uint8Array(W*H),q=new Int32Array(W*H);let qh=0,qt=0;
     const white=i=>{const r=a[i*4],g=a[i*4+1],b=a[i*4+2];return Math.min(r,g,b)>=228&&Math.max(r,g,b)-Math.min(r,g,b)<28};
@@ -3845,7 +3845,7 @@ function cutoutSrc(src){if(_cut.has(src))return _cut.get(src);const pr=new Promi
       const X=i%W,Y=(i/W)|0;if((X>0&&seen[i-1])||(X<W-1&&seen[i+1])||(Y>0&&seen[i-W])||(Y<H-1&&seen[i+W])){const m=Math.min(a[i*4],a[i*4+1],a[i*4+2]);a[i*4+3]=m>200?Math.round(255*(1-(m-200)/55)*0.85):255}}
     x.putImageData(d,0,0);ok(cv.toDataURL('image/png'))}catch(e){ok(null)}};im.onerror=()=>ok(null);im.src=src});_cut.set(src,pr);return pr}
 function cutoutIn(el){const fix=img=>{if(!img||img.dataset.cut)return;img.dataset.cut='1';const src=img.currentSrc||img.src;
-    if(!/^data:/.test(src)){el.classList.add('nocut');return}cutoutSrc(src).then(u=>{if(u&&document.contains(img)){img.src=u;el.classList.add('cut')}else el.classList.add('nocut')})};
+    cutoutSrc(src).then(u=>{if(u&&document.contains(img)){img.src=u;el.classList.add('cut')}else el.classList.add('nocut')})};
   fix(el.querySelector('img'));new MutationObserver(()=>fix(el.querySelector('img'))).observe(el,{childList:true,subtree:true})}
 function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)return [];
   const best=new Map();for(const r of dealRows(fol,20)){const k=r.v.id;if(!best.has(k)||best.get(k).pct<r.pct)best.set(k,r)}
@@ -3881,13 +3881,17 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
   /* the page behind must not scroll sideways or under the story (iOS shifts fixed layers when the page is wider than the screen) */
   const ov=[document.documentElement.style.overflow,document.body.style.overflow];document.documentElement.style.overflow=document.body.style.overflow='hidden';window.scrollTo(0,window.scrollY);
   const prevFocus=document.activeElement;
-  const close=()=>{clearTimeout(timer);markSeen();root.remove();document.documentElement.style.overflow=ov[0];document.body.style.overflow=ov[1];document.removeEventListener('keydown',key);update();prevFocus?.focus?.()};
+  const close=()=>{clearTimeout(timer);markSeen();removeEventListener('resize',onRs);root.remove();document.documentElement.style.overflow=ov[0];document.body.style.overflow=ov[1];document.removeEventListener('keydown',key);update();prevFocus?.focus?.()};
   const markSeen=()=>{(state.storySeen||={})[G[gi].id]=storyKey(G[gi]);save()};
   const go=(d)=>{clearTimeout(timer);si+=d;if(si>=G[gi].rows.length){markSeen();gi++;si=0;if(gi>=G.length){gi--;return close()}}if(si<0){if(gi>0){gi--;si=G[gi].rows.length-1}else si=0}draw()};
   const run=(ms)=>{clearTimeout(timer);t0=Date.now();left=ms;const bar=root.querySelector('.bars i.cur b');if(bar){bar.style.transition='none';bar.style.width=(100*(1-ms/DUR))+'%';bar.offsetWidth;bar.style.transition=`width ${ms}ms linear`;bar.style.width='100%'}timer=setTimeout(()=>go(1),ms)};
   const pause=()=>{if(paused)return;paused=true;clearTimeout(timer);left=Math.max(0,left-(Date.now()-t0));const bar=root.querySelector('.bars i.cur b');if(bar){const w=getComputedStyle(bar).width;bar.style.transition='none';bar.style.width=w}};
   const resume=()=>{if(!paused)return;paused=false;run(left||DUR)};
   const key=e=>{if(e.key==='Escape')close();else if(e.key==='ArrowLeft')go(1);else if(e.key==='ArrowRight')go(-1)};document.addEventListener('keydown',key);
+  /* the showcase takes all the room left between the title and the details: as big as the screen allows */
+  const fitStage=()=>{const st=root.querySelector('.svstage');if(!st)return;root.style.setProperty('--cs','10px');
+    const h=st.clientHeight,w=root.clientWidth;const cs=Math.max(90,Math.min(w*0.56,280,(h-6)/1.88));root.style.setProperty('--cs',cs.toFixed(0)+'px')};
+  const onRs=()=>fitStage();addEventListener('resize',onRs);
   const draw=()=>{const g=G[gi],r=g.rows[si],c=CHB[r.cid];const left=r.pr.end?Math.ceil((new Date(r.pr.end)-Date.now())/864e5):null;
     root.innerHTML=`<div class="svhero">${BOLT_SVG}<div class="bars" aria-hidden="true">${g.rows.map((_,i)=>`<i class="${i<si?'done':i===si?'cur':''}"><b></b></i>`).join('')}</div>
       <div class="svhead"><div class="svtitle"><b>${esc(g.n)} <span class="te">${g.e}</span></b><small>מבצע ${si+1} מתוך ${g.rows.length}</small></div><button class="x" type="button" aria-label="סגור">✕</button></div>
@@ -3899,6 +3903,7 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
         <small style="color:#A9A9B3">${left!=null&&left>=0?(left===0?'נגמר היום':`עוד ${nOf(left,'יום אחד','ימים')}`):''}${r.pr.club?' · למועדון':''}</small></div>
       <div class="sact"><button class="btn y" type="button" id="stAdd">➕ הוסף לרשימה</button><button class="btn ghost" type="button" id="stCheck" style="color:#fff;border-color:#3A3A44">🏷️ איפה עוד?</button></div><button class="svrep" type="button" id="stRep">⚠️ דווח על מחיר שגוי</button>`;
     const stg=root.querySelector('.svstage .th');if(stg){sharpen(stg,r.v);cutoutIn(stg)}
+    fitStage();
     {const me=r;histCheck(r).then(k=>{const el=root.querySelector('#svck');if(!k||!el||G[gi].rows[si]!==me)return;const cur=dealCheck(r);
       /* a warning from the other chains stays; history adds its own warning or a "lowest in N days" */
       if(cur&&cur.cls==='warn'&&k.cls!=='warn')return;if(k.cls==='info'&&cur)return;el.hidden=false;el.className='svcheck '+k.cls;el.textContent=k.t})}
