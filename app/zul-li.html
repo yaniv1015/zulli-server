@@ -3381,9 +3381,10 @@ Words that often appear on Israeli shopping lists (the store's product kinds), t
 Reply with only JSON: {"items": [{"name": string, "size": string, "qty": number, "sure": boolean}]}. If the image has no shopping list, reply {"items": []}.`,{images:img,signal:ctl.signal,modelTier:'complex'});
         const items=(r&&Array.isArray(r.items)?r.items:[]).filter(i=>i&&String(i.name||'').trim());
         if(!items.length){$('lpStatus').innerHTML='<div class="unk">לא מצאנו מוצרים בתמונה. ודא שהרשימה כולה בתמונה, חדה ומוארת.</div>';return}
-        const unsure=items.filter(i=>i.sure===false).length;
-        show(items.map(i=>{let q=Math.round(+i.qty||1);if(!(q>=1&&q<=20))q=1;const sz=String(i.size||'').trim();const nm=String(i.name).replace(/\s+/g,' ').trim();
-          return (i.sure===false?'❓ ':'')+nm+(sz&&!nm.includes(sz)?' '+sz:'')+(q>1?' ('+q+')':'')}).join('\n'),unsure?`<div class="banner">${nOf(unsure,'שורה אחת','שורות')} עם ❓ היו קשות לקריאה. כדאי לבדוק ולתקן לפני שמוסיפים.</div>`:'');
+        const line=i=>{let q=Math.round(+i.qty||1);if(!(q>=1&&q<=20))q=1;const sz=String(i.size||'').trim();const nm=String(i.name).replace(/\s+/g,' ').trim();return nm+(sz&&!nm.includes(sz)?' '+sz:'')+(q>1?' ('+q+')':'')};
+        const unsure=items.filter(i=>i.sure===false).map(i=>String(i.name).replace(/\s+/g,' ').trim());
+        /* hard-to-read lines are named in plain words above the list, not marked inside it */
+        show(items.map(line).join('\n'),unsure.length?`<div class="banner">✏️ <b>כדאי לבדוק:</b> ${unsure.slice(0,8).map(esc).join(' · ')}<br><small>הכתב בשורות האלה לא היה ברור. אם משהו לא נכון, תקן אותו ברשימה למטה.</small></div>`:'');
       }catch(err){if(err?.code==='cancelled')$('lpStatus').textContent='';else $('lpStatus').innerHTML=`<div class="unk">${errText(err?.code)}</div>`}
     };
     watchPicker(document.getElementById('sbody'),()=>{$('lpStatus').innerHTML=missingHelp});
