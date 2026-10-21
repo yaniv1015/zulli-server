@@ -2346,6 +2346,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
+const BUILD='130';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -3435,13 +3436,15 @@ function openListPhoto(){
   openSheet('תמונה של רשימת קניות',`<p class="sub">צלם רשימה בכתב יד, פתק מהמקרר או צילום מסך מוואטסאפ. מוזיל יקרא את המוצרים, ותוכל לבדוק ולתקן לפני שהם נכנסים לרשימה.</p>
     ${fileInput('lpFile','צלם רשימה')}${visionNote()}
     ${CAN_IMG?'':'<button class="btn ghost" type="button" id="lpDemo">הצג דוגמה</button>'}
-    <div id="lpStatus" class="sub" aria-live="polite"></div>
+    <div id="lpStatus" class="sub" aria-live="polite"></div><small class="sub" style="opacity:.6">גרסה ${BUILD}</small>
     <div id="lpRes" style="display:flex;flex-direction:column;gap:10px"></div>`,()=>{
     const show=(lines,note)=>{
       $('lpStatus').innerHTML=note||'';
       $('lpRes').innerHTML=`<label class="f" for="lpText">זה מה שקראנו (${nOf(lines.split('\n').filter(Boolean).length,'מוצר אחד','מוצרים')}). אפשר לתקן, להוסיף או למחוק שורות. כמות כותבים בסוף השורה, למשל "- 2 יח׳":</label>
         <textarea id="lpText" style="min-height:180px">${esc(lines)}</textarea>
         <button class="btn big y" type="button" id="lpAdd">הוסף לרשימה שלי</button><div id="lpUnk"></div>`;
+      /* with the keyboard open, the first tap would only close it (and move the button): keep the focus, so one tap adds */
+      $('lpAdd').addEventListener('pointerdown',e=>e.preventDefault());$('lpAdd').addEventListener('mousedown',e=>e.preventDefault());
       $('lpAdd').onclick=()=>{const txt=$('lpText').value.replace(/❓\s*/g,'').trim();if(!txt){toast('אין מוצרים להוספה');return}
         const{out,unknown}=parseList(txt);const keys=addItems(out,'מתמונה');save();render();
         if(unknown.length){$('lpRes').innerHTML=`<div class="okline">✓ נוספו ${nOf(out.length,'מוצר אחד','מוצרים')}</div>`+unknownBox(unknown);bindUnknown($('lpRes'),keys);$('lpRes').scrollIntoView({block:'start'})}
@@ -4403,7 +4406,7 @@ function renderAccount(){
     <div class="toggle"><label for="nmega">🚨 מבצעי שובר שוק (הנחות של עשרות אחוזים)</label><input type="checkbox" id="nmega" ${state.notif.mega?'checked':''}></div></section>
   <section class="card"><h2>🔒 פרטיות ותנאים</h2>
     <div class="row2"><button class="btn sm ghost" type="button" data-legal="privacy">מדיניות פרטיות</button><button class="btn sm ghost" type="button" data-legal="terms">תנאי שימוש</button><button class="btn sm ghost" type="button" data-legal="access">♿ הצהרת נגישות</button><button class="btn sm ghost" type="button" id="resetAll">איפוס נתוני ההדגמה</button></div></section>
-  <section class="card"><h2>🛟 עזרה ומשוב</h2>
+  <section class="card"><h2>🛟 עזרה ומשוב <small class="sub" style="font-weight:400">· גרסה ${BUILD}</small></h2>
     <div class="row2"><button class="btn sm" type="button" id="fbOpen">💬 שלח משוב או דווח על תקלה</button><button class="btn sm ghost" type="button" id="tourAgain">👋 איך זה עובד</button></div>
     ${(state.reports||[]).length?`<p class="sub">שלחת ${nOf(state.reports.length,'דיווח אחד','דיווחים')} על מחירים. תודה!</p>`:''}</section>
   <section class="card"><h2>🗑️ מחיקת חשבון</h2><p class="sub">מוחק את כל הפרטים והנתונים ששמרת במוזיל.</p>
