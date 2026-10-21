@@ -844,6 +844,8 @@ nav.bn .badge{background:var(--coral);color:#fff}
 .promocard .thv{background:#fff;border-radius:12px}
 .promocard s{color:#FF6A4D}
 .promocard b,.promocard summary,.promocard .dline b,.promocard p{color:inherit}.promocard .dline b{color:#fff}.promocard summary{color:var(--lime)}.promocard .clubpick,.promocard .brands button{color:#F2F2EE}.promocard .brands button{background:#14161B;border-color:#2A2D35}
+.sview.neo .th.hdwait{border-radius:24px;background:radial-gradient(circle at 50% 45%,rgba(159,244,255,.18),transparent 60%);animation:hdpulse 1.1s ease-in-out infinite}
+@keyframes hdpulse{50%{opacity:.45}}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -3865,15 +3867,19 @@ let HAVE=null;const haveReady=(async()=>{try{const r=await fetch('img/have.json'
 const _hires=new Map();
 let HD=null;const hdReady=(async()=>{try{const r=await fetch('img/hd/have.json');if(r.ok){HD=new Set(String(await r.json()).split(','));if(state.tab==='deals')update()}}catch(e){}})();
 const _hdChunks=new Map();
-function hdData(bc){if(!HD||!HD.has(bc))return Promise.resolve(null);const n=Number(String(bc).slice(-4))%32;
-  if(!_hdChunks.has(n))_hdChunks.set(n,fetch(`img/hd/${String(n).padStart(2,'0')}.json`).then(r=>r.ok?r.json():{}).catch(()=>({})));
-  return _hdChunks.get(n).then(c=>c[bc]?'data:image/webp;base64,'+c[bc]:null)}
+/* hd/index.json says how the sharp photos are packed (chunks) and whether they are already cut out on the server */
+let HDIX={chunks:32,cut:false};const hdIxReady=fetch('img/hd/index.json').then(r=>r.ok?r.json():null).then(j=>{if(j&&j.chunks)HDIX={chunks:j.chunks,cut:!!j.cut}}).catch(()=>{});
+function hdData(bc){if(!HD||!HD.has(bc))return Promise.resolve(null);return hdIxReady.then(()=>{const C=HDIX.chunks,n=Number(String(bc).slice(-4))%C;
+  if(!_hdChunks.has(n))_hdChunks.set(n,fetch(`img/hd/${String(n).padStart(C>=100?3:2,'0')}.json`).then(r=>r.ok?r.json():{}).catch(()=>({})));
+  return _hdChunks.get(n).then(c=>c[bc]?'data:image/webp;base64,'+c[bc]:null)})}
+/* warm the next stories: their photo chunks download and decode while the current one is on screen */
+const _warm=new Set();function warmHD(v){if(!v||!v.bc||_warm.has(v.bc)||!HD||!HD.has(v.bc))return;_warm.add(v.bc);hdData(v.bc).then(u=>{if(u){const im=new Image();im.src=u;im.decode?.().catch(()=>{})}})}
 async function hiresUrl(v){const bc=v&&v.bc;if(!bc)return null;if(_hires.has(bc))return _hires.get(bc);let u=null;
   if(v.rp&&v.rp.rami!=null)u=`https://img.rami-levy.co.il/product/${bc}/medium.jpg`;
   else{try{const r=await fetch(`https://world.openfoodfacts.org/api/v2/product/${bc}.json?fields=image_front_url`);if(r.ok){const j=await r.json();u=j&&j.product&&j.product.image_front_url||null}}catch(e){}}
   _hires.set(bc,u);return u}
 function sharpen(el,v){hdData(v&&v.bc).then(d=>d||hiresUrl(v)).then(u=>{if(!u||!document.contains(el))return;const im=new Image();im.alt='';im.referrerPolicy='no-referrer';if(!/^data:/.test(u))im.crossOrigin='anonymous';/* readable pixels, so the white can be cleared; a server without CORS just keeps the thumbnail */
-  im.onload=()=>{if(!document.contains(el)||im.naturalWidth<200)return;el.classList.remove('svtext');el.replaceChildren(im);el.classList.add('has','hires')};im.src=u})}
+  im.onload=()=>{if(!document.contains(el)||(im.naturalWidth<200&&im.naturalHeight<200))return;el.classList.remove('svtext','hdwait');if(HDIX.cut&&/^data:/.test(im.src)){im.dataset.cut='1';el.classList.add('cut')}el.replaceChildren(im);el.classList.add('has','hires')};im.src=u})}
 /* no photo anywhere: a typographic card (the name, big) instead of a lone emoji */
 const noPic=v=>!(v&&v.bc&&((HAVE&&HAVE.has(v.bc))||(HD&&HD.has(v.bc))))&&!(v&&v.n&&TV_RX.test(v.n))&&(HAVE!=null||HD!=null);
 function textCard(v){const n=vLabel(v).replace(/\s+\d+(?:[.,]\d+)?\s*(?:גרם|ג׳|ג'|ק״ג|קג|מ״ל|מ"ל|מל|ליטר|ל׳|יח׳|יחידות)(?=\s|$).*$/,'');const words=n.split(/\s+/);
@@ -3960,7 +3966,7 @@ const storyKey=g=>g.rows.map(r=>r.key).join('~').slice(0,400);
 const HL={top:['🔥','#FFB800','#FF4B2B'],produce:['🥑','#C8F56A','#22B26B'],bakery:['🥐','#FFE0A8','#E58A2E'],dairy:['🧀','#FFF1A6','#F5B700'],
   meat:['🥩','#FFB8A8','#E23D4B'],frozen:['🍦','#D9F7FF','#4FB8F0'],pantry:['🍝','#FFE7A3','#F08A24'],snacks:['🍫','#FFC6E6','#B85CF5'],
   drink:['🥤','#A9F0FF','#2E6BFF'],baby:['🍼','#FFE1F0','#FF7DB8'],care:['🧴','#E6DDFF','#8B6CFF'],home:['🧼','#C9FFF0','#14B8A0'],elec:['⚡','#FFF59E','#FF8A00'],other:['🛒','#E8E8EE','#8A8A99']};
-function storiesHtml(){const G=storyGroups();if(!G.length)return'';const seen=state.storySeen||{};
+function storiesHtml(){const G=storyGroups();if(!G.length)return'';/* the first photo of the first circles loads while the shopper looks at the strip */clearTimeout(storiesHtml.t);storiesHtml.t=setTimeout(()=>{hdReady.then(()=>G.slice(0,4).forEach(g=>g.rows[0]&&warmHD(g.rows[0].v)))},1200);const seen=state.storySeen||{};
   return `<div class="storyband"><div class="stories" role="list" aria-label="מבצעים לפי קטגוריה">${G.map((g,i)=>`<button type="button" class="story${seen[g.id]===storyKey(g)?' seen':''}" data-story="${i}" role="listitem" aria-label="${esc(g.n)}: ${g.rows.length} מבצעים"><span class="ring"><span class="inner hl" style="--g1:${(HL[g.id]||HL.other)[1]};--g2:${(HL[g.id]||HL.other)[2]}"><span class="hle" aria-hidden="true">${(HL[g.id]||HL.other)[0]}</span></span><span class="hlp" dir="ltr">−${Math.max(...g.rows.map(r=>r.pct))}%</span></span><small>${esc(g.n)}</small></button>`).join('')}</div></div>`}
 function openStories(start){const G=storyGroups();if(!G[start])return;let gi=start,si=0,timer=0,t0=0,paused=false,left=0;let DUR=5000;
   const root=document.createElement('div');root.className='sview neo';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.appendChild(root);
@@ -3977,11 +3983,12 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
   /* the showcase takes all the room left between the title and the details: as big as the screen allows */
   const fitStage=()=>{const st=root.querySelector('.svstage');if(!st)return;root.style.setProperty('--cs','10px');
     const h=st.clientHeight,w=root.clientWidth;const cs=Math.max(90,Math.min(w*0.54,260,(h-4)/1.7));root.style.setProperty('--cs',cs.toFixed(0)+'px')};
+  G[start]&&G[start].rows.slice(0,3).forEach(x=>warmHD(x.v));
   const onRs=()=>fitStage();addEventListener('resize',onRs);
   const draw=()=>{const g=G[gi],r=g.rows[si],c=CHB[r.cid];const left=r.pr.end?Math.ceil((new Date(r.pr.end)-Date.now())/864e5):null;
     root.innerHTML=`<div class="svhero">${BOLT_SVG}<div class="bars" aria-hidden="true">${g.rows.map((_,i)=>`<i class="${i<si?'done':i===si?'cur':''}"><b></b></i>`).join('')}</div>
       <div class="svhead"><div class="svtitle"><b>${esc(g.n)} <span class="te">${g.e}</span></b><small>מבצע ${si+1} מתוך ${g.rows.length}</small></div><button class="x" type="button" aria-label="סגור">✕</button></div>
-      <div class="svstage"><div class="case"><div class="prod">${noPic(r.v)?textCard(r.v):thumb(r.v,TYPES[r.v.t][1])}</div></div><div class="podium"><span class="neonpct" dir="ltr">−${r.pct}%</span></div></div>
+      <div class="svstage"><div class="case"><div class="prod">${noPic(r.v)?textCard(r.v):HD&&r.v.bc&&HD.has(r.v.bc)?'<span class="th hdwait" aria-hidden="true"></span>':thumb(r.v,TYPES[r.v.t][1])}</div></div><div class="podium"><span class="neonpct" dir="ltr">−${r.pct}%</span></div></div>
       <button class="tapzone prev" type="button" aria-label="הקודם"></button><button class="tapzone next" type="button" aria-label="הבא"></button></div>
       <div class="sinfo"><div class="svchain" style="--sc:var(${c.c})"><span>המבצע ב<b>${esc(c.name)}</b>${r.pr.club?` <small>· למועדון ${esc(c.club||"")}</small>`:''}${left!=null&&left>=0?` <small class="svdays">· ${left===0?'נגמר היום':`עוד ${nOf(left,'יום אחד','ימים')}`}</small>`:''}</span></div><div class="nm">${esc(vLabel(r.v))}${r.v.s&&!vLabel(r.v).includes(r.v.s)?` <small style="color:#C9C9D1">${esc(r.v.s)}</small>`:''}</div>
         <div class="pr"><b>${fmt(r.unit)}</b>${r.pr.kind==='multi'?' ליח׳':''} &nbsp;<s>${fmt(r.p)}</s></div>${r.pr.kind==='multi'?`<small style="color:#C9C9D1">${esc(r.pr.label)}</small>`:''}
@@ -3989,7 +3996,9 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
 </div>
       <div class="sact"><button class="btn y" type="button" id="stAdd">➕ הוסף לרשימה</button><button class="btn ghost" type="button" id="stCheck" style="color:#fff;border-color:#3A3A44">🏷️ איפה עוד?</button></div><button class="svrep" type="button" id="stRep">⚠️ דווח על מחיר שגוי</button>`;
     const stg=root.querySelector('.svstage .th');if(stg){sharpen(stg,r.v);cutoutIn(stg)}
-    fitStage();
+    /* the sharp photo was expected but is not there: fall back to the small one */
+    if(stg&&stg.classList.contains('hdwait'))hdData(r.v.bc).then(d=>{if(!d&&document.contains(stg)&&stg.classList.contains('hdwait')){stg.outerHTML=thumb(r.v,TYPES[r.v.t][1]);const t2=root.querySelector('.svstage .th');if(t2)cutoutIn(t2)}});
+    fitStage();for(let k=1;k<=3;k++){const nx=g.rows[si+k]||(G[gi+1]&&G[gi+1].rows[k-1-(g.rows.length-si-1)]);if(nx)warmHD(nx.v)}
     {const me=r;histCheck(r).then(k=>{const el=root.querySelector('#svck');if(!k||!el||G[gi].rows[si]!==me)return;const cur=dealCheck(r);
       /* a warning from the other chains stays; history adds its own warning or a "lowest in N days" */
       if(cur&&cur.cls==='warn'&&k.cls!=='warn')return;if(k.cls==='info'&&cur)return;el.hidden=false;el.className='svcheck '+k.cls;el.textContent=k.t})}
