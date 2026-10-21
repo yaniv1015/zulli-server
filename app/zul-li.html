@@ -1236,7 +1236,7 @@ function amtOf(v){const m=String(v&&v.s||'').match(/^([\d.]+)\s*(.+)$/);if(!m)re
   const f=/ליטר/.test(u)?['v',1000]:/מ["״]?ל|מיליליטר/.test(u)?['v',1]:/ק["״]?ג|קילו/.test(u)?['m',1000]:/גרם|ג['׳]?$/.test(u)?['m',1]:[u,1];return n>0?[f[0],n*f[1]]:null}
 /* another package size is a fair substitute only when it holds about as much (a 850 ml bottle is no substitute for 4 litres) */
 function closeSize(v,like){const a=amtOf(v),b=amtOf(like);if(!a||!b)return !b;return a[0]===b[0]&&a[1]/b[1]>=0.8&&a[1]/b[1]<=1.25}
-function cheapestTypeAt(cid,t,q=1,size=null,brand=null,plain=size==='לק״ג'&&!brand&&TYPES[t]?.[2]==='produce',like=null){if(t==='other')return null;/* 'שונות' is a catch-all, not one product kind: never substitute inside it */let best=null;const kl=kindOf(like);for(const v of ofType(t)){if(!allowed(v)||(kl&&kindOf(v)!==kl)||(like&&!size&&!closeSize(v,like))||(size&&v.s!==size&&sizeKey(v)!==size)||(brand&&v.b!==brand)||(plain&&!plainProduce(v,t)))continue;const L=lineAt(cid,v.id,q);if(L&&(!best||L.tot<best.L.tot))best={v,L}}
+function cheapestTypeAt(cid,t,q=1,size=null,brand=null,plain=size==='לק״ג'&&!brand&&TYPES[t]?.[2]==='produce',like=null,fx=null){if(t==='other')return null;/* 'שונות' is a catch-all, not one product kind: never substitute inside it */let best=null;const kl=kindOf(like);for(const v of ofType(t)){if(!allowed(v)||(fx&&!fxMatch(v,fx))||(kl&&kindOf(v)!==kl)||(like&&!size&&!closeSize(v,like))||(size&&v.s!==size&&sizeKey(v)!==size)||(brand&&v.b!==brand)||(plain&&!plainProduce(v,t)))continue;const L=lineAt(cid,v.id,q);if(L&&(!best||L.tot<best.L.tot))best={v,L}}
   if(!best&&plain)return cheapestTypeAt(cid,t,q,size,brand,false,like);
   if(!best&&size)return cheapestTypeAt(cid,t,q,null,brand,undefined,like);return best}
 // the package size used to compare a product the shopper has not chosen yet, so every chain is compared on the same size
@@ -1660,7 +1660,7 @@ function basketAt(c){
   let sub=0,lines=[],missing=[],subs=0,promos=0,est=0,hints=[],wsum=0,regular=0;const needMin=[];
   for(const it of state.items){
     let vid=it.v,L=vid?lineAt(c.id,vid,it.q):null,auto=!vid,isSub=false;
-    if(!L&&!it.v&&(it.bh||it.sz)){const ch=cheapestTypeAt(c.id,it.t,it.q,it.sz||null,it.bh||null);if(ch){vid=ch.v.id;L=ch.L}}
+    if(!L&&!it.v&&(it.bh||it.sz||it.fx)){const ch=cheapestTypeAt(c.id,it.t,it.q,it.sz||null,it.bh||null,undefined,null,it.fx||null);if(ch){vid=ch.v.id;L=ch.L}}
     if(!L){const ch=cheapestTypeAt(c.id,it.t,it.q,it.v?VB[it.v].s:refSize(it.t),null,undefined,it.v?VB[it.v]:null);if(ch){vid=ch.v.id;L=ch.L;if(it.v)isSub=true}}
     if(!L){missing.push(it);/* a missing product is counted at its highest price elsewhere, so a chain that lacks it never looks cheapest for it */
       const mv=it.v&&VB[it.v];const hi=mv&&mv.rp?Math.max(...Object.values(mv.rp)):mv?mv.base:Math.max(0,...ofType(it.t).slice(0,20).map(v=>v.base||0));est+=(hi||0)*it.q;continue}
@@ -1892,7 +1892,7 @@ function renderBasket(){
   // 2. the list
   const lineOf=new Map((w?.lines||[]).map(L=>[L.it.k,L]));
   const swapOf=new Map(w?swapsFor(w).map(x=>[x.it.k,x]):[]);
-  const row=it=>{const v=it.v?VB[it.v]:null;const [tn,emo]=TYPES[it.t];const L=lineOf.get(it.k);const kg=isKg(it,L);const nm=v?vLabel(v):[tn,it.bh].filter(Boolean).join(' ');
+  const row=it=>{const v=it.v?VB[it.v]:null;const [tn,emo]=TYPES[it.t];const L=lineOf.get(it.k);const kg=isKg(it,L);const nm=v?vLabel(v):[tn,it.bh,...Object.values(it.fx||{}).filter(Boolean).map(x=>String(x).replace(/^[^\p{L}\d]+/u,''))].filter(Boolean).join(' ');
     const sub=v?[v.weighted?'במשקל':v.s,goodBrand(v.b)?v.b:''].filter(Boolean).join(' · '):kg?'טרי · הכי זול בכל רשת':it.sz?`${it.sz} · כל מותג, הכי זול`:'לחץ לבחירת מותג וגודל';
     return `<li class="it3" style="--cc:${typeColor(it.t)}"><button type="button" class="itdel" data-del="${it.k}" aria-label="מחק את ${esc(nm)} מהרשימה">✕</button>
       ${thumb(v,emo,'ico')}
@@ -3394,41 +3394,93 @@ Reply with only JSON: {"items": [{"name": string, "size": string, "qty": number,
 function sizeKey(v){const s=v.s||'';if(!s||/^1 יח/.test(s))return '';const n=v.n||'';
   if(/מארז|שישי|רביעי|\d\s*[*×xX]\s*\d|\d\s*יח(?:ידות|׳|')?\b|פחיות/.test(n))return 'מארז · '+s;
   if(/פחית/.test(n))return 'פחית '+s;return s}
-function sizeGroups(t,brand){const g=new Map();
-  for(const v of ofType(t)){if(!allowed(v)||(brand&&v.b!==brand))continue;const k=sizeKey(v);if(!k)continue;const ch=cheapestOf(v.id);if(!ch)continue;
+function sizeGroups(t,brand,pred){const g=new Map();
+  for(const v of ofType(t)){if(!allowed(v)||(brand&&v.b!==brand)||(pred&&!pred(v)))continue;const k=sizeKey(v);if(!k)continue;const ch=cheapestOf(v.id);if(!ch)continue;
     const x=g.get(k)||{k,n:0,min:Infinity};x.n++;x.min=Math.min(x.min,ch.p);g.set(k,x)}
   const fam=k=>/גרם|ק״ג/.test(k)?'w':/ליטר|מ״ל/.test(k)?'v':'o';const tot={w:0,v:0,o:0};for(const x of g.values())tot[fam(x.k)]+=x.n;
   const main=tot.w>tot.v?'w':'v';
   return [...g.values()].filter(x=>(fam(x.k)===main||fam(x.k)==='o')&&(x.n>=2||g.size<=6)).sort((a,b)=>b.n-a.n).slice(0,6)}
+/* ================= "בוא נדייק": ask what kind, then size, brand and product =================
+   For a product written loosely ("גבינה צהובה") the shopper picks, one tap per question, what matters to them:
+   the kind (sliced, grated, by weight), the fat, the size, the brand. Each question appears only when the catalog really
+   has a choice there, and "לא משנה לי" skips it. The answers also steer the price comparison of a generic item. */
+const FORMS={
+  yellow:[['איזו צורה?',[['🧀 פרוסה','פרוס|דק דק'],['🧀 מגורדת','מגורד|גרוד|מגורר'],['⚖️ במשקל / גוש','במשקל|לק"ג|לקג|גוש|בלוק|חריץ']]]],
+  milk:[['איזו אריזה?',[['📦 קרטון','קרטון'],['🍼 בקבוק','בקבוק'],['🛍️ שקית','שקית']]],['איזה חלב?',[['רגיל','^(?!.*(עמיד|לקטוז|סויה|שקדים|שיבולת|מרוכז|שוקו)).*$'],['עמיד','עמיד'],['דל לקטוז','לקטוז']]]],
+  chicken:[['איזה חלק?',[['חזה','חזה'],['שניצל','שניצל'],['כרעיים / ירכיים','כרעיים|ירכיים|שוקיים'],['עוף שלם','עוף שלם|שלם'],['טחון','טחון']]],['טרי או קפוא?',[['❄️ קפוא','קפוא|מוקפא'],['🌿 טרי','טרי']]]],
+  coffee:[['איזה קפה?',[['נמס','נמס'],['שחור / טורקי','שחור|טורקי'],['פולים','פולים'],['קפסולות','קפסול']]]],
+  tuna:[['בשמן או במים?',[['בשמן','בשמן'],['במים','במים']]]],
+  rice:[['איזה אורז?',[['בסמטי','בסמטי'],['פרסי','פרסי'],['עגול','עגול'],['יסמין / תאילנדי','יסמין|תאילנדי'],['מלא','מלא']]]],
+  cream:[['איזו שמנת?',[['חמוצה','חמוצה'],['מתוקה / להקצפה','מתוקה|להקצפה'],['לבישול','לבישול']]]],
+  pasta:[['איזו פסטה?',[['ספגטי','ספגטי'],['פנה','פנה|קולמוס'],['פוזילי / בורגים','פוזילי|בורגים'],['פתיתים','פתיתים']]]],
+  oil:[['איזה שמן?',[['קנולה','קנולה'],['זית','זית'],['חמניות','חמניות'],['תירס','תירס']]]],
+  bread:[['איזה לחם?',[['לבן / אחיד','לבן|אחיד'],['מלא / כוסמין / שיפון','מלא|כוסמין|שיפון|דגנים']]]],
+  eggs:[['איזה גודל ביצים?',[['M','(^|[^A-Z])M([^A-Z]|$)'],['L','(^|[^A-Z])L([^A-Z]|$)'],['XL','XL']]]],
+  yogurt:[['איזה יוגורט?',[['טבעי','טבעי|לבן'],['יווני','יווני'],['עם פירות','תות|אפרסק|פירות|אננס|דובדבן|בננה']]]],
+  hummus:[['איזה חומוס?',[['ממרח / סלט','ממרח|סלט|מוכן|%'],['גרגרים יבשים','יבש'],['שימורים / מבושל','שימור|מבושל']]]]};
+const FAT_TYPES=new Set(['yellow','milk','cottage','yogurt','cream','white','labane','cheese']);
+const BRANDS=['תנובה','טרה','שטראוס','יטבתה','יוטבתה','גד','תבור','עמק','נעם','אסם','עלית','סוגת','ברמן','אנג\'ל','אנג׳ל','סטארקיסט','פילטונה','נסקפה','לוואצה','ג\'ייקובס','ג׳ייקובס','יחיעם','עוף טוב','מאמא עוף','זוגלובק','טעמן','וילי פוד','ברילה','שמיר','צבר','אחלה','מעדני מיקי','דנונה','מולר','הרדוף','גליקסמן','יכין','פרי ניב','פריגת','בריאות','אחלה','מחלבות גד','שופרסל','רמי לוי','יוחננוף','קרפור','פרימור','תפוזינה','הנמל','נטו','אוסם','ויליפוד','סנפרוסט','בונדואל','מותג הבית'];
+function brandOf(v){const n=norm(v.n||'');for(const b of BRANDS)if(n.includes(norm(b)))return b.replace(/'/g,'׳');return goodBrand(v.b)?String(v.b).trim():null}
+const fatOf=v=>{const m=String(v.n||'').match(/(?<![\d.])(\d{1,2}(?:\.\d)?)\s*%/);return m?m[1]+'%':null};
+function facetsFor(t){const F=(FORMS[t]||[]).map(([q,opts],i)=>({id:'f'+i,q,opts:opts.map(([l,rx])=>({l,rx:new RegExp(rx,'i')}))}));
+  if(FAT_TYPES.has(t))F.push({id:'fat',q:'כמה אחוז שומן?',fat:true});return F}
+function fxMatch(v,fx){if(!fx)return true;const n=String(v.n||'');for(const [k,val] of Object.entries(fx)){if(!val)continue;
+    if(k==='fat'){if(fatOf(v)!==val)return false;continue}if(k==='brand'){if(brandOf(v)!==val)return false;continue}
+    const f=facetsFor(v.t).find(x=>x.id===k);const o=f&&f.opts&&f.opts.find(x=>x.l===val);if(o&&!o.rx.test(n))return false}
+  return true}
+/* the options of one question, with how many products each leaves and from what price */
+function facetOptions(it,f,pool){const out=[];
+  if(f.fat){const m=new Map();for(const x of pool){const fv=fatOf(x.v);if(!fv)continue;const o=m.get(fv)||{l:fv,n:0,min:Infinity};o.n++;o.min=Math.min(o.min,x.ch.p);m.set(fv,o)}
+    return [...m.values()].filter(o=>o.n>=1).sort((a,b)=>parseFloat(a.l)-parseFloat(b.l)).slice(0,6)}
+  if(f.brand){const m=new Map();for(const x of pool){const b=brandOf(x.v);if(!b)continue;const o=m.get(b)||{l:b,n:0,min:Infinity};o.n++;o.min=Math.min(o.min,x.ch.p);m.set(b,o)}
+    return [...m.values()].sort((a,b)=>b.n-a.n).slice(0,8)}
+  for(const o of f.opts){let n=0,min=Infinity;for(const x of pool)if(o.rx.test(x.v.n||'')){n++;min=Math.min(min,x.ch.p)}if(n)out.push({l:o.l,n,min})}
+  return out}
 function refineQueue(keys){const q=state.items.filter(i=>!i.v&&(!keys||keys.includes(i.k))&&ofType(i.t).length>1&&!isKg(i)).map(i=>i.k); /* fresh produce needs no size or brand */if(q.length)openRefine(q)}
 function openRefine(queue){
-  let idx=0,step='size';
+  let idx=0,step=0;
+  const poolOf=it=>ofType(it.t).filter(v=>allowed(v)&&fxMatch(v,it.fx)&&(!it.bh||v.b===it.bh)).map(v=>({v,ch:cheapestOf(v.id)})).filter(x=>x.ch);
+  const next=body=>{idx++;step=0;save();draw(body)};
   const draw=body=>{
     const it=state.items.find(i=>i.k===queue[idx]);
-    if(!it){if(++idx<queue.length){step='size';return draw(body)}closeSheet();update();toast('הרשימה מוכנה ✓');return}
-    const [tn,emo]=TYPES[it.t];const groups=sizeGroups(it.t,it.bh);
-    if(step==='size'&&groups.length<2)step='prod';
-    const head=`<div class="rfhead"><span class="ico" aria-hidden="true">${emo}</span><div><b>${esc(it.bh?tn+' '+it.bh:tn)}</b>${it.q>1?` <span class="sub">× ${it.q}</span>`:''}<div class="sub">${idx+1} מתוך ${queue.length}</div></div></div>`;
+    if(!it){if(++idx<queue.length){step=0;return draw(body)}closeSheet();update();toast('הרשימה מוכנה ✓');return}
+    const [tn,emo]=TYPES[it.t];it.fx=it.fx||{};
+    /* the questions for this kind: its forms, the fat, then size and brand; a question without a real choice is skipped */
+    const Q=[...facetsFor(it.t),{id:'size'},{id:'brand',q:'איזו חברה אתה מעדיף?',brand:true},{id:'prod'}];
+    let pool=poolOf(it).filter(x=>!it.sz||sizeKey(x.v)===it.sz);
+    while(step<Q.length){const f=Q[step];
+      if(f.id==='prod')break;
+      if(f.id==='size'){if(it.sz||sizeGroups(it.t,it.bh,v=>fxMatch(v,it.fx)).length<2){step++;continue}break}
+      if(it.fx[f.id]!==undefined){step++;continue}
+      const opts=facetOptions(it,f,pool);const cover=opts.reduce((a,o)=>a+o.n,0);
+      if(opts.length<2||cover<Math.max(2,pool.length*0.12)){step++;continue}break}
+    if(pool.length===1){it.v=pool[0].v.id;delete it.sz;delete it.fx;return next(body)}
+    const desc=[...Object.values(it.fx).filter(Boolean),it.sz].filter(Boolean).join(' · ');
+    const head=`<div class="rfhead"><span class="ico" aria-hidden="true">${emo}</span><div><b>${esc(it.bh?tn+' '+it.bh:tn)}</b>${it.q>1?` <span class="sub">× ${it.q}</span>`:''}<div class="sub">${desc?esc(desc)+' · ':''}${idx+1} מתוך ${queue.length}</div></div></div>`;
     const tail=`<div class="row2 spread"><button class="link" type="button" id="rfSkip">דלג ←</button><button class="link" type="button" id="rfAll">לא משנה לי בשום מוצר, השווה לפי הזול</button></div>`;
-    if(step==='size'){
+    const back=step>0?'<button class="link" type="button" id="rfBack">→ שאלה קודמת</button>':'';
+    const f=Q[step];
+    if(f.id==='size'){const groups=sizeGroups(it.t,it.bh,v=>fxMatch(v,it.fx));
       body.innerHTML=`${head}<h3>איזה גודל?</h3><div class="rfgrid">${groups.map(g=>`<button type="button" class="rfopt" data-sz="${esc(g.k)}"><b>${esc(g.k)}</b><small>מ-${fmt(g.min)} · ${g.n} אפשרויות</small></button>`).join('')}</div>
-        <button type="button" class="rfopt any" data-sz=""><b>לא משנה לי</b><small>הכי זול בכל רשת</small></button>${tail}`;
-      body.querySelectorAll('[data-sz]').forEach(b=>b.onclick=()=>{const k=b.dataset.sz;if(!k){delete it.sz;idx++;step='size';save();return draw(body)}it.sz=k;step='prod';save();draw(body)});
+        <button type="button" class="rfopt any" data-sz=""><b>לא משנה לי</b><small>הכי זול בכל רשת</small></button>${back}${tail}`;
+      body.querySelectorAll('[data-sz]').forEach(b=>b.onclick=()=>{const k=b.dataset.sz;if(k)it.sz=k;step++;save();draw(body)});
+    }else if(f.id!=='prod'){const opts=facetOptions(it,f,pool);
+      body.innerHTML=`${head}<h3>${esc(f.q)}</h3><div class="rfgrid">${opts.map(o=>`<button type="button" class="rfopt" data-fx="${esc(o.l)}"><b>${esc(o.l)}</b><small>מ-${fmt(o.min)} · ${o.n} אפשרויות</small></button>`).join('')}</div>
+        <button type="button" class="rfopt any" data-fx=""><b>לא משנה לי</b><small>${f.brand?'כל חברה, ':''}הכי זול בכל רשת</small></button>${back}${tail}`;
+      body.querySelectorAll('[data-fx]').forEach(b=>b.onclick=()=>{it.fx[f.id]=b.dataset.fx||'';step++;save();draw(body)});
     }else{
-      const vs=ofType(it.t).filter(v=>allowed(v)&&(!it.sz||sizeKey(v)===it.sz)&&(!it.bh||v.b===it.bh)).map(v=>({v,ch:cheapestOf(v.id)})).filter(x=>x.ch).sort((a,b)=>a.ch.p-b.ch.p);
-      if(vs.length===1){it.v=vs[0].v.id;delete it.sz;delete it.bh;idx++;step='size';save();return draw(body)}
+      const vs=pool.sort((a,b)=>a.ch.p-b.ch.p);
       const top=[],seen=new Set();for(const x of vs){const k=norm(vLabel(x.v));if(seen.has(k))continue;seen.add(k);top.push(x);if(top.length>=8)break}
-      body.innerHTML=`${head}<h3>${it.sz?esc(it.sz)+' · ':''}איזה מוצר?</h3>
-        <button type="button" class="rfopt any" id="rfCheap"><b>כל מותג, הכי זול${it.sz?' בגודל הזה':''}</b><small>נשווה את הזול בכל רשת</small></button>
+      body.innerHTML=`${head}<h3>${desc?esc(desc)+' · ':''}איזה מוצר?</h3>
+        <button type="button" class="rfopt any" id="rfCheap"><b>${desc?'הכי זול מהמתאימים':'כל מותג, הכי זול'}</b><small>נשווה את הזול בכל רשת${desc?', רק ממה שבחרת':''}</small></button>
         <div class="rflist">${top.map(({v,ch})=>`<button type="button" class="rfprod" data-rv="${v.id}">${thumb(v,TYPES[v.t][1],'thv')}<span class="grow"><b>${esc(vLabel(v))}</b><small>${esc(v.s||'')}</small></span><span class="num">${fmt(ch.p)}<small>ב${ch.c.short}</small></span></button>`).join('')}</div>
-        ${vs.length>top.length?`<button class="link" type="button" id="rfMore">עוד ${vs.length-top.length} אפשרויות…</button>`:''}
-        ${groups.length>=2?'<button class="link" type="button" id="rfBack">→ חזרה לבחירת גודל</button>':''}${tail}`;
-      $('rfCheap').onclick=()=>{idx++;step='size';save();draw(body)};
-      body.querySelectorAll('[data-rv]').forEach(b=>b.onclick=()=>{it.v=b.dataset.rv;delete it.sz;delete it.bh;idx++;step='size';save();draw(body)});
+        ${vs.length>top.length?`<button class="link" type="button" id="rfMore">עוד ${vs.length-top.length} אפשרויות…</button>`:''}${back}${tail}`;
+      $('rfCheap').onclick=()=>{if(!Object.values(it.fx).some(Boolean))delete it.fx;next(body)};
+      body.querySelectorAll('[data-rv]').forEach(b=>b.onclick=()=>{it.v=b.dataset.rv;delete it.sz;delete it.bh;delete it.fx;next(body)});
       if($('rfMore'))$('rfMore').onclick=()=>{closeSheet();update();openPicker(it.k)};
-      if($('rfBack'))$('rfBack').onclick=()=>{delete it.sz;step='size';draw(body)};
     }
-    $('rfSkip').onclick=()=>{idx++;step='size';draw(body)};
+    if($('rfBack'))$('rfBack').onclick=()=>{/* undo the last answer */for(let k=step-1;k>=0;k--){const g=Q[k];if(g.id==='size'&&it.sz){delete it.sz;step=k;break}if(g.id!=='size'&&it.fx[g.id]!==undefined){delete it.fx[g.id];step=k;break}if(k===0)step=0}draw(body)};
+    $('rfSkip').onclick=()=>{if(it.fx&&!Object.values(it.fx).some(Boolean))delete it.fx;next(body)};
     $('rfAll').onclick=()=>{closeSheet();update()};
     setTimeout(()=>body.querySelector('.rfopt,.rfprod')?.focus(),30);
   };
