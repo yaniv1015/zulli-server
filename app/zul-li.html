@@ -2917,9 +2917,9 @@ const errText=c=>({not_granted:'לא אישרת לאפליקציה להשתמש 
 // That works in more in-app browsers than a hidden input opened by a label or by script.
 /* Turn any phone photo (including iPhone HEIC) into a small JPEG that Claude accepts; also faster to send. */
 function prepImage(f){return new Promise((res,rej)=>{const url=URL.createObjectURL(f);const img=new Image();
-  img.onload=()=>{try{const max=1600,sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');
+  img.onload=()=>{try{const max=2000,sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');
     c.width=Math.max(1,Math.round(img.naturalWidth*sc));c.height=Math.max(1,Math.round(img.naturalHeight*sc));c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
-    c.toBlob(b=>b?res(b):rej(new Error('encode')),'image/jpeg',0.85)}catch(e){URL.revokeObjectURL(url);rej(e)}};
+    c.toBlob(b=>b?res(b):rej(new Error('encode')),'image/jpeg',0.9)}catch(e){URL.revokeObjectURL(url);rej(e)}};
   img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('decode'))};img.src=url})}
 const kb=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.round(n/1024)+' KB';
 /* After the photo picker closes without handing us a file, explain why instead of doing nothing. */
@@ -3353,7 +3353,7 @@ function openListPhoto(){
       $('lpRes').innerHTML=`<label class="f" for="lpText">זה מה שקראנו (${nOf(lines.split('\n').filter(Boolean).length,'מוצר אחד','מוצרים')}). אפשר לתקן, להוסיף או למחוק שורות. כמות כותבים בסוגריים, למשל (2):</label>
         <textarea id="lpText" style="min-height:180px">${esc(lines)}</textarea>
         <button class="btn big y" type="button" id="lpAdd">הוסף לרשימה שלי</button><div id="lpUnk"></div>`;
-      $('lpAdd').onclick=()=>{const txt=$('lpText').value.trim();if(!txt){toast('אין מוצרים להוספה');return}
+      $('lpAdd').onclick=()=>{const txt=$('lpText').value.replace(/❓\s*/g,'').trim();if(!txt){toast('אין מוצרים להוספה');return}
         const{out,unknown}=parseList(txt);const keys=addItems(out,'מתמונה');save();render();
         if(unknown.length){$('lpRes').innerHTML=`<div class="okline">✓ נוספו ${nOf(out.length,'מוצר אחד','מוצרים')}</div>`+unknownBox(unknown);bindUnknown($('lpRes'),keys);$('lpRes').scrollIntoView({block:'start'})}
         else{closeSheet();toast(`נוספו ${nOf(out.length,'מוצר אחד','מוצרים')} מהתמונה`);refineQueue(keys)}};
@@ -3367,14 +3367,20 @@ function openListPhoto(){
       ctl?.abort();ctl=new AbortController();
       $('lpStatus').innerHTML='התמונה התקבלה ✓ · קורא את הרשימה… זה לוקח כמה שניות. אם מופיעה בקשה לאשר שימוש ב-Claude, אשר אותה. <button class="link" type="button" id="lpStop">עצור</button>';$('lpStop').onclick=()=>ctl.abort();
       try{
-        const r=await SAMPLE.json(`The image is a shopping list from Israel, usually in Hebrew: handwritten on paper, a printed note, or a screenshot of a chat or notes app.
-Read every item someone wants to buy. Ignore titles, dates, prices, crossed-out items and chat chrome (names, times, ticks).
-For each item give: name (the product in plain Hebrew as written, fixing obvious spelling; keep the brand, variant and size if written), qty (number of units; 1 if not written).
-Handwriting can be unclear: choose the most likely common supermarket product.
-Reply with only JSON: {"items": [{"name": string, "qty": number}]}. If the image has no shopping list, reply {"items": []}.`,{images:img,signal:ctl.signal,modelTier:'default'});
+        const r=await SAMPLE.json(`The image is a shopping list from Israel, usually in Hebrew (right to left): handwritten on paper, a printed note, or a screenshot of a chat or notes app.
+Read it line by line, top to bottom. Each written line is usually one item; a line can hold two items separated by a comma or "ו".
+Ignore titles, dates, prices, crossed-out items and chat chrome (names, times, ticks). Never add an item that is not written.
+For each item give:
+- name: the product exactly as written, in Hebrew, fixing only obvious spelling. Keep brand and variant words (e.g. "קוטג' 5%", "חלב תנובה 3%").
+- size: a weight or volume written next to it ("150 גרם", "1 ליטר", "500"), else "". A number with a unit, or a number of 100 and more, is a size, never the quantity.
+- qty: how many units, only from a small count written with the item ("x2", "2 ", "×3", "שניים"); 1 if not written. Never more than 20.
+- sure: false when the handwriting of this item is hard to read, so the shopper checks it; true otherwise.
+Reply with only JSON: {"items": [{"name": string, "size": string, "qty": number, "sure": boolean}]}. If the image has no shopping list, reply {"items": []}.`,{images:img,signal:ctl.signal,modelTier:'complex'});
         const items=(r&&Array.isArray(r.items)?r.items:[]).filter(i=>i&&String(i.name||'').trim());
         if(!items.length){$('lpStatus').innerHTML='<div class="unk">לא מצאנו מוצרים בתמונה. ודא שהרשימה כולה בתמונה, חדה ומוארת.</div>';return}
-        show(items.map(i=>{const q=Math.round(+i.qty||1);return String(i.name).replace(/\s+/g,' ').trim()+(q>1?' ('+q+')':'')}).join('\n'));
+        const unsure=items.filter(i=>i.sure===false).length;
+        show(items.map(i=>{let q=Math.round(+i.qty||1);if(!(q>=1&&q<=20))q=1;const sz=String(i.size||'').trim();const nm=String(i.name).replace(/\s+/g,' ').trim();
+          return (i.sure===false?'❓ ':'')+nm+(sz&&!nm.includes(sz)?' '+sz:'')+(q>1?' ('+q+')':'')}).join('\n'),unsure?`<div class="banner">${nOf(unsure,'שורה אחת','שורות')} עם ❓ היו קשות לקריאה. כדאי לבדוק ולתקן לפני שמוסיפים.</div>`:'');
       }catch(err){if(err?.code==='cancelled')$('lpStatus').textContent='';else $('lpStatus').innerHTML=`<div class="unk">${errText(err?.code)}</div>`}
     };
     watchPicker(document.getElementById('sbody'),()=>{$('lpStatus').innerHTML=missingHelp});
