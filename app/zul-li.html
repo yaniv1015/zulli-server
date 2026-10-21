@@ -3408,6 +3408,9 @@ function sizeGroups(t,brand,pred){const g=new Map();
    the kind (sliced, grated, by weight), the fat, the size, the brand. Each question appears only when the catalog really
    has a choice there, and "לא משנה לי" skips it. The answers also steer the price comparison of a generic item. */
 const FORMS={
+  cola:[['איזו אריזה?',[['🥫 פחית','פחית|פח |(^|\\D)(330|355|250|275) ?מ'],['🧴 בקבוק קטן','(^|\\D)(500|0\\.5|600) ?(מ|ל)'],['🍾 בקבוק גדול','(1|1\\.25|1\\.5|2) ?(ליטר|ל\'|ל׳)'],['📦 מארז / שישייה','שישי|מארז|רביעי|\\d+ ?\\*|\\* ?\\d+|\\d+ ?יח']]],['רגיל או דיאט?',[['רגיל','^(?!.*(זירו|zero|דיאט|diet|לייט|ללא סוכר)).*$'],['זירו / דיאט','זירו|zero|דיאט|diet|לייט|ללא סוכר']]]],softdrinks:[['איזו אריזה?',[['🥫 פחית','פחית|פח |(^|\\D)(330|355|250|275) ?מ'],['🧴 בקבוק קטן','(^|\\D)(500|0\\.5|600) ?(מ|ל)'],['🍾 בקבוק גדול','(1|1\\.25|1\\.5|2) ?(ליטר|ל\'|ל׳)'],['📦 מארז / שישייה','שישי|מארז|רביעי|\\d+ ?\\*|\\* ?\\d+|\\d+ ?יח']]],['רגיל או דיאט?',[['רגיל','^(?!.*(זירו|zero|דיאט|diet|לייט|ללא סוכר)).*$'],['זירו / דיאט','זירו|zero|דיאט|diet|לייט|ללא סוכר']]]],icedtea:[['איזו אריזה?',[['🥫 פחית','פחית|פח |(^|\\D)(330|355|250|275) ?מ'],['🧴 בקבוק קטן','(^|\\D)(500|0\\.5|600) ?(מ|ל)'],['🍾 בקבוק גדול','(1|1\\.25|1\\.5|2) ?(ליטר|ל\'|ל׳)'],['📦 מארז / שישייה','שישי|מארז|רביעי|\\d+ ?\\*|\\* ?\\d+|\\d+ ?יח']]],['רגיל או דיאט?',[['רגיל','^(?!.*(זירו|zero|דיאט|diet|לייט|ללא סוכר)).*$'],['זירו / דיאט','זירו|zero|דיאט|diet|לייט|ללא סוכר']]]],water:[['איזו אריזה?',[['🥫 פחית','פחית|פח |(^|\\D)(330|355|250|275) ?מ'],['🧴 בקבוק קטן','(^|\\D)(500|0\\.5|600) ?(מ|ל)'],['🍾 בקבוק גדול','(1|1\\.25|1\\.5|2) ?(ליטר|ל\'|ל׳)'],['📦 מארז / שישייה','שישי|מארז|רביעי|\\d+ ?\\*|\\* ?\\d+|\\d+ ?יח']]]],juice:[['איזו אריזה?',[['🥫 פחית','פחית|פח |(^|\\D)(330|355|250|275) ?מ'],['🧴 בקבוק קטן','(^|\\D)(500|0\\.5|600) ?(מ|ל)'],['🍾 בקבוק גדול','(1|1\\.25|1\\.5|2) ?(ליטר|ל\'|ל׳)'],['📦 מארז / שישייה','שישי|מארז|רביעי|\\d+ ?\\*|\\* ?\\d+|\\d+ ?יח']]]],beer:[['איזו אריזה?',[['🥫 פחית','פחית|פח |(^|\\D)(330|355|250|275) ?מ'],['🧴 בקבוק קטן','(^|\\D)(500|0\\.5|600) ?(מ|ל)'],['🍾 בקבוק גדול','(1|1\\.25|1\\.5|2) ?(ליטר|ל\'|ל׳)'],['📦 מארז / שישייה','שישי|מארז|רביעי|\\d+ ?\\*|\\* ?\\d+|\\d+ ?יח']]]],
+  bamba:[['איזה גודל?',[['🧒 שקית אישית','(^|\\D)(10|15|20|25|30) ?(גר|ג)'],['🥜 שקית רגילה','(^|\\D)(60|70|80|100) ?(גר|ג)'],['📦 מארז / שקית גדולה','מארז|\\d+ ?\\*|\\* ?\\d+|(^|\\D)(150|200|250|300|400) ?(גר|ג)']]],['איזו במבה?',[['רגילה','^(?!.*(מתוקה|נוגט|מילוי|צ.דר|ברביקיו|מאנצ)).*$'],['במילוי נוגט','נוגט|מילוי'],['מתוקה','מתוקה'],['טעמים (מאנצ׳)','מאנצ|צ.דר|ברביקיו']]]],
+  snacks:[['איזה גודל?',[['🧒 שקית אישית','(^|\\D)(15|20|25|30|35) ?(גר|ג)'],['🥨 שקית רגילה','(^|\\D)(45|50|55|60|70|80|100) ?(גר|ג)'],['📦 מארז / משפחתי','מארז|משפחתי|\\d+ ?\\*|\\* ?\\d+|(^|\\D)(150|200|250|300) ?(גר|ג)']]]],
   yellow:[['איזו צורה?',[['🧀 פרוסה','פרוס|דק דק'],['🧀 מגורדת','מגורד|גרוד|מגורר'],['⚖️ במשקל / גוש','במשקל|לק"ג|לקג|גוש|בלוק|חריץ']]]],
   milk:[['איזו אריזה?',[['📦 קרטון','קרטון'],['🍼 בקבוק','בקבוק'],['🛍️ שקית','שקית']]],['איזה חלב?',[['רגיל','^(?!.*(עמיד|לקטוז|סויה|שקדים|שיבולת|מרוכז|שוקו)).*$'],['עמיד','עמיד'],['דל לקטוז','לקטוז']]]],
   chicken:[['איזה חלק?',[['חזה','חזה'],['שניצל','שניצל'],['כרעיים / ירכיים','כרעיים|ירכיים|שוקיים'],['עוף שלם','עוף שלם|שלם'],['טחון','טחון']]],['טרי או קפוא?',[['❄️ קפוא','קפוא|מוקפא'],['🌿 טרי','טרי']]]],
@@ -3427,7 +3430,7 @@ function brandOf(v){const n=norm(v.n||'');for(const b of BRANDS)if(n.includes(no
 const fatOf=v=>{const m=String(v.n||'').match(/(?<![\d.])(\d{1,2}(?:\.\d)?)\s*%/);return m?m[1]+'%':null};
 function facetsFor(t){const F=(FORMS[t]||[]).map(([q,opts],i)=>({id:'f'+i,q,opts:opts.map(([l,rx])=>({l,rx:new RegExp(rx,'i')}))}));
   if(FAT_TYPES.has(t))F.push({id:'fat',q:'כמה אחוז שומן?',fat:true});return F}
-function fxMatch(v,fx){if(!fx)return true;const n=String(v.n||'');for(const [k,val] of Object.entries(fx)){if(!val)continue;
+function fxMatch(v,fx){if(!fx)return true;const n=String(v.n||'')+' '+String(v.s||'');for(const [k,val] of Object.entries(fx)){if(!val)continue;
     if(k==='fat'){if(fatOf(v)!==val)return false;continue}if(k==='brand'){if(brandOf(v)!==val)return false;continue}
     const f=facetsFor(v.t).find(x=>x.id===k);const o=f&&f.opts&&f.opts.find(x=>x.l===val);if(o&&!o.rx.test(n))return false}
   return true}
@@ -3437,7 +3440,7 @@ function facetOptions(it,f,pool){const out=[];
     return [...m.values()].filter(o=>o.n>=1).sort((a,b)=>parseFloat(a.l)-parseFloat(b.l)).slice(0,6)}
   if(f.brand){const m=new Map();for(const x of pool){const b=brandOf(x.v);if(!b)continue;const o=m.get(b)||{l:b,n:0,min:Infinity};o.n++;o.min=Math.min(o.min,x.ch.p);m.set(b,o)}
     return [...m.values()].sort((a,b)=>b.n-a.n).slice(0,8)}
-  for(const o of f.opts){let n=0,min=Infinity;for(const x of pool)if(o.rx.test(x.v.n||'')){n++;min=Math.min(min,x.ch.p)}if(n)out.push({l:o.l,n,min})}
+  for(const o of f.opts){let n=0,min=Infinity;for(const x of pool)if(o.rx.test((x.v.n||'')+' '+(x.v.s||''))){n++;min=Math.min(min,x.ch.p)}if(n)out.push({l:o.l,n,min})}
   return out}
 function refineQueue(keys){const q=state.items.filter(i=>!i.v&&(!keys||keys.includes(i.k))&&ofType(i.t).length>1&&!isKg(i)).map(i=>i.k); /* fresh produce needs no size or brand */if(q.length)openRefine(q)}
 function openRefine(queue){
@@ -3453,7 +3456,7 @@ function openRefine(queue){
     let pool=poolOf(it).filter(x=>!it.sz||sizeKey(x.v)===it.sz);
     while(step<Q.length){const f=Q[step];
       if(f.id==='prod')break;
-      if(f.id==='size'){if(it.sz||sizeGroups(it.t,it.bh,v=>fxMatch(v,it.fx)).length<2){step++;continue}break}
+      if(f.id==='size'){/* a package or size already chosen above (can, bottle, personal bag) answers this one */const pk=Q.some(g=>g.q&&/אריזה|גודל/.test(g.q)&&it.fx[g.id]);if(it.sz||pk||sizeGroups(it.t,it.bh,v=>fxMatch(v,it.fx)).length<2){step++;continue}break}
       if(it.fx[f.id]!==undefined){step++;continue}
       const opts=facetOptions(it,f,pool);const cover=opts.reduce((a,o)=>a+o.n,0);
       if(opts.length<2||cover<Math.max(2,pool.length*0.12)){step++;continue}break}
