@@ -848,7 +848,7 @@ nav.bn .badge{background:var(--coral);color:#fff}
 @keyframes hdpulse{50%{opacity:.45}}
 .lpost .vwrap{aspect-ratio:9/16;max-height:72vh;background:#000;border-radius:16px;overflow:hidden;display:grid;place-items:center}
 .lpost iframe{width:100%;height:100%;border:0}
-.lfallback{color:#fff;font-weight:800;font-size:1.1rem;text-decoration:none;padding:20px}
+.lfallback{color:#fff;font-weight:800;font-size:1.05rem;text-decoration:none;padding:20px;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;text-align:center;height:100%}.lfallback p{margin:0}.lfallback small{font-weight:500;opacity:.85}.lfallback .link{color:var(--lime,#D7FF1F)}
 .cmplist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .cmplist li{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--bg);border-inline-start:4px solid var(--sc);flex-wrap:wrap}
 .cmplist li.win{background:var(--lime-soft);box-shadow:inset 0 0 0 2px var(--lime)}
@@ -1091,8 +1091,8 @@ TYPES.other=['מוצר','🛍️','other',[],1,null,null];
 const NO_ROOT_EMOJI=(function(){try{const cv=document.createElement('canvas');cv.width=cv.height=40;const c=cv.getContext('2d');c.font='32px sans-serif';c.textBaseline='top';c.fillText('🫜',2,2);
   const d=c.getImageData(0,0,40,40).data;let col=0;for(let i=0;i<d.length;i+=4)if(d[i+3]>100&&Math.max(d[i],d[i+1],d[i+2])-Math.min(d[i],d[i+1],d[i+2])>40)col++;
   return col<20}catch(e){return false}})();
-const EXTRA_KW={banana:['בננה','בננות'],potato:['תפוח אדמה','תפוחי אדמה'],tomato:['עגבניה','עגבנייה','עגבניות'],spreads:['ריבת','ממרח'],beer:['היינקן','קרלסברג','גולדסטאר','טובורג','קורונה','בירה'],bodycare:['סטיק','דאו','רולאון','רול און','דאודורנט','סבון','ג׳ל רחצה','קרם ידיים'],
-  tp:['גלילים'],candy:['קינדר','מסטיק','סוכריה','סוכריות','חמצוץ','לקריץ'],chocolate:['שוקולד','פרה','מקופלת','טעמי','ריטר','מילקה'],snacks:['תפוציפס','דוריטוס','צ׳יטוס','פופקורן','אפרופו','חטיף'],
+const EXTRA_KW={banana:['בננה','בננות'],potato:['תפוח אדמה','תפוחי אדמה'],tomato:['עגבניה','עגבנייה','עגבניות'],spreads:['ריבת','ממרח','חלבה'],beer:['היינקן','קרלסברג','גולדסטאר','טובורג','קורונה','בירה'],bodycare:['סטיק','דאו','רולאון','רול און','דאודורנט','סבון','ג׳ל רחצה','קרם ידיים'],
+  tp:['גלילים'],plantmilk:['חלב שיבולת','חלב סויה','חלב שקדים','חלב אורז','משקה שיבולת','משקה סויה','משקה שקדים','משקה אורז','משקה קוקוס'],cookies:['ופלים','וופל','ופל','וופלים','גליליות','אפיפיות'],cereal:['גרנולה','ברנפלקס'],pets:['מזון חתולים','מזון כלבים','לחתולים','לכלבים','לחתול','לכלב','חול לחתולים'],candy:['קינדר','מסטיק','סוכריה','סוכריות','חמצוץ','לקריץ'],chocolate:['שוקולד','פרה','מקופלת','טעמי','ריטר','מילקה'],snacks:['תפוציפס','דוריטוס','צ׳יטוס','פופקורן','אפרופו','חטיף'],
   softdrinks:['ספרייט','פאנטה','שוופס','סודה','פריגת'],juice:['מיץ','נקטר','פרימור'],water:['נביעות','מי עדן','עין גדי'],oral:['קולגייט','סנסודיין','משחת שיניים','מברשת שיניים'],
   cleaners:['אקונומיקה','סנו','מסיר','מנקה'],paper:['מגבונים','ממחטות','מפיות','נייר סופג'],bags:['שקית','שקיות','ניילון'],household:['סוללה','סוללות','נר','נרות']};
 
@@ -1489,11 +1489,18 @@ let _proc=null;const PROCESSED={test:x=>(_proc||=new RegExp('('+['בחומץ','�
    (same result as testing every keyword one by one, about 6× faster over the whole catalog) */
 const _kwIdx=new WeakMap();
 function kwIndex(kws){let m=_kwIdx.get(kws);if(m)return m;m=new Map();for(const x of kws){const key=x.k.slice(0,3);if(!m.has(key))m.set(key,[]);m.get(key).push(x)}_kwIdx.set(kws,m);return m}
-function classify(name,kws){const s=' '+norm(name).replace(/[.,()\-/*]/g,' ');const processed=PROCESSED.test(s);let best=null;const idx=kwIndex(kws);const seen=new Set();
+/* what a product IS comes before its flavor or scent: «מזון חתולים בטעם הודו» is cat food, «שוקולד במילוי מרציפן» chocolate.
+   The name is read up to the first flavor/«with» word. An object or cosmetic (a lipstick, a bottle, a mop) is never filed as food. */
+const FLAVOR_CUT=/\s(בטעמ|טעמ|בטעמי|בניחוח|ניחוח|במילוי|מילוי|מצופה|מצופימ|מצופות|בציפוי|ציפוי|עמ|בתוספת|תוספת|ללא|לניקוי|נגד|בסגנונ|בצורת|על בסיס|מועשר|מועשרת)\s/;
+const NONFOOD=/\s(שפתונ\S*|גלוס|מרככ|מפיצ|מבשמ|בקבוק תינוק|בקבוק נירוסטה|בקבוק ספורט|מגב|פטיש|כפכפ|בגד|מלכודת|משחת נעליימ|נוזל נעליימ|נעליימ|בלונ|בלונימ|מכונית|צעצוע|גלגל ימ|קלמר|כפ גלידה|כפ ספגטי|סבונ|דאודורנט|דאו|מסיר איפור|איפור|ספריי לניקוי|לניקוי|מגבונ\S*|מגבות|שמפו|מרסס|תרסיס|זרעי עגבניה|זרעימ|בצק משחק|צמחי בית|מזונ|חתולימ|כלבימ|לחתול\S*|לכלב\S*|נר|נרות|סוללה|נורה|מטליות?|חוט|דבק|מפה|מפת|מפות)\s/;
+const FOODCAT=new Set(['dairy','bakery','produce','meat','pantry','drink']);
+function classify(name,kws,noCut){const full=' '+norm(name).replace(/[.,()\-/*]/g,' ')+' ';const m=noCut?null:full.slice(1).match(FLAVOR_CUT);const s=m&&m.index>0?full.slice(0,m.index+2):full;
+  const nonfood=NONFOOD.test(s)||/^\s(תבנית|פקק|סט|כפ|בובה|גופיית|גופייה|מגבת|קיסמי|ספלי|כוס)\s/.test(full);const processed=PROCESSED.test(full);let best=null;const idx=kwIndex(kws);const seen=new Set();
   for(let i=0;i<s.length;i++){if(s[i]!==' ')continue;for(const key of [s.substr(i,3),s.substr(i,2)]){const cands=idx.get(key);if(!cands)continue;
     for(const x of cands){if(seen.has(x)||!s.startsWith(x.k,i))continue;seen.add(x);/* first occurrence only, like indexOf */
-      const nx=s[i+x.k.length];if(x.k.length<6&&nx&&nx!==' ')continue;if(x.k.length<=4&&i>1)continue;if(processed&&TYPES[x.t][2]==='produce')continue;
+      const nx=s[i+x.k.length];if(x.k.length<6&&nx&&nx!==' ')continue;if(x.k.length<=4&&i>1)continue;if(processed&&TYPES[x.t][2]==='produce')continue;if(nonfood&&FOODCAT.has(TYPES[x.t][2]))continue;
       if(!best||i<best.i||(i===best.i&&x.k.length>best.len))best={t:x.t,i,len:x.k.length}}}}
+  if(!best&&s!==full){/* nothing before the flavor word: a drink or a home product may be named after it («משקה קל בטעם ענבים פריגת») */const t=classify(name,kws,true);return t!=='other'&&['drink','home','baby'].includes(TYPES[t]?.[2])?t:'other'}
   return best?best.t:'other'}
 function rebuildIndex(){for(const k in VB)delete VB[k];for(const k in BYBC)delete BYBC[k];
   for(const v of V){VB[v.id]=v;if(v.bc)BYBC[v.bc]=v}_byType=null;for(const k in _refSize)delete _refSize[k];_mega=null;_megaDay=''}
@@ -2388,7 +2395,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='133';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='134';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -2493,7 +2500,16 @@ function renderQuick(R,fold){if(!R)return;let html='';const has=state.items.leng
    spelling (יוגורט/יוגרט, שוקולאד), one-letter typos (במבא), units written any way (1.5 ל / 1.5 ליטר / 1500 מ"ל / 4ליטר).
    An index from words to products is built once and rebuilt when products are added. */
 const SX={n:-1,first:null,voc:null,tok:null};
-function sxSoon(){clearTimeout(sxSoon.t);sxSoon.t=setTimeout(()=>{try{(window.requestIdleCallback||(f=>f()))(()=>sxIndex())}catch(e){}},1500)}
+/* built in small slices while the phone is idle (all at once froze the screen for over a second); a search before it is done finishes it */
+function sxSoon(){clearTimeout(sxSoon.t);sxSoon.t=setTimeout(function step(){if(sxBuild(12))return;sxSoon.t=setTimeout(step,30)},1500)}
+let SXB=null;
+function sxBuild(ms){if(SX.n===V.length&&SX.first===V[0]){SXB=null;return true}
+  if(!SXB||SXB.n!==V.length||SXB.first!==V[0])SXB={i:0,n:V.length,first:V[0],voc:new Map(),tok:new Array(V.length)};
+  const end=performance.now()+ms,{voc,tok}=SXB;
+  while(SXB.i<V.length){const i=SXB.i++;const v=V[i];const ts=[...new Set(sxTokens(TYPES[v.t][0]+' '+v.b+' '+v.n+' '+v.s+(v.own?' מותג הבית':'')))];tok[i]=ts;
+    for(const t of ts){let L=voc.get(t);if(!L)voc.set(t,L=[]);L.push(i)}
+    if((i&255)===0&&performance.now()>end)return false}
+  SX.voc=voc;SX.tok=tok;SX.n=V.length;SX.first=V[0];SXB=null;return true}
 const UNIT_CANON={'ל':'ליטר','ליט':'ליטר','ליטר':'ליטר','ליטרימ':'ליטר','lt':'ליטר','l':'ליטר','מל':'מל','מיליליטר':'מל','ml':'מל','גר':'גרמ','גרמ':'גרמ','ג':'גרמ','גרמימ':'גרמ','g':'גרמ','gr':'גרמ','קג':'קג','קילו':'קג','קילוגרמ':'קג','kg':'קג','יח':'יח','יחידות':'יח','יחי':'יח','יחידה':'יח'};
 function sxCanon(s){return norm(String(s||'')).replace(/(\d)([^\d\s.,%])/g,'$1 $2').replace(/([^\d\s.,%])(\d)/g,'$1 $2').replace(/[^\p{L}\p{N}.%]+/gu,' ').replace(/(^|\s)\.+|\.+(\s|$)/g,' ').replace(/יי+/g,'י').replace(/וו+/g,'ו').trim()}
 function sxTokens(str){const raw=sxCanon(str).split(' ').filter(Boolean),out=[];
@@ -2502,10 +2518,7 @@ function sxTokens(str){const raw=sxCanon(str).split(' ').filter(Boolean),out=[];
     if(u&&i>0&&/^\d+(\.\d+)?$/.test(raw[i-1])){const n=+raw[i-1];if(u==='ליטר'){out.push(String(Math.round(n*1000)),'מל')}else if(u==='מל'&&n>=100){out.push(String(n/1000),'ליטר')}else if(u==='קג'){out.push(String(Math.round(n*1000)),'גרמ')}else if(u==='גרמ'&&n>=100){out.push(String(n/1000),'קג')}}}
   return out}
 const sxStem=t=>t.length>=4?t.replace(/(יות|ות|ימ|יה|ית|ה|ת)$/,'')||t:t;
-function sxIndex(){if(SX.n===V.length&&SX.first===V[0])return;const voc=new Map(),tok=new Array(V.length);
-  for(let i=0;i<V.length;i++){const v=V[i];const ts=[...new Set(sxTokens(TYPES[v.t][0]+' '+v.b+' '+v.n+' '+v.s+(v.own?' מותג הבית':'')))];tok[i]=ts;
-    for(const t of ts){let L=voc.get(t);if(!L)voc.set(t,L=[]);L.push(i)}}
-  SX.voc=voc;SX.tok=tok;SX.n=V.length;SX.first=V[0]}
+function sxIndex(){sxBuild(1e9)}
 function sxEdit1(a,b){/* true when a and b differ by at most one letter added, removed or changed */
   if(Math.abs(a.length-b.length)>1)return false;let i=0,j=0,e=0;
   while(i<a.length&&j<b.length){if(a[i]===b[j]){i++;j++;continue}if(++e>1)return false;if(a.length>b.length)i++;else if(b.length>a.length)j++;else{i++;j++}}
@@ -2524,7 +2537,9 @@ function sxWordScore(w,t){if(t===w)return 6;
 function findProducts(q,{fids=null,limit=30,needSold=false}={}){
   const raw=String(q||'').trim();if(!raw)return[];sxIndex();
   if(/^\d{5,14}$/.test(raw)){const out=[];for(const v of V)if(v.bc&&v.bc.startsWith(raw))out.push({v,score:v.bc===raw?100:50});return out.slice(0,limit)}
-  const words=[...new Set(sxTokens(raw).filter(w=>w!=='של'))];if(!words.length)return[];
+  const PACKW=/^(חבילה|חבילת|מארז|מארזי|אריזה|אריזת|פאק|שישייה|שישיה|מגש)$/;const toks=sxTokens(raw);const pack=toks.some(w=>PACKW.test(w));
+  const words=[...new Set(toks.filter(w=>w!=='של'&&w!=='עמ'&&!PACKW.test(w)))];if(!words.length)return[];
+  const isPack=v=>{const m=String(v.s||'').match(/^(\d+)\s*יח/);if(m&&+m[1]>=4)return true;return /(מארז|שישי|רביעי|שלישי|\d+\s*(יח|גליל|גלילימ|פחיות|בקבוקימ)|\d+\s*[x*×]\s*\d)/.test(norm(v.n))};
   /* per word: the best score of each product that has a matching word */
   const per=words.map(w=>{const m=new Map();for(const [t,L] of SX.voc){const s=sxWordScore(w,t);if(!s)continue;for(const i of L)if(!(m.get(i)>=s))m.set(i,s)}return m});
   const need=words.length>=3?words.length-1:words.length;/* a long query may have one word no product has */
@@ -2542,6 +2557,7 @@ function findProducts(q,{fids=null,limit=30,needSold=false}={}){
     s+=4*Math.min(1,(cnt.get(i)||0)/nt);              // the query covers most of the name: the plain product, not a variant
     s+=Math.min(sold,8)*0.8;                         // sold in many chains: the product people usually mean
     s-=nm.length/60;                                 // shorter names are the plain product
+    if(pack)s+=isPack(v)?5:-3;                       // «חבילה», «מארז»: a multi-pack, not one roll
     out.push({v,score:s})}
   return out.sort((a,b)=>b.score-a.score).slice(0,limit)}
 
@@ -2907,6 +2923,13 @@ function linkInfo(u){u=String(u||'').trim();let m;
   if(/(facebook\.com|fb\.watch)\//i.test(u))return{site:'facebook',name:'פייסבוק',embed:`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(u)}&show_text=false`,url:u};
   if(m=u.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/i))return{site:'youtube',name:'יוטיוב',embed:`https://www.youtube.com/embed/${m[1]}`,url:u};
   if(/^https?:\/\//i.test(u))return{site:'web',name:'האתר',embed:null,url:u};return null}
+/* a short share link (vm.tiktok.com/…, tiktok.com/t/…, fb.watch, instagram share) has no video number in it: the number is found
+   by following the link (in the Android app, natively) or from TikTok's oEmbed, so the video plays here, in the feed */
+async function resolveLink(L){if(!L||L.embed)return L;
+  try{if(L.site==='tiktok'){const r=await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(L.url)}`);if(r.ok){const j=await r.json();const id=j.embed_product_id||(String(j.html||'').match(/data-video-id="(\d+)"/)||[])[1];if(id)return{...L,embed:`https://www.tiktok.com/embed/v2/${id}`,title:j.title}}}}catch(e){}
+  try{const H=window.Capacitor?.Plugins?.CapacitorHttp;if(H){const r=await H.request({url:L.url,method:'GET',headers:{'User-Agent':'Mozilla/5.0 (Linux; Android 14) Mobile'}});
+    const fin=r.url||'';const L2=linkInfo(fin);if(L2&&L2.embed)return{...L2,url:L.url};const m=String(r.data||'').match(/(?:tiktok\.com\/@[^/"]+\/video\/\d+|instagram\.com\/(?:reel|p)\/[A-Za-z0-9_-]+|facebook\.com\/[^"\s]+\/videos\/\d+)/);if(m){const L3=linkInfo('https://www.'+m[0]);if(L3&&L3.embed)return{...L3,url:L.url}}}}catch(e){}
+  return L}
 /* the title of a TikTok or YouTube post, through their public oEmbed (when the network allows it) */
 async function linkTitle(L){try{const api=L.site==='tiktok'?`https://www.tiktok.com/oembed?url=${encodeURIComponent(L.url)}`:L.site==='youtube'?`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(L.url)}`:null;if(!api)return '';
   const r=await fetch(api);if(!r.ok)return '';const j=await r.json();return String(j.title||'').slice(0,300)}catch(e){return ''}}
@@ -2939,11 +2962,12 @@ function openLinkSave(prefill){let busy=false,ai=null;
     $('lkGo').onclick=async()=>{if(busy)return;const L=linkInfo($('lkUrl').value);if(!L){toast('הדבק קישור לסרטון');$('lkUrl').focus();return}
       const title=$('lkTitle').value.trim().slice(0,80)||'מתכון מ'+L.name;let ingr=$('lkIngr').value.trim().slice(0,1500);
       if(!ingr&&SAMPLE){busy=true;$('lkGo').textContent='✨ מזהה מצרכים ושומר…';try{ai=await aiTextIngredients(title,$('lkText').value.trim());ingr=ai.ingredients.map(x=>x.name+(x.amount?' '+x.amount:'')).join('\n')}catch(e){}busy=false}
-      (state.links||(state.links=[])).unshift({id:nid(),url:L.url,site:L.site,embed:L.embed,title,ingr,ts:Date.now()});state.links=state.links.slice(0,100);save();
+      const LR=await resolveLink(L);(state.links||(state.links=[])).unshift({id:nid(),url:L.url,site:L.site,embed:LR.embed,title,ingr,ts:Date.now()});state.links=state.links.slice(0,100);save();
       closeSheet();toast('💾 נשמר בפיד שלך');if(state.tab!=='feed')go('feed');else renderFeed();
       if(ingr)setTimeout(()=>openIngrSheet({dish:title,note:ai?ai.note:'',ingredients:ingrRows(ingr),written:!ai},null),350)}})}
 function linksHtml(){const L=state.links||[];if(!L.length)return '';
-  return `<section class="card"><h2>💾 המתכונים ששמרתי</h2><div class="vfeed">${L.map(x=>`<article class="post lpost"><div class="vwrap">${x.embed?`<iframe src="${esc(x.embed)}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="${esc(x.title)}"></iframe>`:`<a class="lfallback" href="${esc(x.url)}" target="_blank" rel="noopener">▶️ צפה בסרטון</a>`}</div>
+  for(const x of L)if(!x.embed&&!x.tried){x.tried=1;resolveLink(linkInfo(x.url)).then(R=>{if(R&&R.embed){x.embed=R.embed;save();if(state.tab==='feed')renderFeed()}})}
+  return `<section class="card"><h2>💾 המתכונים ששמרתי</h2><div class="vfeed">${L.map(x=>`<article class="post lpost"><div class="vwrap">${x.embed?`<iframe src="${esc(x.embed)}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="${esc(x.title)}"></iframe>`:`<div class="lfallback"><p>לא הצלחנו להציג את הסרטון הזה כאן.</p><small>קישורי שיתוף קצרים נפתחים במלואם באפליקציית אנדרואיד. אפשר גם להדביק את הקישור המלא של הסרטון.</small><a class="link" href="${esc(x.url)}" target="_blank" rel="noopener">צפה באתר ↗</a></div>`}</div>
     <div class="pb"><div class="row2 spread"><b>${esc(x.title)}</b><a class="link" href="${esc(x.url)}" target="_blank" rel="noopener">פתח ב${esc(linkInfo(x.url)?.name||'אתר')} ↗</a></div>
     ${x.ingr?`<details><summary class="sub">🧾 מצרכים</summary><div class="ingr">${esc(x.ingr)}</div></details>`:''}
     <div class="row2"><button class="btn sm" type="button" data-lkadd="${esc(x.id)}">🛒 הוסף מצרכים לסל</button><button class="link danger" type="button" data-lkdel="${esc(x.id)}">מחק</button></div></div></article>`).join('')}</div></section>`}
@@ -3007,18 +3031,23 @@ function openPicker(key){
   const it=state.items.find(i=>i.k===key);if(!it)return;const [tn]=TYPES[it.t];
   let brand=it.bh||'הכל',pq='',lim=30;
   const draw=body=>{
-    const vs=ofType(it.t).map(v=>({v,ch:cheapestOf(v.id),ok:allowed(v)})).filter(x=>x.ch).sort((a,b)=>(b.ok-a.ok)||(a.ch.p-b.ch.p));
+    /* the usual products first (sold in most of your chains, with what you wrote), not the cheapest odd one (a single roll, wet wipes) */
+    const fol=followed().map(c=>c.id),nCh=v=>v.rp?fol.filter(c=>v.rp[c]!=null).length:0;
+    const hsc=new Map((it.hint?findProducts(it.hint,{limit:300}):[]).map(x=>[x.v.id,x.score]));
+    const vs=ofType(it.t).map(v=>({v,ch:cheapestOf(v.id),ok:allowed(v)})).filter(x=>x.ch).sort((a,b)=>(b.ok-a.ok)||((hsc.get(b.v.id)??-99)-(hsc.get(a.v.id)??-99))||(Math.min(nCh(b.v),6)-Math.min(nCh(a.v),6))||(a.ch.p-b.ch.p));
     const brands=['הכל',...new Set(vs.map(x=>x.v.own?'מותגי הבית':x.v.b).filter(goodBrand))].slice(0,16);
-    const nq=norm(pq);const all=vs.filter(x=>(brand==='הכל'||(brand==='מותגי הבית'?x.v.own:x.v.b===brand))&&(!nq||nq.split(/\s+/).every(w=>norm(vLabel(x.v)+' '+x.v.s).includes(w))));const shown=all.slice(0,lim);
+    /* a search here looks in every product, not only this kind: «מעדן הגולן בטעם שוקולד» is found from «שוקולד» */
+    const found=pq.trim()?findProducts(pq,{limit:80}).map(x=>({v:x.v,ch:cheapestOf(x.v.id),ok:allowed(x.v)})).filter(x=>x.ch):null;
+    const all=(found||vs).filter(x=>brand==='הכל'||(brand==='מותגי הבית'?x.v.own:x.v.b===brand));const shown=all.slice(0,lim);
     body.innerHTML=`<button class="btn y big" type="button" id="autoC">✨ לא משנה לי, תבחר את הזול</button>
-      <label class="f" for="pq">או חפש מותג או גודל (${vs.length} אפשרויות)</label><input type="search" id="pq" value="${esc(pq)}" placeholder="למשל: תנובה, 1 ליטר" autocomplete="off">
+      <label class="f" for="pq">או חפש מוצר, מותג או גודל (${vs.length} אפשרויות)</label><input type="search" id="pq" value="${esc(pq)}" placeholder="למשל: תנובה, 1 ליטר" autocomplete="off">
       <div class="brands" role="group" aria-label="סינון לפי מותג">${brands.map(b=>`<button type="button" data-br="${esc(b)}" aria-pressed="${b===brand}">${esc(b)}</button>`).join('')}</div>
       <div class="vlist">${shown.map(({v,ch,ok})=>`<button class="vopt" type="button" data-v="${v.id}" aria-pressed="${it.v===v.id}" ${ok?'':'style="opacity:.55"'}>${thumb(v,TYPES[v.t][1],"thv")}<span><b>${esc(vLabel(v))}</b>${v.own?` <span class="own">מותג הבית · ${CHB[v.own].short}</span>`:''}<br><small>${v.s}${v.kosher?' · כשרות '+v.kosher:''}${v.pik?' · בפיקוח':''}${ok?'':' · לא לפי ההעדפות שלך'}</small></span><span class="vp num">${fmt(ch.p)}<br><small>ב${ch.c.short}</small><br><small>${unitPrice(v,ch.p)}</small></span></button>`).join('')||'<div class="empty">לא נמצא. נסה מילה אחרת.</div>'}</div>
       ${all.length>shown.length?`<button class="btn ghost" type="button" id="pmore">הצג עוד ${all.length-shown.length}</button>`:''}`;
     const pqi=body.querySelector('#pq');let pqt=0;pqi.oninput=e=>{const el=e.target;clearTimeout(pqt);pqt=setTimeout(()=>{pq=el.value;lim=30;redrawKeep(body,'#pq',draw)},200)};
     if(body.querySelector('#pmore'))body.querySelector('#pmore').onclick=()=>{lim+=30;draw(body)};
     body.querySelectorAll('[data-br]').forEach(b=>b.onclick=()=>{brand=b.dataset.br;lim=30;draw(body)});
-    body.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{it.v=b.dataset.v;delete it.bh;log(`בחר ${vLabel(VB[it.v])}`);closeSheet();update();toast('נבחר: '+vLabel(VB[it.v]))});
+    body.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{it.v=b.dataset.v;it.t=VB[it.v].t;delete it.bh;log(`בחר ${vLabel(VB[it.v])}`);closeSheet();update();toast('נבחר: '+vLabel(VB[it.v]))});
     $('autoC').onclick=()=>{it.v=null;closeSheet();update();toast('נשווה לפי הגרסה הזולה בכל רשת')};
   };
   openSheet('בחירת '+tn,'',draw);
@@ -3585,9 +3614,15 @@ function facetOptions(it,f,pool){const out=[];
   return out}
 /* a written or spoken line names a kind ("קולה קטן"), not a product: the app does not pick one; it keeps the words as a hint
    and asks. Only a barcode or an exact full name picks the product directly. */
-function looseItems(out,lines){return out.map((o,i)=>{const v=o.v&&VB[o.v];const line=String(lines&&lines[i]||'').trim();
+/* the kind of product from the whole line, as the search reads it: «חלב שיבולת שועל» is a plant drink, not milk;
+   «מעדן הגולן בטעם שוקולד» a pudding, not chocolate */
+function kindFromLine(line,t){line=String(line).replace(/^[\s\-•*\d.)]+(?=\S)/,'').replace(/[x×*]\s*\d+|\d+\s*[x×*]|\d+([.,]\d+)?\s*(ק[״"']?ג|קילו|גרם|גר|ליטר|ל|מ[״"']?ל|יח[׳']?|יחידות)?/g,' ').replace(/[^\p{L}\s%]/gu,' ').trim();if(!line)return t;const r=findProducts(line,{limit:12});if(r.length<2)return t;const top=r[0].score;const c={};
+  for(const x of r)if(x.score>=top-3)c[x.v.t]=(c[x.v.t]||0)+1;const best=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
+  return best&&best[0]!==t&&best[0]!=='other'&&!c[t]&&best[1]>=2&&TYPES[t]?.[2]!=='produce'?best[0]:t}
+function looseItems(out,lines){return out.map((o,i)=>{const r=looseItem0(o,lines&&lines[i]);if(!r.v&&r.hint&&out.length===1){const t2=kindFromLine(r.hint,r.t);if(t2!==r.t)return{...r,t:t2,sz:null,bh:null}}return r})}
+function looseItem0(o,ln){{const v=o.v&&VB[o.v];const line=String(ln||'').trim();
   if(v&&line&&norm(vLabel(v))!==norm(line)&&!/^\d{8,14}$/.test(line)&&ofType(o.t).filter(x=>x.real).length>1){const n={...o,v:null,hint:line};return n}
-  return line?{...o,hint:line}:o})}
+  return line?{...o,hint:line}:o}}
 function parseLoose(txt){const lines=String(txt).split(/\n|,/).map(x=>x.trim()).filter(Boolean);const out=[],unknown=[];
   for(const l of lines){const r=parseList(l);if(r.out.length){out.push(...looseItems(r.out,r.out.map(()=>l)))}unknown.push(...r.unknown)}return{out,unknown}}
 function refineQueue(keys){const q=state.items.filter(i=>!i.v&&(!keys||keys.includes(i.k))&&ofType(i.t).length>1&&!isKg(i)).map(i=>i.k); /* fresh produce needs no size or brand */if(q.length)openRefine(q)}
@@ -3632,7 +3667,8 @@ function openRefine(queue){
       /* the words the shopper wrote ("קולה זירו פחית") rank the products first, then the price */
       const hw=norm(it.hint||'').split(/\s+/).filter(w=>w.length>=2&&!norm(tn).includes(w));const hs=x=>{const n=norm(vLabel(x.v)+' '+(x.v.s||''));return hw.reduce((a,w)=>a+(n.includes(w)?1:0),0)};
       const pic=x=>!!(x.v.bc&&((HAVE&&HAVE.has(x.v.bc))||(HD&&HD.has(x.v.bc))));
-      const vs=pool.sort((a,b)=>(hs(b)-hs(a))||(pic(b)-pic(a))||(a.ch.p-b.ch.p));
+      const fsc=new Map((it.hint?findProducts(it.hint,{limit:400}):[]).map((x,i)=>[x.v.id,x.score]));const fs=x=>fsc.get(x.v.id)??-99;
+      const vs=pool.sort((a,b)=>(hs(b)-hs(a))||(fs(b)-fs(a))||(pic(b)-pic(a))||(a.ch.p-b.ch.p));
       const top=[],seen=new Set();for(const x of vs){const k=norm(vLabel(x.v));if(seen.has(k))continue;seen.add(k);top.push(x);if(top.length>=12)break}
       body.innerHTML=`${head}<h3>${desc?esc(desc)+' · ':''}איזה מוצר?</h3>
         <button type="button" class="rfopt any" id="rfCheap"><b>${desc?'הכי זול מהמתאימים':'כל מותג, הכי זול'}</b><small>נשווה את הזול בכל רשת${desc?', רק ממה שבחרת':''}</small></button>
@@ -4161,7 +4197,10 @@ function cutoutSrc(src){if(_cut.has(src))return _cut.get(src);const pr=new Promi
 function cutoutIn(el){const fix=img=>{if(!img||img.dataset.cut)return;img.dataset.cut='1';const src=img.currentSrc||img.src;
     cutoutSrc(src).then(u=>{if(u&&document.contains(img)){img.src=u;el.classList.add('cut')}else el.classList.add('nocut')})};
   fix(el.querySelector('img'));new MutationObserver(()=>fix(el.querySelector('img'))).observe(el,{childList:true,subtree:true})}
-function storyGroups(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)return [];
+/* the groups are the same until the prices, the chains followed, the photos or the day change: built once, not on every screen */
+function storyGroups(){const k=[V.length,V[0]?.id,followed().map(c=>c.id).join(','),new Date().toDateString(),typeof HDIX!=='undefined'&&HDIX?1:0,typeof HDINFO!=='undefined'&&HDINFO?Object.keys(HDINFO).length:0,state.hideCats||''].join('|');
+  if(storyGroups.k===k)return storyGroups.v;storyGroups.k=k;return storyGroups.v=storyGroups0()}
+function storyGroups0(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)return [];
   const best=new Map();for(const r of dealRows(fol,20)){const k=r.v.id;if(!best.has(k)||best.get(k).pct<r.pct)best.set(k,r)}
   const promo=new Set(),names=new Set();
   const all=[...best.values()].filter(r=>!r.pr.club||state.clubs.includes(r.cid)).sort((a,b)=>b.pct-a.pct).filter(r=>{
