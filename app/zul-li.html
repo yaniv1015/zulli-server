@@ -881,6 +881,8 @@ html[data-contrast="1"] .card,html[data-contrast="1"] .btn,html[data-contrast="1
 @keyframes pulse{50%{transform:scale(1.08)}}
 .cmprow{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;cursor:pointer;flex-wrap:wrap}
 .cmplist li.picked{outline:3px solid var(--ink);outline-offset:-1px}
+.rfhead{flex-wrap:wrap}.rfhead .rfedit{margin-inline-start:auto;align-self:center}
+.rfeditbox{display:flex;flex-direction:column;gap:8px;padding:12px;border:1.5px dashed var(--line);border-radius:16px;margin-bottom:6px}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -2433,7 +2435,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='136';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='137';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -3690,7 +3692,9 @@ function openRefine(queue){
       if(opts.length<2||cover<Math.max(2,pool.length*0.12)){step++;continue}break}
     if(pool.length===1){it.v=pool[0].v.id;delete it.sz;delete it.fx;return next(body)}
     const desc=[...Object.values(it.fx).filter(Boolean),it.sz].filter(Boolean).join(' · ');
-    const head=`<div class="rfhead"><span class="ico" aria-hidden="true">${emo}</span><div><b>${esc(it.hint||(it.bh?tn+' '+it.bh:tn))}</b>${it.q>1?` <span class="sub">× ${it.q}</span>`:''}<div class="sub">${desc?esc(desc)+' · ':''}${idx+1} מתוך ${queue.length}</div></div></div>`;
+    const head=`<div class="rfhead"><span class="ico" aria-hidden="true">${emo}</span><div><b>${esc(it.hint||(it.bh?tn+' '+it.bh:tn))}</b>${it.q>1?` <span class="sub">× ${it.q}</span>`:''}<div class="sub">${desc?esc(desc)+' · ':''}${idx+1} מתוך ${queue.length}</div></div><button type="button" class="btn sm ghost rfedit" id="rfEdit" aria-expanded="false">✏️ תקן או מוצר אחר</button></div>
+      <div class="rfeditbox" id="rfEditBox" hidden><label class="f" for="rfName">שם המוצר</label><div class="row2" style="flex-wrap:nowrap"><input type="search" id="rfName" value="${esc(it.hint||tn)}" autocomplete="off" style="flex:1;min-width:0"><button class="btn sm" type="button" id="rfNameGo">עדכן</button></div>
+        <small class="sub">כתוב את השם הנכון (למשל: ממרח נוטלה 350 גרם), או בחר מוצר מהתוצאות:</small><div class="rfgrid pics" id="rfFound"></div></div>`;
     const tail=`<div class="row2 spread"><button class="link" type="button" id="rfSkip">דלג ←</button><button class="link" type="button" id="rfAll">לא משנה לי בשום מוצר, השווה לפי הזול</button></div>`;
     const back=step>0?'<button class="link" type="button" id="rfBack">→ שאלה קודמת</button>':'';
     const f=Q[step];
@@ -3719,6 +3723,19 @@ function openRefine(queue){
     }
     if($('rfBack'))$('rfBack').onclick=()=>{/* undo the last answer */for(let k=step-1;k>=0;k--){const g=Q[k];if(g.id==='size'&&it.sz){delete it.sz;step=k;break}if(g.id!=='size'&&it.fx[g.id]!==undefined){delete it.fx[g.id];step=k;break}if(k===0)step=0}draw(body)};
     $('rfSkip').onclick=()=>{if(it.fx&&!Object.values(it.fx).some(Boolean))delete it.fx;next(body)};
+    /* the name was read wrong, or the shopper wants something else: fix the words (the questions start again for the new product)
+       or pick a product straight from the search */
+    const eb=$('rfEditBox'),ei=$('rfName');
+    const found=()=>{const q=ei.value.trim();const r=q.length>=2?findProducts(q,{limit:8}).filter(x=>cheapestOf(x.v.id)):[];
+      $('rfFound').innerHTML=r.length?r.map(({v})=>`<button type="button" class="rfpic" data-rfv="${v.id}">${thumb(v,TYPES[v.t][1])}<b>${esc(vLabel(v))}</b><small>${esc(v.s||'')}</small><span class="num">מ-${fmt(cheapestOf(v.id).p)}</span></button>`).join(''):(q.length>=2?'<p class="sub">לא מצאנו מוצר כזה. נסה מילה אחרת.</p>':'');
+      $('rfFound').querySelectorAll('[data-rfv]').forEach(b=>b.onclick=()=>{const v=VB[b.dataset.rfv];it.v=v.id;it.t=v.t;it.hint=vLabel(v);delete it.sz;delete it.bh;delete it.fx;delete it._pre;toast('נבחר: '+vLabel(v));next(body)})};
+    $('rfEdit').onclick=()=>{eb.hidden=!eb.hidden;$('rfEdit').setAttribute('aria-expanded',!eb.hidden);if(!eb.hidden){ei.focus();ei.select();found()}};
+    let et=0;ei.oninput=()=>{clearTimeout(et);et=setTimeout(found,250)};
+    const apply=()=>{const txt=ei.value.trim();if(!txt){ei.focus();return}const o=parseLoose(txt).out[0];
+      if(!o){toast('לא זיהינו את המוצר. נסה שם אחר או בחר מהתוצאות');return}
+      it.t=o.t;it.hint=txt;delete it.v;delete it.sz;delete it.bh;it.fx={};delete it._pre;if(o.v){it.v=o.v;toast('נבחר: '+vLabel(VB[o.v]));return next(body)}
+      step=0;save();toast('עודכן: '+txt);draw(body)};
+    $('rfNameGo').onclick=apply;ei.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();apply()}};
     $('rfAll').onclick=()=>{closeSheet();update()};
     setTimeout(()=>body.querySelector('.rfopt,.rfprod')?.focus(),30);
   };
