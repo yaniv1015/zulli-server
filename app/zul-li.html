@@ -879,6 +879,8 @@ html[data-contrast="1"] .sub,html[data-contrast="1"] small{color:var(--ink)!impo
 html[data-contrast="1"] .card,html[data-contrast="1"] .btn,html[data-contrast="1"] input,html[data-contrast="1"] select{border-width:2px!important}
 @media (prefers-color-scheme:dark){html[data-contrast="1"]{--line:#c9c9d2!important}}
 @keyframes pulse{50%{transform:scale(1.08)}}
+.cmprow{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;cursor:pointer;flex-wrap:wrap}
+.cmplist li.picked{outline:3px solid var(--ink);outline-offset:-1px}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -1756,7 +1758,16 @@ function basketAt(c){
 function evaluate(){
   const res=followed().map(basketAt);
   const score=r=>state.mode==='cheap'?r.eff:state.mode==='fast'?r.slotH*1000+r.eff:r.eff+state.hour*r.slotH;
-  res.forEach(r=>r.score=score(r)+(r.rankMin?1e6:0)+(r.missing.length?1e5:0)); /* a chain that has the whole list comes before one that lacks part of it */res.sort((a,b)=>a.score-b.score);return res;
+  /* one comparable number per chain. For each product, the usual price is the median of what the chains charge for it.
+     A chain whose stand-in costs over twice that usual price is offering a different product (a wrong match or a price-file
+     error), so that line does not count as found; every product a chain lacks is counted at its usual price and the total
+     says so. Without this, a chain lacking two products looked cheapest, and one odd line made a chain look 40% dearer. */
+  const per=new Map();for(const r of res)for(const L of r.lines){(per.get(L.it.k)||per.set(L.it.k,[]).get(L.it.k)).push(L.tot)}
+  const med=new Map();for(const [k,a] of per){a.sort((x,y)=>x-y);med.set(k,a[a.length>>1])}
+  for(const r of res){r.odd=[];if(per.size&&res.length>=3){const keep=[];for(const L of r.lines){const m=med.get(L.it.k);if(m!=null&&(per.get(L.it.k).length>=3)&&L.tot>m*2.2&&L.tot-m>8){r.odd.push(L);r.missing.push(L.it);r.sub-=L.tot;r.total-=L.tot;r.show-=L.tot;if(L.sub)r.subs--;if(L.promo)r.promos--}else keep.push(L)}r.lines=keep}
+    r.estN=0;r.estAmt=0;for(const it of r.missing){const m=med.get(it.k);if(m!=null){r.estAmt+=m;r.estN++}}
+    r.found=r.show;r.show+=r.estAmt;r.heavy=r.missing.length>Math.max(2,state.items.length*.2);/* lacks a fifth of the list: not a place to buy it all */r.eff=r.show+(r.missing.length-r.estN)*1e4+(r.heavy?1e5:0)}
+  res.forEach(r=>r.score=score(r)+(r.rankMin?1e6:0));res.sort((a,b)=>a.score-b.score);return res;
 }
 /* buy in two chains: each product from whichever of the two is cheaper, paying both delivery fees and meeting both minimums.
    Only chains with published delivery terms take part, so the saving is real. */
@@ -1930,9 +1941,9 @@ function openLocation(){
 /* weighed items (fruit, vegetables, deli counter) count in kilos, in half-kilo steps */
 function isKg(it,L){const v=it.v?VB[it.v]:L&&VB[L.vid];if(v)return !!v.weighted;return TYPES[it.t]?.[2]==='produce'&&ofType(it.t).some(x=>x.weighted)}
 function kgText(q,short){const n=Math.round(q*10)/10;if(short)return `${n}<small>ק״ג</small>`;return n===1?'קילו':n===0.5?'חצי קילו':`${n} ק״ג`}
-function cheapestText(res){const ok=res.filter(r=>!r.rankMin&&!r.missing.length);return ok.length?ok:res}
+function cheapestText(res){const ok=res.filter(r=>!r.rankMin&&!r.heavy);return ok.length?ok:res}
 function renderBasket(){
-  const S=$('screen');const wasTyping=document.activeElement&&document.activeElement.id==='q';const res=state.items.length?evaluate():[];const w=res[0];
+  const S=$('screen');const wasTyping=document.activeElement&&document.activeElement.id==='q';const res=state.items.length?evaluate():[];const w=(state.pickChain&&res.find(r=>r.c.id===state.pickChain))||res[0];const picked=!!(state.pickChain&&w&&w.c.id===state.pickChain&&w!==res[0]);
   const open=state.items.filter(i=>!i.v&&!isKg(i)).length; // fresh produce does not need a brand or size
   let html='';
   if(state.done)html+=`<section class="card donebox" role="status"><div class="donehead"><span aria-hidden="true">✅</span><div><b>${state.done.ext?`הקנייה ב${esc(state.done.chain)} נשמרה`:`ההזמנה מ${esc(state.done.chain)} נקלטה`}</b><div class="sub">${state.done.ext?'סכום משוער ':''}${fmt(state.done.total)}${state.done.ext?'':` · מספר הזמנה ${esc(state.done.id)} (הדגמה)`}</div></div></div>
@@ -1992,9 +2003,9 @@ function renderBasket(){
       :'<div class="emptybox"><div style="font-size:2.4rem" aria-hidden="true">🛒</div><b>הרשימה ריקה</b><span class="sub">כתוב מוצר בחיפוש למעלה, או הדבק רשימה שכבר יש לך.</span></div>'}
   </section>`;
   /* the answer, once, after the list: the whole list priced at each chain in the shopper's area */
-  if(state.items.length&&res.length){const R=state.mode==='fast'?res:res.slice().sort((a,b)=>(a.rankMin-b.rankMin)||(a.missing.length-b.missing.length)||(a.show-b.show));const top=R.slice(0,6);const hi=Math.max(...cheapestText(res).map(r=>r.show));
+  if(state.items.length&&res.length){const R=res;const top=R.slice(0,6);if(w&&!top.includes(w))top.push(w);const hi=Math.max(...cheapestText(res).map(r=>r.show));
     html+=`<section class="card cmpcard"><h2>🏆 איפה הכי זול לקנות את כל הרשימה</h2><p class="sub">${esc(locText())} · ${nOf(res.length,'רשת אחת','רשתות')}</p>
-      <ol class="cmplist">${top.map((r,k)=>`<li class="${k===0?'win':''}" style="--sc:var(${r.c.c})"><span class="cmpk">${k+1}</span><span class="grow"><b>${esc(r.c.name)}</b>${r.missing.length?`<small class="sub">חסרים ${r.missing.length} מוצרים</small>`:''}</span><b class="num">${fmt(r.show)}</b>${k===0&&hi-r.show>0.5?`<small class="cmpsave">חוסך עד ${fmt(hi-r.show)}</small>`:''}</li>`).join('')}</ol>
+      <p class="sub">לחץ על רשת כדי לבחור ממנה לקנות.</p><ol class="cmplist">${top.map((r,k)=>`<li class="${k===0?'win':''}${r===w?' picked':''}" style="--sc:var(${r.c.c})"><button type="button" class="cmprow" data-pickc="${r.c.id}" aria-pressed="${r===w}" aria-label="${esc(r.c.name)}, ${fmt(r.show)}${r.missing.length?', כולל הערכה ל'+r.missing.length+' מוצרים חסרים':''}. לחץ לבחירה"><span class="cmpk">${R.indexOf(r)+1}</span><span class="grow"><b>${esc(r.c.name)}${r===w&&picked?' · נבחרה':''}</b>${r.missing.length?`<small class="sub">כולל הערכה ל${r.missing.length===1?'מוצר אחד שחסר':'-'+r.missing.length+' מוצרים שחסרים'} ברשת</small>`:''}</span><b class="num">${fmt(r.show)}</b>${k===0&&hi-r.show>0.5?`<small class="cmpsave">חוסך עד ${fmt(hi-r.show)}</small>`:''}</button></li>`).join('')}</ol>
       <button class="btn" type="button" id="cmpAll">השוואה מלאה בין כל הרשתות ›</button></section>`}
   if(state.items.length)html+=`<details class="moreadd"${state._moreAdd?' open':''}><summary><span>➕ עוד דרכים להוסיף<small class="sub">הדבקה, תמונה, ברקוד, אירועים ומבצעים</small></span></summary>${helpersHtml}<div class="results quick" id="qmore"></div></details>`;
   if(w)html+='<div class="barspace" aria-hidden="true"></div>';
@@ -2008,11 +2019,11 @@ function renderBasket(){
     const ok=cheapestText(res);const worst=Math.max(...ok.map(r=>r.show));const save=worst-w.show;
     bar.hidden=false;document.documentElement.classList.add('hasbar');
     bar.innerHTML=`<button type="button" class="bestinfo" id="openCompare" aria-label="הכי משתלם: ${w.c.name}, ${fmt(w.show)}. לחץ להשוואה בין כל הרשתות">
-        <span class="bl">${state.mode==='fast'?'הכי מהיר':'הכי זול'} · ${nOf(res.length,'רשת אחת','רשתות')}</span>
+        <span class="bl">${picked?'הרשת שבחרת':state.mode==='fast'?'הכי מהיר':'הכי זול'} · ${nOf(res.length,'רשת אחת','רשתות')}</span>
         <span class="bn"><span class="av" style="--sc:var(${w.c.c})" aria-hidden="true">${w.c.ab}</span><span class="bnn">${w.c.short}</span> <b class="num">${fmt(w.show)}</b></span>
-        <span class="bs">${save>0.5?`חוסך ${fmt(save)} · `:''}השוואה מלאה ›</span></button>
+        <span class="bs">${picked?(w.show-res[0].show>0.5?`יקר ב-${fmt(w.show-res[0].show)} מ${res[0].c.short} · `:''):save>0.5?`חוסך ${fmt(save)} · `:''}השוואה מלאה ›</span></button>
       <button type="button" class="btn y bestgo" data-checkout="${w.c.id}">להזמנה</button>`;
-    bar.querySelector('#openCompare').onclick=()=>openCompare();if($('cmpAll'))$('cmpAll').onclick=()=>openCompare();
+    bar.querySelector('#openCompare').onclick=()=>openCompare();document.querySelectorAll('[data-pickc]').forEach(b=>b.onclick=()=>{const id=b.dataset.pickc;state.pickChain=id===res[0].c.id?null:id;window.save();renderBasket();toast(`נבחרה ${CHB[id].name}${id===res[0].c.id?' (הזולה)':''} · "להזמנה" יזמין ממנה`)});if($('cmpAll'))$('cmpAll').onclick=()=>openCompare();
     bar.querySelector('[data-checkout]').onclick=()=>openCheckout(w.c.id);
   } else {bar.hidden=true;bar.innerHTML='';document.documentElement.classList.remove('hasbar')}
   // bindings
@@ -2163,7 +2174,7 @@ function openCompare(){if(state.raceBy==='branch')return openBranchRace();
   const draw=body=>{
     // "cheapest": strictly by price, low to high (a chain that is missing products counts their estimated cost);
     // the trophy goes to the cheapest chain you can actually order from (not below its minimum)
-    const ev=evaluate();const res=state.mode==='fast'?ev:ev.slice().sort((a,b)=>(!!a.missing.length-!!b.missing.length)||(a.missing.length?a.eff-b.eff:a.show-b.show));const w=res.find(r=>!r.rankMin)||res[0];if(!w){closeSheet();return}
+    const ev=evaluate();const res=state.mode==='fast'?ev:ev.slice().sort((a,b)=>a.eff-b.eff);const w=res.find(r=>!r.rankMin)||res[0];if(!w){closeSheet();return}
     const max=Math.max(...res.map(r=>r.show)),min=Math.min(...res.map(r=>r.show));const sw=swapsFor(w);const swTot=sw.reduce((a,s)=>a+s.save,0);
     const pos=USERPOS;
     body.innerHTML=`${raceSeg('chain')}<div class="seg" role="group" aria-label="איך להשוות?">${[['address','📍 לפי הכתובת שלי'],['city','🏙️ לפי העיר']].map(([m,l])=>`<button type="button" data-cmpby="${m}" aria-pressed="${(state.cmpBy||'address')===m}">${l}</button>`).join('')}</div>
@@ -2180,8 +2191,8 @@ function openCompare(){if(state.raceBy==='branch')return openBranchRace();
           <div class="row2"><button class="btn sm" type="button" id="splitSave">💾 שמור כשתי רשימות</button><button class="btn sm ghost" type="button" id="splitCopy">📋 העתק</button></div></details>`})()}
       <button class="btn ghost" type="button" id="cmpBranch">🏪 בדיקת הסל בסניף מסוים</button>
       <div class="race">${res.map((r,i)=>{const pct=max===min?100:35+65*(r.show-min)/(max-min);
-        return `<div class="rrow${r===w?' first':''}" style="--sc:var(${r.c.c})"><div class="rhead"><span class="av">${r.c.ab}</span>
-          <span class="rname">${r===w?'🏆 ':''}<span class="rank num">${i+1}.</span> ${r.c.name}<small>${r.c.noDelivery||r.c.pickup?'🏪':'🚚 '+slotLabel(r.slotH)+' ·'} ${feeLine(r)}</small><small>${BR[r.c.id]?esc(brLabel(r.c)):state.cmpBy==='city'&&!branchesOf(r.c,cmpCity()).length?`אין לרשת סניף ב${esc(cmpCity())} · מחיר רגיל ברשת`:AUTO[r.c.id]&&AUTO[r.c.id].how==='near'?`📍 הסניף הקרוב: ${esc(AUTO[r.c.id].nb)} · ${AUTO[r.c.id].exact?'':'כ-'}${Math.round(AUTO[r.c.id].km)} ק״מ · מחיר רגיל ברשת`:'מחיר רגיל ברשת'}${allBranches(r.c).length?` · <button class="link" type="button" data-pickbr="${r.c.id}">${BR[r.c.id]?'החלף':'בחר סניף'}</button>`:''}</small></span><span class="rtotal num">${r.lines.length?fmt(r.show):'—'}${r.missing.length&&r.lines.length?`<small class="sub">בלי ${nOf(r.missing.length,'מוצר חסר','מוצרים חסרים')}</small>`:''}${!state.withFee&&r.fee?`<small class="sub">+ משלוח ${fmt(r.fee)}</small>`:''}</span></div>
+        return `<div class="rrow${r===w?' first':''}${r.heavy?' heavy':''}" style="--sc:var(${r.c.c})"><div class="rhead"><span class="av">${r.c.ab}</span>
+          <span class="rname">${r===w?'🏆 ':''}<span class="rank num">${i+1}.</span> ${r.c.name}<small>${r.c.noDelivery||r.c.pickup?'🏪':'🚚 '+slotLabel(r.slotH)+' ·'} ${feeLine(r)}</small><small>${BR[r.c.id]?esc(brLabel(r.c)):state.cmpBy==='city'&&!branchesOf(r.c,cmpCity()).length?`אין לרשת סניף ב${esc(cmpCity())} · מחיר רגיל ברשת`:AUTO[r.c.id]&&AUTO[r.c.id].how==='near'?`📍 הסניף הקרוב: ${esc(AUTO[r.c.id].nb)} · ${AUTO[r.c.id].exact?'':'כ-'}${Math.round(AUTO[r.c.id].km)} ק״מ · מחיר רגיל ברשת`:'מחיר רגיל ברשת'}${allBranches(r.c).length?` · <button class="link" type="button" data-pickbr="${r.c.id}">${BR[r.c.id]?'החלף':'בחר סניף'}</button>`:''}</small></span><span class="rtotal num">${r.lines.length?fmt(r.show):'—'}${r.missing.length&&r.lines.length?`<small class="sub">כולל הערכה ל${nOf(r.missing.length,'מוצר חסר','מוצרים חסרים')}</small>`:''}${!state.withFee&&r.fee?`<small class="sub">+ משלוח ${fmt(r.fee)}</small>`:''}</span></div>
           <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
           ${r.missing.length||r.belowMin||r.subs?`<div class="pills">${r.missing.length?`<span class="pill warn">${r.missing.length===1?'חסר מוצר אחד':`חסרים ${nOf(r.missing.length,'מוצר אחד','מוצרים')}`}</span>`:''}${r.subs?`<span class="pill y">${r.subs===1?'תחליף אחד':r.subs+' תחליפים'}</span>`:''}${r.coupon?`<span class="pill good">🎟️ קופון −${fmt(r.coupon.off)}</span>`:''}${r.promos?`<span class="pill good">${r.promos===1?'מבצע אחד':r.promos+' מבצעים'}</span>`:''}${r.belowMin?`<span class="pill warn">${state.withFee?'':'למשלוח: '}חסר ${fmt(r.c.min-r.sub)} למינימום הזמנה (${fmt(r.c.min)})</span>`:''}</div>`:''}
           <button class="btn sm ${r===w?'y':'ghost'}" type="button" data-checkout="${r.c.id}">הזמן מ${r.c.short}</button></div>`}).join('')}</div>
@@ -2422,7 +2433,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='135';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='136';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
