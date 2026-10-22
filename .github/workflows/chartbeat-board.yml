@@ -1,0 +1,64 @@
+name: Chartbeat Board
+
+# Builds the Chartbeat Board desktop app for Windows and Mac and attaches both files to the "chartbeat-board" release.
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main, chartbeat-board]
+    paths: ['chartbeat-board/**', '.github/workflows/chartbeat-board.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: --win portable --x64
+          - os: macos-latest
+            target: --mac dmg --universal
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: chartbeat-board
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: npx electron-builder ${{ matrix.target }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.os }}
+          path: |
+            chartbeat-board/dist/*.exe
+            chartbeat-board/dist/*.dmg
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Publish to the chartbeat-board release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la out
+          NOTES="לוח גולשים בזמן אמת מנתוני Chartbeat.
+          Windows: הורידו את ChartbeatBoard-Windows.exe ופתחו. אם מופיעה אזהרה כחולה: More info ואז Run anyway.
+          Mac: הורידו את ChartbeatBoard-Mac.dmg, גררו את האפליקציה ל-Applications. בפתיחה הראשונה: קליק ימני על האפליקציה ואז Open (או הגדרות המערכת > פרטיות ואבטחה > Open Anyway).
+          בתוך האפליקציה לוחצים על ⚙ ומזינים מפתח API ושם אתר."
+          gh release view chartbeat-board >/dev/null 2>&1 || gh release create chartbeat-board --target "$GITHUB_SHA" --title "Chartbeat Board" --notes "$NOTES"
+          gh release upload chartbeat-board out/* --clobber
+          gh release edit chartbeat-board --title "Chartbeat Board" --notes "$NOTES"
