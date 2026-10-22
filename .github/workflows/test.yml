@@ -1,0 +1,43 @@
+name: Tests
+
+# Server unit tests and the app's browser suite (behaviour, accessibility and security), on every change to the app,
+# the server code or the tests. The browser tests read the published app data from the gh-pages branch.
+on:
+  push:
+    branches: [main]
+    paths: ['app/**', 'src/**', 'test/**', 'mobile/**', '.github/workflows/test.yml']
+  pull_request:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node test/run.js
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Playwright and Chromium
+        run: |
+          pip install playwright==1.48.0
+          python -m playwright install --with-deps chromium
+      - name: App data from gh-pages
+        run: |
+          git fetch --depth 1 origin gh-pages
+          git worktree add site origin/gh-pages
+      - name: Browser suite
+        run: python test/browser/run.py --data site

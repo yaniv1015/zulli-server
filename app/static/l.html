@@ -31,7 +31,8 @@ ul{margin:8px 0 0;padding-inline-start:20px}
 <script>
 // The list is inside the address (after #). This page only reads it; nothing is sent anywhere.
 (function () {
-  var data = (location.hash || '').replace(/^#/, '');
+  /* only the list's own characters (base64url): nothing else can reach the app link below */
+  var data = (location.hash || '').replace(/^#/, '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 8000);
   var names = [];
   try {
     var o = JSON.parse(decodeURIComponent(escape(atob(data.replace(/-/g, '+').replace(/_/g, '/')))));

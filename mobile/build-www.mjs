@@ -8,6 +8,7 @@ const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <base href="${DATA}">
 <meta name="theme-color" content="#0B0B0F">
+<meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri ${new URL(DATA).origin}; form-action 'none'">
 </head><body>${body}</body></html>`;
 await mkdir(new URL('./www/', import.meta.url), { recursive: true });
 await writeFile(new URL('./www/index.html', import.meta.url), html);

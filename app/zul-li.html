@@ -905,7 +905,7 @@ html[data-contrast="1"] .card,html[data-contrast="1"] .btn,html[data-contrast="1
 <div class="toast" id="toast" role="status" dir="rtl"></div>
 <div id="sheetRoot" dir="rtl"></div>
 
-<script>
+<script>var _fol=null;/* compared-chains cache (see followed) */
 /* ================= data ================= */
 const CH=[
  {id:'shufersal',name:'שופרסל אונליין',short:'שופרסל',ab:'ש',c:'--s1',mult:1.05,fee:35.9,min:null,slot:3,club:'שופרסל Club',url:'https://www.shufersal.co.il/online/he/'},
@@ -1532,7 +1532,7 @@ function classify(name,kws,noCut){const full=' '+norm(name).replace(/[.,()\-/*]/
       if(!best||i<best.i||(i===best.i&&x.k.length>best.len))best={t:x.t,i,len:x.k.length}}}}
   if(!best&&s!==full){/* nothing before the flavor word: a drink or a home product may be named after it («משקה קל בטעם ענבים פריגת») */const t=classify(name,kws,true);return t!=='other'&&['drink','home','baby'].includes(TYPES[t]?.[2])?t:'other'}
   return best?best.t:'other'}
-function rebuildIndex(){for(const k in VB)delete VB[k];for(const k in BYBC)delete BYBC[k];
+function rebuildIndex(){_fol=null;for(const k in VB)delete VB[k];for(const k in BYBC)delete BYBC[k];
   for(const v of V){VB[v.id]=v;if(v.bc)BYBC[v.bc]=v}_byType=null;for(const k in _refSize)delete _refSize[k];_mega=null;_megaDay=''}
 function applyReal(sum){
   if(!sum||typeof sum.products!=='object')throw new Error('format');
@@ -1629,11 +1629,12 @@ function cleanState(){
  if(!CITIES[state.city]){state.city='תל אביב-יפו';state.branch={}}if(state.nb===undefined)state.nb='';
  state.knownChains=CH.map(c=>c.id);state.seenMega=state.seenMega||[];if(state.notif.mega===undefined)state.notif.mega=true}
 /* saved twice: some app views clear localStorage between visits, IndexedDB is the backup */
-function save(){const j=JSON.stringify(state);try{localStorage.setItem('zulli4',j)}catch(e){}idbSet('state',j).catch(()=>{})}
+function save(){_fol=null;const j=JSON.stringify(state);try{localStorage.setItem('zulli4',j)}catch(e){}idbSet('state',j).catch(()=>{})}
 /* chains that deliver nationwide are always compared; neighborhood chains (local) only where they have a branch in the city */
 const NEAR_KM=15;
 const localHere=c=>(state.anywhere||[]).includes(c.id)||(state.cmpBy==='city'?branchesOf(c,cmpCity()).length>0:(branchesOf(c).length>0||!!(AUTO[c.id]&&AUTO[c.id].how==='near'&&AUTO[c.id].km<=NEAR_KM)));
-const followed=()=>CH.filter(c=>state.follow.includes(c.id)&&(!REAL||REAL.chains.includes(c.id))&&(!c.local||!REAL||(localHere(c)&&LOADED.has(c.id))));
+/* the chains compared: worked out once per task (it was recomputed for every product while a list was drawn, ~0.2 s per screen) */
+const followed=()=>{if(_fol)return _fol.slice();_fol=CH.filter(c=>state.follow.includes(c.id)&&(!REAL||REAL.chains.includes(c.id))&&(!c.local||!REAL||(localHere(c)&&LOADED.has(c.id))));setTimeout(()=>{_fol=null},0);return _fol.slice()};
 function log(txt){const me=state.profile.name||'אני';const e={ts:Date.now(),txt:`${me} ${txt}`};state.family.feed.unshift(e);state.family.feed=state.family.feed.slice(0,8);FAM.feedOut.push(e)}
 /* ================= family list (shared, live) =================
    One shared document per family, families/<code>: {items, rev, by, ts, feed, members}. Everyone who opens this app
@@ -2435,7 +2436,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='137';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='138';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -2721,8 +2722,10 @@ async function shareText(title,text){
 const LIST_LINK='https://yaniv1015.github.io/zulli-server/l.html#';
 const b64u={enc:s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''),dec:s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))))};
 function encodeList(items){return b64u.enc(JSON.stringify({n:'',i:items.map(it=>[it.v||('t:'+it.t),+it.q||1,it.bh||''].filter((x,k)=>k<2||x))}))}
-function decodeList(data){try{const o=JSON.parse(b64u.dec(String(data).trim()));return (o.i||[]).map(([id,q,bh])=>{if(String(id).startsWith('t:')){const t=id.slice(2);return TYPES[t]?{t,v:null,q:+q||1,bh:bh||undefined}:null}
-  const v=VB[id];return v?{t:v.t,v:v.id,q:+q||1}:null}).filter(Boolean)}catch(e){return null}}
+function decodeList(data){try{const o=JSON.parse(b64u.dec(String(data).trim()));return (o.i||[]).map(([id,q,bh])=>{if(String(id).startsWith('t:')){const t=id.slice(2);return TYPES[t]?{t,v:null,q:qOk(q),bh:typeof bh==='string'&&bh.length<=40?bh:undefined}:null}
+  const v=VB[id];return v?{t:v.t,v:v.id,q:qOk(q)}:null}).filter(Boolean).slice(0,200)}catch(e){return null}}
+/* a shared link is someone else's data: a quantity between 0.5 and 99, at most 200 lines */
+const qOk=q=>{q=+q;return isFinite(q)&&q>0?Math.min(99,Math.max(.5,Math.round(q*2)/2)):1};
 const listLinkOf=t=>{const m=String(t||'').match(/(?:l\.html#|mozil:\/\/l\/)([A-Za-z0-9_-]{8,})/);return m?m[1]:null};
 function openSharedList(data){const items=decodeList(data);if(!items||!items.length){toast('הקישור לרשימה לא תקין או ישן');return}
   openSheet('📲 רשימה ששיתפו איתך',`<p>${nOf(items.length,'מוצר אחד','מוצרים')}:</p><ul class="sub" style="margin:0;padding-inline-start:18px">${items.slice(0,40).map(it=>`<li>${esc(it.v?vLabel(VB[it.v]):TYPES[it.t][0])}${it.q>1?' × '+it.q:''}</li>`).join('')}</ul>
@@ -3005,9 +3008,10 @@ function openLinkSave(prefill){let busy=false,ai=null;
       const LR=await resolveLink(L);(state.links||(state.links=[])).unshift({id:nid(),url:L.url,site:L.site,embed:LR.embed,title,ingr,ts:Date.now()});state.links=state.links.slice(0,100);save();
       closeSheet();toast('💾 נשמר בפיד שלך');if(state.tab!=='feed')go('feed');else renderFeed();
       if(ingr)setTimeout(()=>openIngrSheet({dish:title,note:ai?ai.note:'',ingredients:ingrRows(ingr),written:!ai},null),350)}})}
-function linksHtml(){const L=state.links||[];if(!L.length)return '';
+const EMBED_OK=/^https:\/\/www\.(tiktok\.com\/embed\/v2\/\d+|instagram\.com\/(p|reel)\/[A-Za-z0-9_-]+\/embed|facebook\.com\/plugins\/video\.php\?|youtube\.com\/embed\/[A-Za-z0-9_-]+)/;
+function linksHtml(){const L=(state.links||[]).filter(x=>x&&/^https?:\/\//i.test(String(x.url||'')));L.forEach(x=>{if(x.embed&&!EMBED_OK.test(x.embed))x.embed=null});if(!L.length)return '';
   for(const x of L)if(!x.embed&&!x.tried){x.tried=1;resolveLink(linkInfo(x.url)).then(R=>{if(R&&R.embed){x.embed=R.embed;save();if(state.tab==='feed')renderFeed()}})}
-  return `<section class="card"><h2>💾 המתכונים ששמרתי</h2><div class="vfeed">${L.map(x=>`<article class="post lpost"><div class="vwrap">${x.embed?`<iframe src="${esc(x.embed)}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="${esc(x.title)}"></iframe>`:`<div class="lfallback"><p>לא הצלחנו להציג את הסרטון הזה כאן.</p><small>קישורי שיתוף קצרים נפתחים במלואם באפליקציית אנדרואיד. אפשר גם להדביק את הקישור המלא של הסרטון.</small><a class="link" href="${esc(x.url)}" target="_blank" rel="noopener">צפה באתר ↗</a></div>`}</div>
+  return `<section class="card"><h2>💾 המתכונים ששמרתי</h2><div class="vfeed">${L.map(x=>`<article class="post lpost"><div class="vwrap">${x.embed?`<iframe src="${esc(x.embed)}" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="${esc(x.title)}"></iframe>`:`<div class="lfallback"><p>לא הצלחנו להציג את הסרטון הזה כאן.</p><small>קישורי שיתוף קצרים נפתחים במלואם באפליקציית אנדרואיד. אפשר גם להדביק את הקישור המלא של הסרטון.</small><a class="link" href="${esc(x.url)}" target="_blank" rel="noopener">צפה באתר ↗</a></div>`}</div>
     <div class="pb"><div class="row2 spread"><b>${esc(x.title)}</b><a class="link" href="${esc(x.url)}" target="_blank" rel="noopener">פתח ב${esc(linkInfo(x.url)?.name||'אתר')} ↗</a></div>
     ${x.ingr?`<details><summary class="sub">🧾 מצרכים</summary><div class="ingr">${esc(x.ingr)}</div></details>`:''}
     <div class="row2"><button class="btn sm" type="button" data-lkadd="${esc(x.id)}">🛒 הוסף מצרכים לסל</button><button class="link danger" type="button" data-lkdel="${esc(x.id)}">מחק</button></div></div></article>`).join('')}</div></section>`}
