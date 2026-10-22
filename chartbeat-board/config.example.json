@@ -1,0 +1,9 @@
+{
+  "apiKey": "YOUR_CHARTBEAT_API_KEY",
+  "host": "example.co.il",
+  "title": "CHART BEET",
+  "refreshSeconds": 15,
+  "topLimit": 10,
+  "timeZone": "Asia/Jerusalem",
+  "demo": false
+}

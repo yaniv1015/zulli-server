@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chartbeat Board</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="board">
+    <header class="card head">
+      <div class="clock" id="clock">--:--</div>
+      <div class="brand" id="brand">CHART<br><span>BEET</span></div>
+      <button class="gear" id="openSettings" title="הגדרות" aria-label="הגדרות">⚙</button>
+    </header>
+
+    <section class="card now">
+      <h2>גולשים עכשיו</h2>
+      <div class="big" id="people">—</div>
+      <div class="cmp" id="cmpWeek"></div>
+      <div class="cmp" id="cmp4w"></div>
+    </section>
+
+    <section class="tiles">
+      <div class="card tile"><h3>צפיות היום</h3><div id="pageviews">—</div></div>
+      <div class="card tile"><h3>יוניקים היום</h3><div id="uniques">—</div></div>
+      <div class="card tile"><h3>המשך גלישה</h3><div id="recirc">—</div></div>
+      <div class="card tile"><h3>זמן מעורבות</h3><div id="engaged">—</div></div>
+    </section>
+
+    <section class="card top">
+      <label class="hide-landing"><input type="checkbox" id="hideLanding" checked> הסתר דפי נחיתה</label>
+      <table>
+        <thead><tr><th></th><th>עמוד</th><th>גולשים</th></tr></thead>
+        <tbody id="pages"></tbody>
+      </table>
+    </section>
+
+    <section class="splits">
+      <div class="card split"><h3>מקורות תנועה</h3><ul id="sources"></ul></div>
+      <div class="card split"><h3>מכשיר</h3><ul id="devices"></ul></div>
+      <div class="card split"><h3>סוג קורא</h3><ul id="readers"></ul></div>
+    </section>
+
+    <footer class="status" id="status"></footer>
+  </main>
+
+  <dialog id="settings">
+    <form method="dialog" id="settingsForm">
+      <h2>הגדרות Chartbeat</h2>
+      <label>מפתח API <input name="apiKey" autocomplete="off" placeholder="API key"></label>
+      <label>אתר (host) <input name="host" placeholder="example.co.il" dir="ltr"></label>
+      <label>כותרת <input name="title"></label>
+      <label>רענון (שניות) <input name="refreshSeconds" type="number" min="5" max="300"></label>
+      <label>מספר כתבות <input name="topLimit" type="number" min="3" max="30"></label>
+      <label class="row"><input name="demo" type="checkbox"> מצב הדגמה (בלי Chartbeat)</label>
+      <p class="hint">המפתח נשמר במחשב הזה בלבד ולא נשלח לדפדפן.</p>
+      <div class="actions">
+        <button value="cancel" formnovalidate>ביטול</button>
+        <button value="save" class="primary">שמירה</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
