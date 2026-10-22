@@ -52,6 +52,10 @@ async function cb(cfg, endpoint, params = {}, { text = false } = {}) {
   return text ? res.text() : res.json();
 }
 
+// מנסה את הגרסה החדשה ואם היא לא קיימת לחשבון, את v3 שמופיעה בהדרכה של Chartbeat
+const cbLive = (cfg, name, params) =>
+  cb(cfg, `/live/${name}/v4/`, params).catch(() => cb(cfg, `/live/${name}/v3/`, params));
+
 const num = (...vals) => {
   for (const v of vals) if (typeof v === 'number' && Number.isFinite(v)) return v;
   return 0;
@@ -183,8 +187,8 @@ export async function buildDashboard(cfg, caches) {
     return { ...demoDashboard(), demo: true, configured: Boolean(cfg.apiKey && cfg.host), title: cfg.title };
   }
   const [qs, tp] = await Promise.allSettled([
-    cb(cfg, '/live/quickstats/v4/').then(parseQuickstats),
-    cb(cfg, '/live/toppages/v4/', { limit: 50 }).then(parseToppages),
+    cbLive(cfg, 'quickstats').then(parseQuickstats),
+    cbLive(cfg, 'toppages', { limit: 50 }).then(parseToppages),
   ]);
   const cmp = caches.comparisons(cfg);
   const tot = caches.totals(cfg);
@@ -263,7 +267,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   if (arg('probe')) {
     // מדפיס את התשובות הגולמיות מ-Chartbeat, לבדיקה שהחשבון מחזיר את מה שהלוח מצפה לו
     const cfg = loadConfig(path.join(HERE, 'config.json'));
-    for (const [ep, p] of [['/live/quickstats/v4/', {}], ['/live/toppages/v4/', { limit: 3 }]]) {
+    for (const [ep, p] of [['/live/quickstats/v4/', {}], ['/live/quickstats/v3/', {}], ['/live/toppages/v4/', { limit: 3 }], ['/live/toppages/v3/', { limit: 3 }]]) {
       try { console.log(ep, JSON.stringify(await cb(cfg, ep, p), null, 2)); } catch (e) { console.log(ep, 'שגיאה:', e.message); }
     }
     try { console.log('comparisons', await comparisons(cfg)); } catch (e) { console.log('comparisons שגיאה:', e.message); }
