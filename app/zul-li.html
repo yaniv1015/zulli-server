@@ -1,7 +1,7 @@
 <title>מוזיל</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;700;800&family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: phone-first app column, five screens switched by a fixed bottom nav; bottom sheets for pickers, scan, receipt, checkout and invoices */
 :root{
@@ -883,6 +883,135 @@ html[data-contrast="1"] .card,html[data-contrast="1"] .btn,html[data-contrast="1
 .cmplist li.picked{outline:3px solid var(--ink);outline-offset:-1px}
 .rfhead{flex-wrap:wrap}.rfhead .rfedit{margin-inline-start:auto;align-self:center}
 .rfeditbox{display:flex;flex-direction:column;gap:8px;padding:12px;border:1.5px dashed var(--line);border-radius:16px;margin-bottom:6px}
+/* ================= skin: מכולת רטרו (F) =================
+   Cream ground, deep brown ink, tomato for the one action that matters, olive for savings, mustard for highlights.
+   Fredoka (round, retro) for headings and every number; Rubik for everything you read. Calm surfaces, one shape language
+   (soft rounded rectangles), thin borders and soft shadows, so prices breathe and the order button is the loudest thing. */
+html[data-skin="retro"]{
+  --bg:#F7EEDC;--surface:#FFFFFF;--surface2:#FFFBF3;--ink:#2A1508;--muted:#5C4330;--line:#E3D3B4;--line2:#EFE3CC;
+  --accent:#B23A0B;--accent-soft:#FBE3D6;--tag:#B23A0B;--tag-ink:#FFFFFF;--brand:#B23A0B;--brand2:#256B43;
+  --good:#256B43;--good-soft:#E3F0E6;--warn:#B23A0B;--warn-soft:#FBE3D6;
+  --lime:#E8A600;--lime-soft:#FBEFD0;--coral:#B23A0B;--on-lime:#2A1508;--olive:#256B43;--mustard:#E8A600;
+  --btn-bg:#2A1508;--btn-ink:#FFFBF3;--pill-on:#EADBC0;
+  --card-sh:0 1px 0 #E3D3B4,0 10px 24px -18px rgba(42,21,8,.38);
+  --cta-sh:0 18px 36px -12px rgba(178,58,11,.6),0 4px 10px -4px rgba(42,21,8,.25);
+  --hero-a:#2A1508;--hero-b:#3A2212;--hero-c:#5C2A0E;--hero-dot:#E8A600;--hero-ink:#FFFBF3;
+  --display:"Fredoka","Rubik",system-ui,sans-serif;--body:"Rubik",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --ease:cubic-bezier(.2,.8,.2,1)}
+@media (prefers-color-scheme:dark){html[data-skin="retro"]:not([data-theme="light"]){
+  --bg:#1A0F07;--surface:#26170D;--surface2:#2F1D10;--ink:#F7EEDC;--muted:#CDB89A;--line:#4A3322;--line2:#3A2618;
+  --accent:#FF7A45;--accent-soft:#3D1D0E;--tag:#FF7A45;--tag-ink:#1A0F07;--brand:#FF7A45;--good:#6FCB8F;--good-soft:#183323;--warn:#FF7A45;--warn-soft:#3D1D0E;
+  --lime:#F2B705;--lime-soft:#3A2A0C;--coral:#E2551F;--on-lime:#1A0F07;--olive:#6FCB8F;--btn-bg:#F7EEDC;--btn-ink:#2A1508;--pill-on:#4A3322;
+  --card-sh:0 0 0 1px rgba(255,240,220,.03),0 14px 30px -20px rgba(0,0,0,.8);color-scheme:dark}}
+html[data-skin="retro"][data-theme="dark"]{
+  --bg:#1A0F07;--surface:#26170D;--surface2:#2F1D10;--ink:#F7EEDC;--muted:#CDB89A;--line:#4A3322;--line2:#3A2618;
+  --accent:#FF7A45;--accent-soft:#3D1D0E;--tag:#FF7A45;--tag-ink:#1A0F07;--brand:#FF7A45;--good:#6FCB8F;--good-soft:#183323;--warn:#FF7A45;--warn-soft:#3D1D0E;
+  --lime:#F2B705;--lime-soft:#3A2A0C;--coral:#E2551F;--on-lime:#1A0F07;--olive:#6FCB8F;--btn-bg:#F7EEDC;--btn-ink:#2A1508;--pill-on:#4A3322;
+  --card-sh:0 0 0 1px rgba(255,240,220,.03),0 14px 30px -20px rgba(0,0,0,.8);color-scheme:dark}
+/* the ground: cream, with the tricolor shop-sign stripe along the top */
+html[data-skin="retro"] body{background:linear-gradient(#B23A0B 0 4px,#E8A600 4px 8px,#256B43 8px 12px) top/100% 12px no-repeat,var(--bg);background-attachment:scroll;font-family:var(--body);padding-top:24px}
+html[data-skin="retro"] h1,html[data-skin="retro"] h2,html[data-skin="retro"] h3,html[data-skin="retro"] .card h2,html[data-skin="retro"] .sheet h2{font-family:var(--display);font-weight:700;letter-spacing:0}
+/* every number in one face, digits of one width so columns line up */
+html[data-skin="retro"] .num,html[data-skin="retro"] .rtotal,html[data-skin="retro"] .stat .v,html[data-skin="retro"] .cmplist .cmpk{font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums}
+/* logo */
+html[data-skin="retro"] .logo .lgtext{font-family:var(--display);font-weight:700;color:var(--accent);letter-spacing:0}
+html[data-skin="retro"] .lgarrow{fill:#E8A600}
+/* surfaces: soft rounded rectangles, thin warm borders */
+html[data-skin="retro"] .card{background:var(--surface);border:1.5px solid var(--line);border-radius:20px;box-shadow:var(--card-sh)}
+html[data-skin="retro"] .sheet{background:var(--surface2);border-radius:24px 24px 0 0}
+html[data-skin="retro"] .loc{background:var(--surface2);border:1.5px solid var(--line);border-radius:14px}
+html[data-skin="retro"] input[type=text],html[data-skin="retro"] input[type=search],html[data-skin="retro"] input[type=email],html[data-skin="retro"] input[type=tel],html[data-skin="retro"] input[type=url],html[data-skin="retro"] textarea,html[data-skin="retro"] select{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;color:var(--ink)}
+html[data-skin="retro"] #q{border:1.5px solid var(--ink)}
+/* buttons: brown for the ordinary, tomato only for the action that matters */
+html[data-skin="retro"] .btn{background:var(--btn-bg);color:var(--btn-ink);border-radius:14px;box-shadow:none;transition:transform .16s var(--ease),box-shadow .2s ease,background-color .2s}
+html[data-skin="retro"] .btn.y{background:#B23A0B;color:#FFFFFF;box-shadow:var(--cta-sh)}
+html[data-skin="retro"] .btn.y:active{box-shadow:0 8px 18px -10px rgba(178,58,11,.6)}
+html[data-skin="retro"] .btn.k{background:var(--ink);color:var(--bg)}
+html[data-skin="retro"] .btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+html[data-skin="retro"] .btn.ghost:hover{border-color:var(--ink)}
+html[data-skin="retro"] .link{color:var(--ink);text-decoration-color:var(--mustard)}
+html[data-skin="retro"][data-theme="dark"] .link{color:var(--mustard);text-decoration-color:rgba(242,183,5,.4)}
+@media (prefers-color-scheme:dark){html[data-skin="retro"]:not([data-theme="light"]) .link{color:var(--lime);text-decoration-color:rgba(242,183,5,.4)}}
+/* chips, segmented controls and tags: cream at rest, tomato when chosen */
+html[data-skin="retro"] .chip{background:var(--surface2);border:1.5px solid var(--line);border-radius:14px;font-weight:600}
+html[data-skin="retro"] .chip:hover{background:var(--lime-soft);border-color:var(--line)}
+html[data-skin="retro"] .seg{background:var(--surface2);border:1.5px solid var(--line);border-radius:16px}
+html[data-skin="retro"] .seg button[aria-pressed=true],html[data-skin="retro"] .seg button[aria-selected=true],html[data-skin="retro"] .seg.two button[aria-checked="true"],html[data-skin="retro"] .a11yz button[aria-checked="true"]{background:#B23A0B;color:#FFFFFF;box-shadow:0 8px 16px -8px rgba(178,58,11,.7)}
+html[data-skin="retro"] .banner{background:var(--lime-soft);color:var(--ink);border-inline-start:4px solid var(--mustard);border-radius:14px}
+html[data-skin="retro"] .locline{background:var(--surface);box-shadow:var(--card-sh),inset 4px 0 0 var(--mustard)}
+html[data-skin="retro"] .addbox{box-shadow:var(--card-sh),inset 0 4px 0 var(--mustard)}
+html[data-skin="retro"] .helper{background:var(--surface2);border:1.5px solid var(--line);border-radius:16px}
+html[data-skin="retro"] .helper.wide{background:var(--btn-bg);color:var(--btn-ink)}
+html[data-skin="retro"] .moreadd{background:var(--surface2);border:1.5px solid var(--line)}
+/* pills */
+html[data-skin="retro"] .pill.good{background:var(--good-soft);color:var(--good)}
+html[data-skin="retro"] .pill.mega,html[data-skin="retro"] .pill.y{background:#B23A0B;color:#fff;box-shadow:none}
+/* list rows: raised white cards, no colored edge */
+html[data-skin="retro"] .it3{background:var(--surface);border:0;border-inline-start:0;border-radius:14px;box-shadow:0 1px 0 var(--line),0 6px 14px -10px rgba(42,21,8,.35)}
+html[data-skin="retro"] .it3 .th,html[data-skin="retro"] .it3 .ico{background:var(--bg)}
+html[data-skin="retro"] .it3>.step3{background:var(--bg)}
+html[data-skin="retro"] .step3 button[data-inc],html[data-skin="retro"]:not([data-theme=dark]) .step3 button[data-inc]{background:var(--ink);color:var(--bg)}
+/* stats and premium */
+html[data-skin="retro"] .stat{background:var(--lime);color:var(--on-lime)}
+html[data-skin="retro"] .stat.b{background:var(--olive);color:#FFFFFF}
+html[data-skin="retro"] .stat.k{background:#B23A0B;color:#FFFFFF}
+html[data-skin="retro"] .plan{background:#2A1508;border:0;color:#FFFBF3}
+html[data-skin="retro"] .plan .price{color:var(--mustard)}
+/* comparison */
+html[data-skin="retro"] .cmplist li{background:var(--surface);border-inline-start:0;border-radius:14px;box-shadow:0 1px 0 var(--line),0 4px 12px -6px rgba(42,21,8,.18)}
+html[data-skin="retro"] .cmplist li.win{background:var(--surface);box-shadow:0 0 0 2px var(--olive),0 18px 34px -18px rgba(37,107,67,.55)}
+html[data-skin="retro"] .cmpsave{color:var(--olive)}
+html[data-skin="retro"] .rrow{background:var(--surface);border:1.5px solid var(--line2);border-radius:16px;box-shadow:0 1px 0 var(--line),0 4px 12px -8px rgba(42,21,8,.2)}
+html[data-skin="retro"] .rrow.first{border-color:var(--olive);box-shadow:0 0 0 5px rgba(37,107,67,.10),0 22px 40px -20px rgba(37,107,67,.55)}
+html[data-skin="retro"] .rfpic{background:var(--surface);border:1.5px solid var(--line);border-radius:16px;box-shadow:0 4px 12px -8px rgba(42,21,8,.25)}
+/* the bottom bar: the cheapest chain in tomato, floating 12px over a calm cream menu */
+html[data-skin="retro"] .bestbar{bottom:calc(76px + env(safe-area-inset-bottom,0px));padding:0 12px}
+html[data-skin="retro"] .bestinfo{background:#B23A0B;border:0;color:#FFFFFF;border-radius:20px;box-shadow:var(--cta-sh)}
+html[data-skin="retro"] .bestinfo .bs{color:#FFE3C2}
+html[data-skin="retro"] .bestinfo .bn{font-family:var(--display);font-weight:700}
+html[data-skin="retro"] .bestinfo .bn b{font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums}
+html[data-skin="retro"] .bestbar .btn.bestgo,html[data-skin="retro"] .bestgo{background:#2A1508;color:#FFFBF3;border-radius:20px;box-shadow:0 10px 22px -12px rgba(42,21,8,.6)}
+html[data-skin="retro"][data-theme="dark"] .bestbar .btn.bestgo{background:#F7EEDC;color:#2A1508}
+@media (prefers-color-scheme:dark){html[data-skin="retro"]:not([data-theme="light"]) .bestbar .btn.bestgo{background:#F7EEDC;color:#2A1508}}
+html[data-skin="retro"] nav.bn{background:var(--surface2);border-top:1.5px solid var(--line);box-shadow:none}
+html[data-skin="retro"] nav.bn button{color:var(--muted);border-radius:14px}
+html[data-skin="retro"] nav.bn button[aria-current=page]{color:var(--ink);background:var(--pill-on);box-shadow:none;font-weight:700}
+html[data-skin="retro"] nav.bn .badge{background:#B23A0B;color:#fff}
+/* deal moments: the market-breakers card in deep brown */
+html[data-skin="retro"] .promocard{background:#2A1508!important;color:#FFFBF3}
+html[data-skin="retro"] .promocard .drow{border-bottom-color:#4A3322}
+html[data-skin="retro"] .promocard .seg{background:#3A2212;border-color:#4A3322}
+html[data-skin="retro"] .promocard .seg button[aria-pressed=true]{background:var(--mustard);color:#2A1508}
+html[data-skin="retro"] .promocard .btn.dadd{background:var(--mustard);color:#2A1508}
+html[data-skin="retro"] .promocard .brands button{background:#3A2212;border-color:#4A3322}
+/* story band on the home screen: warm, no neon */
+html[data-skin="retro"] .storyband{background:var(--surface2);border:1.5px solid var(--line);box-shadow:none}
+html[data-skin="retro"] .story{color:var(--ink)}
+html[data-skin="retro"] .story .ring{background:conic-gradient(from var(--ra),#B23A0B,#E8A600,#256B43,#B23A0B)}
+html[data-skin="retro"] .story .inner{border-color:var(--surface2)}
+html[data-skin="retro"] .story .inner.hl{background:radial-gradient(circle at 50% 115%,var(--g2) 0,transparent 68%),#FFF3DC}
+html[data-skin="retro"][data-theme="dark"] .story .inner.hl{background:radial-gradient(circle at 50% 115%,var(--g2) 0,transparent 68%),#3A2212}
+@media (prefers-color-scheme:dark){html[data-skin="retro"]:not([data-theme="light"]) .story .inner.hl{background:radial-gradient(circle at 50% 115%,var(--g2) 0,transparent 68%),#3A2212}}
+html[data-skin="retro"] .story small{color:var(--ink);font-weight:600}
+html[data-skin="retro"] .story .hlp{background:#B23A0B;color:#fff;border:2px solid var(--surface2);font-family:var(--display);font-weight:700}
+html[data-skin="retro"] .story.seen .ring{background:var(--line)}
+html[data-skin="retro"] .story.seen small{color:var(--muted)}
+html[data-skin="retro"] .story.seen .hlp{background:var(--line);color:var(--muted)}
+/* accessibility helpers in the skin's colors */
+html[data-skin="retro"] #readFab{background:var(--mustard);color:#2A1508}
+html[data-skin="retro"] #readFab.on{background:#B23A0B;color:#fff}
+html[data-skin="retro"] .readmode .reading{outline-color:#B23A0B}
+/* feel: everything pressable gives a little under the finger */
+html[data-skin="retro"] .chip,html[data-skin="retro"] .qchip,html[data-skin="retro"] .it3,html[data-skin="retro"] .rfpic,html[data-skin="retro"] .rfopt,html[data-skin="retro"] .helper,html[data-skin="retro"] .cmprow,html[data-skin="retro"] nav.bn button,html[data-skin="retro"] .step3 button,html[data-skin="retro"] .bestinfo,html[data-skin="retro"] .bestgo{transition:transform .16s var(--ease),box-shadow .2s ease,background-color .2s ease}
+html[data-skin="retro"] .chip:active,html[data-skin="retro"] .qchip:active,html[data-skin="retro"] .rfpic:active,html[data-skin="retro"] .rfopt:active,html[data-skin="retro"] .helper:active,html[data-skin="retro"] .cmprow:active,html[data-skin="retro"] .bestinfo:active,html[data-skin="retro"] .bestgo:active,html[data-skin="retro"] .btn:active{transform:scale(.98)}
+html[data-skin="retro"] .step3 button:active,html[data-skin="retro"] nav.bn button:active{transform:scale(.92)}
+html[data-skin="retro"] .rolling{display:inline-block;animation:rollin .5s var(--ease)}
+@keyframes rollin{0%{transform:translateY(-35%);opacity:.2}100%{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){html[data-skin="retro"] *{transition:none!important}html[data-skin="retro"] .rolling{animation:none}}
+.skinpick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.skinpick button{min-height:64px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.skinpick button i{display:flex;gap:3px}.skinpick button i span{width:14px;height:14px;border-radius:4px;display:block}
+.skinpick button[aria-checked="true"]{outline:3px solid var(--accent);outline-offset:1px}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -905,7 +1034,7 @@ html[data-contrast="1"] .card,html[data-contrast="1"] .btn,html[data-contrast="1
 <div class="toast" id="toast" role="status" dir="rtl"></div>
 <div id="sheetRoot" dir="rtl"></div>
 
-<script>var _fol=null;/* compared-chains cache (see followed) */
+<script>try{const _st=JSON.parse(localStorage.getItem('zulli4')||'{}');if((_st.skin||'retro')==='retro')document.documentElement.dataset.skin='retro'}catch(e){document.documentElement.dataset.skin='retro'}var _fol=null;/* compared-chains cache (see followed) */
 /* ================= data ================= */
 const CH=[
  {id:'shufersal',name:'שופרסל אונליין',short:'שופרסל',ab:'ש',c:'--s1',mult:1.05,fee:35.9,min:null,slot:3,club:'שופרסל Club',url:'https://www.shufersal.co.il/online/he/'},
@@ -2026,6 +2155,7 @@ function renderBasket(){
         <span class="bn"><span class="av" style="--sc:var(${w.c.c})" aria-hidden="true">${w.c.ab}</span><span class="bnn">${w.c.short}</span> <b class="num">${fmt(w.show)}</b></span>
         <span class="bs">${picked?(w.show-res[0].show>0.5?`יקר ב-${fmt(w.show-res[0].show)} מ${res[0].c.short} · `:''):save>0.5?`חוסך ${fmt(save)} · `:''}השוואה מלאה ›</span></button>
       <button type="button" class="btn y bestgo" data-checkout="${w.c.id}">להזמנה</button>`;
+    {const nb=bar.querySelector('.bestinfo .bn b');if(nb&&renderBasket._prev!=null&&renderBasket._prevChain===w.c.id)rollNum(nb,renderBasket._prev,w.show);renderBasket._prev=w.show;renderBasket._prevChain=w.c.id}
     bar.querySelector('#openCompare').onclick=()=>openCompare();document.querySelectorAll('[data-pickc]').forEach(b=>b.onclick=()=>{const id=b.dataset.pickc;state.pickChain=id===res[0].c.id?null:id;window.save();renderBasket();toast(`נבחרה ${CHB[id].name}${id===res[0].c.id?' (הזולה)':''} · "להזמנה" יזמין ממנה`)});if($('cmpAll'))$('cmpAll').onclick=()=>openCompare();
     bar.querySelector('[data-checkout]').onclick=()=>openCheckout(w.c.id);
   } else {bar.hidden=true;bar.innerHTML='';document.documentElement.classList.remove('hasbar')}
@@ -2436,7 +2566,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='138';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='139';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -4500,7 +4630,7 @@ const LEGAL={
   <h3>מנוי פרימיום</h3><p>מתחדש חודשית וניתן לביטול בכל עת, בהתאם לחוק הגנת הצרכן.</p></div>`]
 };
 /* account: location and payment stay open; every other card shows only its title until tapped */
-function accordion(root){const order=[...(state.profile.registered?[]:['👤']),'♿','📍','🎟️','💳','👤','🥗','🏪','🔔','📊','⭐','🔒'];
+function accordion(root){const order=[...(state.profile.registered?[]:['👤']),'♿','🎨','📍','🎟️','💳','👤','🥗','🏪','🔔','📊','⭐','🔒'];
   const secs=[...root.children].filter(x=>x.tagName==='SECTION');const key=sec=>sec.querySelector('h2')?.textContent.trim()||'';
   secs.sort((a,b)=>{const ia=order.findIndex(o=>key(a).startsWith(o)),ib=order.findIndex(o=>key(b).startsWith(o));return (ia<0?99:ia)-(ib<0?99:ib)}).forEach(x=>root.appendChild(x));
   state.accOpen=state.accOpen||[];
@@ -4549,6 +4679,18 @@ document.addEventListener('click',e=>{const z=e.target.closest('[data-a11yz]');i
   if(e.target.id==='a11yTest')speak('שלום, ככה נשמעת ההקראה במוזיל. אותה קנייה, פחות כסף.')});
 document.addEventListener('change',e=>{if(e.target.id==='a11yC'){a11y().contrast=e.target.checked;save();applyA11y()}else if(e.target.id==='a11yR'){a11y().read=e.target.checked;save();applyA11y();renderAccount();if(a11y().read)speak('הקראת טקסט פועלת. לחץ על טקסט כדי לשמוע אותו.')}else if(e.target.id==='a11yRate'){a11y().rate=+e.target.value;save()}});
 
+
+/* ================= skin: retro (F, default) or the earlier neon look ================= */
+const SKINS=[['retro','מכולת רטרו',['#F7EEDC','#B23A0B','#E8A600','#256B43']],['neon','ניאון',['#0B0B0F','#D7FF1F','#FF4B2B','#F3F4EE']]];
+function applySkin(){const k=state.skin||'retro';if(k==='retro')document.documentElement.dataset.skin='retro';else delete document.documentElement.dataset.skin}
+function skinCard(){const k=state.skin||'retro';return `<section class="card" id="skinCard"><h2>🎨 עיצוב</h2><p class="sub">אפשר לחזור לעיצוב הקודם בכל רגע.</p>
+  <div class="skinpick" role="radiogroup" aria-label="עיצוב האפליקציה">${SKINS.map(([id,n,c])=>`<button type="button" role="radio" data-skin="${id}" aria-checked="${k===id}"><i aria-hidden="true">${c.map(x=>`<span style="background:${x}"></span>`).join('')}</i>${n}</button>`).join('')}</div></section>`}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-skin]');if(!b||!b.closest('#skinCard'))return;state.skin=b.dataset.skin;save();applySkin();renderAccount();toast('העיצוב הוחלף: '+SKINS.find(x=>x[0]===state.skin)[1])});
+/* haptics: a short tick when something is added or chosen (phones that support it) */
+document.addEventListener('click',e=>{if(!e.target.closest('[data-inc],[data-dec],[data-addv],[data-addt],.chip,.qchip,[data-rv],[data-pickc],.rfopt,.story'))return;try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}},true);
+/* a price that changes rolls to its new value, like an odometer, instead of jumping */
+function rollNum(el,from,to,ms=650){if(!el||from==null||to==null||Math.abs(to-from)<.01||matchMedia('(prefers-reduced-motion: reduce)').matches){if(el&&to!=null)el.textContent=fmt(to);return}
+  const t0=performance.now();cancelAnimationFrame(el._roll);const step=t=>{const k=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-k,3);el.textContent=fmt(from+(to-from)*e);if(k<1)el._roll=requestAnimationFrame(step)};el._roll=requestAnimationFrame(step)}
 function renderAccount(){
   const p=state.profile,P=state.pref;
   $('screen').innerHTML=`
@@ -4562,6 +4704,7 @@ function renderAccount(){
       :`<p class="sub">כדי להזמין צריך להירשם: שם מלא, מייל, טלפון וכתובת מגורים.</p><button class="btn k" type="button" id="regOpen">📝 הרשמה</button>`}
     <div class="fgrid"><label class="f">שפה<select id="plang"><option value="he">עברית</option><option disabled>English (בקרוב)</option><option disabled>العربية (בקרוב)</option><option disabled>Русский (בקרוב)</option></select></label></div></section>
   ${a11yCard()}
+  ${skinCard()}
   <section class="card"><h2>🎟️ מועדונים וקופונים</h2>
     <p class="sub">${state.clubs.length?`חבר ב: ${state.clubs.filter(id=>CHB[id]).map(id=>CHB[id].club).join(', ')}`:'עוד לא סימנת מועדונים'} · ${(state.coupons||[]).filter(couponLive).length} קופונים פעילים</p>
     <button class="btn" type="button" id="openClubs">ניהול מועדונים וקופונים</button></section>
@@ -4707,7 +4850,7 @@ async function pushSync(){const L=LN();if(!L||!state.pushOn||!REAL)return;
 async function pushToggle(on){const L=LN();if(!L)return;if(on){let pr;try{pr=await L.requestPermissions()}catch(e){pr=null}
     if(!pr||pr.display!=='granted'){state.pushOn=false;save();update();toast('לא אושרו התראות. אפשר להפעיל אותן בהגדרות הטלפון');return}
     state.pushOn=true;save();update();toast('🔔 התראות לטלפון פועלות');pushSync()}else{state.pushOn=false;save();update();toast('התראות לטלפון כבויות')}}
-(async function boot(){try{applyA11y()}catch(e){}setTimeout(()=>{try{chainLogos()}catch(e){}},1500);setTimeout(()=>{pushSync().catch(()=>{})},8000);
+(async function boot(){try{applyA11y()}catch(e){}try{applySkin()}catch(e){}setTimeout(()=>{try{chainLogos()}catch(e){}},1500);setTimeout(()=>{pushSync().catch(()=>{})},8000);
   $('screen').innerHTML='<div class="empty">טוען מחירים אמיתיים…</div>';
   let loaded=false;
   if(state.real&&state.real.source!=='bundled'){try{const sum=await idbGet('summary');if(sum){applyReal(sum);REAL.source='file';loaded=true}}catch(e){}}
