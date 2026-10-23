@@ -560,6 +560,17 @@ nav.bn button .e{font-size:1.4rem}
 .vopt>span.vp{flex:none}
 .rfprod .grow{flex:1}
 .drow .thv{width:56px;height:56px}
+.dlabel{font-size:.82rem;color:var(--muted);opacity:.85;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.listacts{gap:8px;align-items:center}
+.cmpopts{border:1.5px solid var(--line);border-radius:16px;background:var(--surface2,var(--card));margin:0 0 12px;padding:0 12px}
+.cmpopts>summary{list-style:none;cursor:pointer;min-height:48px;display:flex;align-items:center;gap:10px;padding:8px 0}
+.cmpopts>summary>.grow{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.cmpopts>summary::-webkit-details-marker{display:none}
+.cmpopts>summary::after{content:'⌄';font-size:1.2rem;color:var(--muted)}
+.cmpopts[open]>summary::after{content:'⌃'}
+.cmpopts[open]{padding-bottom:12px}
+.h3{font-size:1.1rem;margin:0 0 10px}
+.listacts .moreb{min-width:44px;font-size:1.25rem;letter-spacing:1px;padding-inline:10px}
 
 .addrnow{border-radius:14px;padding:12px 14px;background:var(--warn-soft);font-size:1.02rem}
 .addrnow.ok{background:var(--good-soft)}
@@ -941,7 +952,7 @@ html[data-skin="retro"] .banner{background:var(--lime-soft);color:var(--ink);bor
 html[data-skin="retro"] .locline{background:var(--surface);box-shadow:var(--card-sh),inset 4px 0 0 var(--mustard)}
 html[data-skin="retro"] .addbox{box-shadow:var(--card-sh),inset 0 4px 0 var(--mustard)}
 html[data-skin="retro"] .helper{background:var(--surface2);border:1.5px solid var(--line);border-radius:16px}
-html[data-skin="retro"] .helper.wide{background:var(--btn-bg);color:var(--btn-ink)}
+html[data-skin="retro"] .helper.wide{background:var(--surface2);color:var(--ink);border:1.5px solid var(--line)}
 html[data-skin="retro"] .moreadd{background:var(--surface2);border:1.5px solid var(--line)}
 /* pills */
 html[data-skin="retro"] .pill.good{background:var(--good-soft);color:var(--good)}
@@ -977,13 +988,24 @@ html[data-skin="retro"] nav.bn{background:var(--surface2);border-top:1.5px solid
 html[data-skin="retro"] nav.bn button{color:var(--muted);border-radius:14px}
 html[data-skin="retro"] nav.bn button[aria-current=page]{color:var(--ink);background:var(--pill-on);box-shadow:none;font-weight:700}
 html[data-skin="retro"] nav.bn .badge{background:#B23A0B;color:#fff}
-/* deal moments: the market-breakers card in deep brown */
-html[data-skin="retro"] .promocard{background:#2A1508!important;color:#FFFBF3}
-html[data-skin="retro"] .promocard .drow{border-bottom-color:#4A3322}
-html[data-skin="retro"] .promocard .seg{background:#3A2212;border-color:#4A3322}
-html[data-skin="retro"] .promocard .seg button[aria-pressed=true]{background:var(--mustard);color:#2A1508}
+/* deal moments: the market-breakers card stays light for long scrolling, with a tomato header strip */
+html[data-skin="retro"] .promocard{background:var(--surface)!important;color:var(--ink);border:1.5px solid var(--line)!important;padding-top:0;overflow:hidden}
+html[data-skin="retro"] .promocard>h2{margin:0 -16px 10px;padding:14px 16px 12px;background:#B23A0B;color:#FFFFFF}
+html[data-skin="retro"] .promocard .sub,html[data-skin="retro"] .promocard .dline,html[data-skin="retro"] .dline{color:var(--muted)}
+html[data-skin="retro"] .promocard .drow{border-bottom-color:var(--line)}
 html[data-skin="retro"] .promocard .btn.dadd{background:var(--mustard);color:#2A1508}
-html[data-skin="retro"] .promocard .brands button{background:#3A2212;border-color:#4A3322}
+html[data-skin="retro"] .promocard .drow .grow>b,html[data-skin="retro"] .promocard .dline b{color:var(--ink)}
+html[data-skin="retro"] .promocard s{color:#B23A0B}
+html[data-skin="retro"] .promocard .seg{background:var(--surface2);border-color:var(--line)}
+html[data-skin="retro"] .promocard .seg button{color:var(--ink)}
+html[data-skin="retro"] .promocard .seg button[aria-pressed=true]{background:#B23A0B;color:#fff}
+html[data-skin="retro"] .promocard .link,html[data-skin="retro"] .promocard summary{color:#B23A0B;text-decoration-color:var(--mustard)}
+html[data-skin="retro"] .promocard .pill.good{background:#E3F1E8;color:#1E5A37}
+html[data-skin="retro"] .promocard .pill.warnp{background:#FBE6DC;color:#8E2E08}
+html[data-skin="retro"] .promocard .clubpick,html[data-skin="retro"] .promocard .brands button{color:var(--ink)}
+html[data-skin="retro"] .promocard .brands button{background:var(--surface2);border-color:var(--line)}
+html[data-skin="retro"] .promocard .thv{background:#fff;border:1px solid var(--line)}
+html[data-skin="retro"] .promocard .btn.ghost{background:var(--surface2);color:var(--ink);border:1.5px solid var(--line)}
 /* story band on the home screen: warm, no neon */
 html[data-skin="retro"] .storyband{background:var(--surface2);border:1.5px solid var(--line);box-shadow:none}
 html[data-skin="retro"] .story{color:var(--ink)}
@@ -1012,6 +1034,18 @@ html[data-skin="retro"] .rolling{display:inline-block;animation:rollin .5s var(-
 .skinpick button{min-height:64px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
 .skinpick button i{display:flex;gap:3px}.skinpick button i span{width:14px;height:14px;border-radius:4px;display:block}
 .skinpick button[aria-checked="true"]{outline:3px solid var(--accent);outline-offset:1px}
+
+/* v140 touch targets: every control at least 44px; inline links get a bigger invisible hit area */
+.btn.sm{min-height:44px}
+.step3 button,.it3>.step3 button{width:44px;height:44px}
+.itdel{width:44px;height:44px;top:2px;inset-inline-end:2px}
+.cmplist li{padding:0}
+.cmprow{padding:10px 12px;min-height:52px}
+.rrow .link,.promocard .link,.cmpopts .link,.rhead .link{display:inline-block;padding:12px 6px;margin:-12px -6px}
+label:has(>input[data-follow]){min-width:44px;min-height:44px;justify-content:center}
+.av{background-image:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.2))}
+html[data-skin="retro"][data-theme="dark"] .promocard .link,html[data-skin="retro"][data-theme="dark"] .promocard summary,html[data-skin="retro"][data-theme="dark"] .promocard s{color:#FF9A6B}
+@media (prefers-color-scheme:dark){html[data-skin="retro"]:not([data-theme="light"]) .promocard .link,html[data-skin="retro"]:not([data-theme="light"]) .promocard summary,html[data-skin="retro"]:not([data-theme="light"]) .promocard s{color:#FF9A6B}}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -2081,16 +2115,17 @@ function renderBasket(){
   if(state.done)html+=`<section class="card donebox" role="status"><div class="donehead"><span aria-hidden="true">✅</span><div><b>${state.done.ext?`הקנייה ב${esc(state.done.chain)} נשמרה`:`ההזמנה מ${esc(state.done.chain)} נקלטה`}</b><div class="sub">${state.done.ext?'סכום משוער ':''}${fmt(state.done.total)}${state.done.ext?'':` · מספר הזמנה ${esc(state.done.id)} (הדגמה)`}</div></div></div>
     <p>פתחנו לך <b>רשימה חדשה וריקה</b>. מה שקנית נשמר תחת "שמורים" ← "הזמנות קודמות".</p>
     <div class="row2"><button class="btn sm" type="button" id="doneOrder">🧾 ${state.done.ext?'לצפייה בסיכום':'לצפייה בחשבונית'}</button><button class="link" type="button" id="doneX">סגור</button></div></section>`;
-  if(!state.locSet||!state.profile.street)html+=`<button class="locline" type="button" id="locPrompt">📍 <b>לאן לשלוח?</b> הוסף כתובת למשלוח ›</button>`;
+  const notes=[];
+  if(!state.locSet||!state.profile.street)notes.push(`<button class="locline" type="button" id="locPrompt">📍 <b>לאן לשלוח?</b> הוסף כתובת למשלוח ›</button>`);
   const fresh=state.notif.mega?followedMega().filter(m=>!state.seenMega.includes(megaId(m))):[];
-  if(fresh.length){const m=fresh[0];html+=`<section class="alertslim" role="alert"><button type="button" class="alertgo" id="megaAll"><b>🚨 מבצע ב${m.c.short}:</b> ${esc(vLabel(m.v))} <b dir="ltr">−${m.pct}%</b> <u>לצפייה</u></button><button class="x" type="button" id="megaX" aria-label="סגור התראה">✕</button></section>`}
+  if(fresh.length){const m=fresh[0];notes.unshift(`<section class="alertslim" role="alert"><button type="button" class="alertgo" id="megaAll"><b>🚨 מבצע ב${m.c.short}:</b> ${esc(vLabel(m.v))} <b dir="ltr">−${m.pct}%</b> <u>לצפייה</u></button><button class="x" type="button" id="megaX" aria-label="סגור התראה">✕</button></section>`)}
   const due=dueLists();
-  if(due.length){const l=due[0];html+=`<section class="alertslim good" role="status"><button type="button" class="alertgo" id="dueGo"><b>⏰ הגיע הזמן ל"${esc(l.name)}"</b> · ${nOf(l.items.length,'מוצר אחד','מוצרים')} <u>טען והשווה</u></button><button class="x" type="button" id="dueX" aria-label="לא עכשיו">✕</button></section>`}
+  if(due.length){const l=due[0];notes.unshift(`<section class="alertslim good" role="status"><button type="button" class="alertgo" id="dueGo"><b>⏰ הגיע הזמן ל"${esc(l.name)}"</b> · ${nOf(l.items.length,'מוצר אחד','מוצרים')} <u>טען והשווה</u></button><button class="x" type="button" id="dueX" aria-label="לא עכשיו">✕</button></section>`)}
   const cnew=chainAlertDeals(true);
-  if(cnew.length){const by={};cnew.forEach(r=>by[r.cid]=(by[r.cid]||0)+1);html+=`<section class="alertslim good" role="status"><button type="button" class="alertgo" id="caGo"><b>🔔 ${cnew.length===1?'מבצע חדש':cnew.length+' מבצעים חדשים'}</b> ${Object.entries(by).map(([c,n])=>`ב${CHB[c].short} (${n})`).join(', ')} · עד ${cnew[0].pct}% הנחה <u>לצפייה</u></button><button class="x" type="button" id="caX" aria-label="סגור">✕</button></section>`}
+  if(cnew.length){const by={};cnew.forEach(r=>by[r.cid]=(by[r.cid]||0)+1);notes.unshift(`<section class="alertslim good" role="status"><button type="button" class="alertgo" id="caGo"><b>🔔 ${cnew.length===1?'מבצע חדש':cnew.length+' מבצעים חדשים'}</b> ${Object.entries(by).map(([c,n])=>`ב${CHB[c].short} (${n})`).join(', ')} · עד ${cnew[0].pct}% הנחה <u>לצפייה</u></button><button class="x" type="button" id="caX" aria-label="סגור">✕</button></section>`)}
   const drops=priceDrops();
-  if(drops.length){const d=drops[0];html+=`<section class="alertslim good" role="status"><button type="button" class="alertgo" id="dropGo"><b>📉 ירד המחיר:</b> ${esc(vLabel(d.v))} <b class="num">${fmt(d.from)} ← ${fmt(d.to)}</b> ב${d.c.short}${drops.length>1?` · ועוד ${drops.length-1}`:''} <u>לצפייה</u></button><button class="x" type="button" id="dropX" aria-label="סגור">✕</button></section>`}
-  if(!state.items.length&&state.lists.length&&!due.length){const l=state.lists[0];html+=`<button class="locline" type="button" id="quickList">📝 <b>הקנייה הקבועה:</b> טען את "${esc(l.name)}" (${nOf(l.items.length,'מוצר אחד','מוצרים')}) ›</button>`}
+  if(drops.length){const d=drops[0];notes.unshift(`<section class="alertslim good" role="status"><button type="button" class="alertgo" id="dropGo"><b>📉 ירד המחיר:</b> ${esc(vLabel(d.v))} <b class="num">${fmt(d.from)} ← ${fmt(d.to)}</b> ב${d.c.short}${drops.length>1?` · ועוד ${drops.length-1}`:''} <u>לצפייה</u></button><button class="x" type="button" id="dropX" aria-label="סגור">✕</button></section>`)}
+  if(!state.items.length&&state.lists.length&&!due.length){const l=state.lists[0];notes.unshift(`<button class="locline" type="button" id="quickList">📝 <b>הקנייה הקבועה:</b> טען את "${esc(l.name)}" (${nOf(l.items.length,'מוצר אחד','מוצרים')}) ›</button>`)}
   // 1. add products: one big search box and the other ways to add. Once the list has products, the other ways fold
   //    into one line under the list, so the list sits right under the search box
   const helpersHtml=`<div class="helpers">
@@ -2108,7 +2143,10 @@ function renderBasket(){
     <label class="f big" for="q">מה צריך לקנות?</label>
     <div class="qrow"><input type="search" id="q" class="bigq" placeholder="למשל: חלב, במבה, שמפו" autocomplete="off" enterkeyhint="search"><button type="button" class="micbtn" id="micBtn" aria-label="הוסף בקול: אמור את המוצרים" aria-pressed="false">🎤</button></div>
     <div class="results" id="qres" aria-live="polite"></div>
-    ${state.items.length?'':helpersHtml}</section>`;
+    </section>`;
+  /* one notice at a time, under the search box, most urgent first; dismissing it reveals the next */
+  {const one=['megaAll','dueGo','dropGo','caGo','quickList','locPrompt'].map(id=>notes.find(n=>n.includes(`id="${id}"`))).find(Boolean);if(one)html+=one}
+  if(!state.items.length)html+=`<section class="card" aria-labelledby="hh"><h2 id="hh" class="h3">➕ עוד דרכים להוסיף</h2>${helpersHtml}</section>`;
   // 2. the list
   const lineOf=new Map((w?.lines||[]).map(L=>[L.it.k,L]));
   const swapOf=new Map(w?swapsFor(w).map(x=>[x.it.k,x]):[]);
@@ -2128,16 +2166,15 @@ function renderBasket(){
   html+=budgetHtml(w&&state.items.length?w.total:0);
   html+=`<section class="card" aria-labelledby="bh">
     <div class="row2 spread"><h2 id="bh" tabindex="-1">הרשימה שלי${state.items.length?` <span class="cnt">${state.items.length}</span>`:''}</h2>
-      ${state.items.length?'<span class="row2" style="gap:14px"><button class="link danger" type="button" id="clearList">🗑 נקה רשימה</button><button class="link" type="button" id="moreList" aria-haspopup="dialog">עוד ⋯</button></span>':''}</div>
-    ${state.items.length?`<div class="row2" style="gap:8px"><button class="btn sm" type="button" id="storeMode">🛒 מצב סופר</button><button class="btn sm ghost" type="button" id="aisleSort" aria-pressed="${!!state.byAisle}">↕️ ${state.byAisle?'סדר רגיל':'לפי מעברים בסופר'}</button><button class="btn sm ghost" type="button" id="shareListBtn">📤 שתף</button></div>`:''}
+      ${state.items.length?'<span class="row2 listacts"><button class="btn sm" type="button" id="storeMode">🛒 מצב סופר</button><button class="btn sm ghost moreb" type="button" id="moreList" aria-haspopup="dialog" aria-label="עוד אפשרויות לרשימה: שיתוף, מיון, שמירה, ניקוי">⋯</button></span>':''}</div>
+    ${state.items.length&&state.byAisle?'<p class="sub">ממוין לפי מעברים בסופר · <button class="link" type="button" id="aisleSort" aria-pressed="true">סדר רגיל</button></p>':''}
     ${open?`<button class="hintline" type="button" id="pickFirst">${open===1?'מוצר אחד':open+' מוצרים'} בלי מותג או גודל · <u>בוא נדייק</u></button>`:''}
     ${state.items.length?`<ul class="items3">${state.byAisle?(()=>{let last='';return byShelf(state.items).map(({it,a})=>{const h=a!==last?`<li class="aisleh">${shelfName(a)}</li>`:'';last=a;return h+row(it)}).join('')})():state.items.map(row).join('')}</ul>`
       :'<div class="emptybox"><div style="font-size:2.4rem" aria-hidden="true">🛒</div><b>הרשימה ריקה</b><span class="sub">כתוב מוצר בחיפוש למעלה, או הדבק רשימה שכבר יש לך.</span></div>'}
   </section>`;
   /* the answer, once, after the list: the whole list priced at each chain in the shopper's area */
   if(state.items.length&&res.length){const R=res;const top=R.slice(0,6);if(w&&!top.includes(w))top.push(w);const hi=Math.max(...cheapestText(res).map(r=>r.show));
-    html+=`<section class="card cmpcard"><h2>🏆 איפה הכי זול לקנות את כל הרשימה</h2><p class="sub">${esc(locText())} · ${nOf(res.length,'רשת אחת','רשתות')}</p>
-      <p class="sub">לחץ על רשת כדי לבחור ממנה לקנות.</p><ol class="cmplist">${top.map((r,k)=>`<li class="${k===0?'win':''}${r===w?' picked':''}" style="--sc:var(${r.c.c})"><button type="button" class="cmprow" data-pickc="${r.c.id}" aria-pressed="${r===w}" aria-label="${esc(r.c.name)}, ${fmt(r.show)}${r.missing.length?', כולל הערכה ל'+r.missing.length+' מוצרים חסרים':''}. לחץ לבחירה"><span class="cmpk">${R.indexOf(r)+1}</span><span class="grow"><b>${esc(r.c.name)}${r===w&&picked?' · נבחרה':''}</b>${r.missing.length?`<small class="sub">כולל הערכה ל${r.missing.length===1?'מוצר אחד שחסר':'-'+r.missing.length+' מוצרים שחסרים'} ברשת</small>`:''}</span><b class="num">${fmt(r.show)}</b>${k===0&&hi-r.show>0.5?`<small class="cmpsave">חוסך עד ${fmt(hi-r.show)}</small>`:''}</button></li>`).join('')}</ol>
+    html+=`<section class="card cmpcard"><h2>🏆 איפה הכי זול לקנות את כל הרשימה</h2><p class="sub">${esc(locText())} · ${nOf(res.length,'רשת אחת','רשתות')} · לחץ על רשת כדי לבחור</p><ol class="cmplist">${top.map((r,k)=>`<li class="${k===0?'win':''}${r===w?' picked':''}" style="--sc:var(${r.c.c})"><button type="button" class="cmprow" data-pickc="${r.c.id}" aria-pressed="${r===w}" aria-label="${esc(r.c.name)}, ${fmt(r.show)}${r.missing.length?', כולל הערכה ל'+r.missing.length+' מוצרים חסרים':''}. לחץ לבחירה"><span class="cmpk">${R.indexOf(r)+1}</span><span class="grow"><b>${esc(r.c.name)}${r===w&&picked?' · נבחרה':''}</b>${r.missing.length?`<small class="sub">כולל הערכה ל${r.missing.length===1?'מוצר אחד שחסר':'-'+r.missing.length+' מוצרים שחסרים'} ברשת</small>`:''}</span><b class="num">${fmt(r.show)}</b>${k===0&&hi-r.show>0.5?`<small class="cmpsave">חוסך עד ${fmt(hi-r.show)}</small>`:''}</button></li>`).join('')}</ol>
       <button class="btn" type="button" id="cmpAll">השוואה מלאה בין כל הרשתות ›</button></section>`}
   if(state.items.length)html+=`<details class="moreadd"${state._moreAdd?' open':''}><summary><span>➕ עוד דרכים להוסיף<small class="sub">הדבקה, תמונה, ברקוד, אירועים ומבצעים</small></span></summary>${helpersHtml}<div class="results quick" id="qmore"></div></details>`;
   if(w)html+='<div class="barspace" aria-hidden="true"></div>';
@@ -2310,19 +2347,20 @@ function openCompare(){if(state.raceBy==='branch')return openBranchRace();
     const ev=evaluate();const res=state.mode==='fast'?ev:ev.slice().sort((a,b)=>a.eff-b.eff);const w=res.find(r=>!r.rankMin)||res[0];if(!w){closeSheet();return}
     const max=Math.max(...res.map(r=>r.show)),min=Math.min(...res.map(r=>r.show));const sw=swapsFor(w);const swTot=sw.reduce((a,s)=>a+s.save,0);
     const pos=USERPOS;
-    body.innerHTML=`${raceSeg('chain')}<div class="seg" role="group" aria-label="איך להשוות?">${[['address','📍 לפי הכתובת שלי'],['city','🏙️ לפי העיר']].map(([m,l])=>`<button type="button" data-cmpby="${m}" aria-pressed="${(state.cmpBy||'address')===m}">${l}</button>`).join('')}</div>
+    const optSum=[(state.cmpBy||'address')==='address'?'לפי הכתובת':'לפי '+cmpCity(),state.mode==='fast'?'הכי מהיר':'הכי זול',state.withFee?'כולל משלוח':'בלי משלוח'].join(' · ');
+    body.innerHTML=`<details class="cmpopts" id="cmpOpts"${state._cmpOpts?' open':''}><summary><span class="grow"><b>⚙️ איך משווים</b><small class="sub">${esc(optSum)}</small></span></summary>${raceSeg('chain')}<div class="seg" role="group" aria-label="איך להשוות?">${[['address','📍 לפי הכתובת שלי'],['city','🏙️ לפי העיר']].map(([m,l])=>`<button type="button" data-cmpby="${m}" aria-pressed="${(state.cmpBy||'address')===m}">${l}</button>`).join('')}</div>
       <p class="sub" style="margin-top:-4px">${(state.cmpBy||'address')==='address'?(pos&&!pos.none?(pos.prec===2?`מחירי הסניף הקרוב ל${esc(streetLine())}, ${esc(state.city)}, בכל רשת.`:`מחירי הסניף הקרוב למרכז ${esc(state.city)}. <button class="link" type="button" id="cmpAddr">הוסף כתובת</button> לדיוק.`):'מחפש את הסניפים הקרובים…'):`בכל רשת: הסניף בעיר שבחרת שבו הסל שלך הכי זול.${_cmpBusy?' <b>מחשב…</b>':''}`}</p>
       ${state.cmpBy==='city'?`<div class="cmpcity"><label class="f" for="cmpCity">עיר להשוואה <small class="sub">(הכתובת שלך לא משתנה)</small></label><div class="combo"><input type="text" id="cmpCity" value="${esc(cmpCity())}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="cmpCityList" aria-expanded="false" placeholder="התחל להקליד שם עיר"><div class="sugg" id="cmpCityList" role="listbox" hidden></div></div>${cmpCity()!==state.city?`<button class="link" type="button" id="cmpHome">חזרה ל${esc(state.city)}</button>`:''}</div>`:''}
       <div class="seg" role="group" aria-label="מה חשוב לך?">${[['cheap','💰 הכי זול'],['fast','⚡ הכי מהיר']].map(([m,l])=>`<button type="button" data-mode="${m}" aria-pressed="${state.mode===m}">${l}</button>`).join('')}</div>
       <div class="seg" role="group" aria-label="איך לחשב?">${[[0,'🛒 מחיר המוצרים'],[1,'🚚 כולל משלוח']].map(([m,l])=>`<button type="button" data-withfee="${m}" aria-pressed="${!!state.withFee===!!m}">${l}</button>`).join('')}</div>
       ${state.withFee?`<p class="sub" style="margin-top:-4px">כולל דמי משלוח שהרשתות מפרסמות. רשת שלא מפרסמת דמי משלוח מוצגת בלעדיהם, אז ההשוואה בינה לבין השאר לא מדויקת.</p>`:''}
+      <button class="btn ghost" type="button" id="cmpBranch">🏪 בדיקת הסל בסניף מסוים</button></details>
       ${sw.length?`<button class="savebtn" type="button" id="swapAll">💡 ${sw.length===1?'החלף מוצר אחד':`החלף ${nOf(sw.length,'מוצר אחד','מוצרים')}`} למותג זול יותר ב${w.c.short} · <b>חסוך ${fmt(swTot)}</b></button>`:''}
       ${(()=>{const sp=bestSplit(ev);if(!sp)return'';
         return `<details class="split"><summary><b>🔀 לקנות בשתי רשתות: ${fmt(sp.total)}</b><br><small>${nOf(sp.pa.length,'מוצר אחד','מוצרים')} ב${sp.A.c.short} + ${sp.pb.length} ב${sp.B.c.short} · חוסך <b>${fmt(sp.save)}</b> לעומת ${sp.single.c.short} לבד, כולל שני משלוחים</small></summary>
           ${[[sp.A,sp.pa,sp.sa,sp.fa],[sp.B,sp.pb,sp.sb,sp.fb]].map(([r,ls,sub,fee])=>`<div class="splitpart" style="--sc:var(${r.c.c})"><div class="row2 spread"><b><span class="av">${r.c.ab}</span> ${r.c.short}</b><span class="num">${fmt(sub)} + משלוח ${fee?fmt(fee):'חינם'}</span></div>
             <small class="sub">${ls.map(L=>esc(vLabel(VB[L.vid]))).join(' · ')}</small></div>`).join('')}
           <div class="row2"><button class="btn sm" type="button" id="splitSave">💾 שמור כשתי רשימות</button><button class="btn sm ghost" type="button" id="splitCopy">📋 העתק</button></div></details>`})()}
-      <button class="btn ghost" type="button" id="cmpBranch">🏪 בדיקת הסל בסניף מסוים</button>
       <div class="race">${res.map((r,i)=>{const pct=max===min?100:35+65*(r.show-min)/(max-min);
         return `<div class="rrow${r===w?' first':''}${r.heavy?' heavy':''}" style="--sc:var(${r.c.c})"><div class="rhead"><span class="av">${r.c.ab}</span>
           <span class="rname">${r===w?'🏆 ':''}<span class="rank num">${i+1}.</span> ${r.c.name}<small>${r.c.noDelivery||r.c.pickup?'🏪':'🚚 '+slotLabel(r.slotH)+' ·'} ${feeLine(r)}</small><small>${BR[r.c.id]?esc(brLabel(r.c)):state.cmpBy==='city'&&!branchesOf(r.c,cmpCity()).length?`אין לרשת סניף ב${esc(cmpCity())} · מחיר רגיל ברשת`:AUTO[r.c.id]&&AUTO[r.c.id].how==='near'?`📍 הסניף הקרוב: ${esc(AUTO[r.c.id].nb)} · ${AUTO[r.c.id].exact?'':'כ-'}${Math.round(AUTO[r.c.id].km)} ק״מ · מחיר רגיל ברשת`:'מחיר רגיל ברשת'}${allBranches(r.c).length?` · <button class="link" type="button" data-pickbr="${r.c.id}">${BR[r.c.id]?'החלף':'בחר סניף'}</button>`:''}</small></span><span class="rtotal num">${r.lines.length?fmt(r.show):'—'}${r.missing.length&&r.lines.length?`<small class="sub">כולל הערכה ל${nOf(r.missing.length,'מוצר חסר','מוצרים חסרים')}</small>`:''}${!state.withFee&&r.fee?`<small class="sub">+ משלוח ${fmt(r.fee)}</small>`:''}</span></div>
@@ -2339,6 +2377,7 @@ function openCompare(){if(state.raceBy==='branch')return openBranchRace();
     body.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;update();draw(body)});
     body.querySelectorAll('[data-withfee]').forEach(b=>b.onclick=()=>{state.withFee=b.dataset.withfee==='1';update();draw(body)});
     if(body.querySelector('#cmpBranch'))body.querySelector('#cmpBranch').onclick=()=>openBranchCheck();
+    {const d=body.querySelector('#cmpOpts');if(d)d.ontoggle=()=>{state._cmpOpts=d.open}}
     body.querySelectorAll('[data-anyadd]').forEach(b=>b.onclick=async()=>{const c=CHB[b.dataset.anyadd];state.anywhere=[...new Set([...(state.anywhere||[]),c.id])];save();toast(`${c.short} נוספה להשוואה`);await ensureChain(c.id);await ensureBranches();if(document.contains(body))draw(body)});
     body.querySelectorAll('[data-anydel]').forEach(b=>b.onclick=async()=>{state.anywhere=(state.anywhere||[]).filter(x=>x!==b.dataset.anydel);save();await ensureBranches();if(document.contains(body))draw(body)});
     bindRaceSeg(body);
@@ -2380,6 +2419,7 @@ function openPaste(){
 function openListMenu(){
   openSheet('אפשרויות לרשימה',`<div class="menu">
     <button type="button" class="menuitem" id="mShare">📤 שתף את הרשימה (וואטסאפ, מייל…)</button>
+    <button type="button" class="menuitem" id="mAisle" aria-pressed="${!!state.byAisle}">↕️ ${state.byAisle?'סדר רגיל':'סדר לפי מעברים בסופר'}</button>
     <button type="button" class="menuitem" id="mRecipe">🍳 מתכון → רשימת מצרכים</button>
     <button type="button" class="menuitem" id="mDepts">🗂️ מחלקות: חשמל, בית, ריהוט, גינה…</button>
     <button type="button" class="menuitem" id="mBranch">🏪 כמה הרשימה עולה בסניף מסוים?</button>
@@ -2391,6 +2431,7 @@ function openListMenu(){
     <button type="button" class="menuitem danger" id="mClear">🗑 נקה את כל הרשימה</button></div>`,()=>{
     $('mSave').onclick=()=>{const name='רשימה '+(state.lists.length+1);state.lists.unshift({id:nid(),name,items:state.items.map(({k,...r})=>r),sched:{on:false,day:4,hour:18,rep:'weekly',auto:false}});closeSheet();update();toast(`נשמר בשם "${name}"`)};
     $('mLists').onclick=()=>{closeSheet();state.mine='lists';go('mine')};
+    $('mAisle').onclick=()=>{state.byAisle=!state.byAisle;closeSheet();update()};
     $('mBranch').onclick=()=>openBranchCheck();
     $('mDepts').onclick=()=>openDepts();
     $('mClubs').onclick=()=>{closeSheet();openClubs()};
@@ -2566,7 +2607,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='139';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='140';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -3987,7 +4028,7 @@ const cardsOf=()=>state.pays.filter(p=>!/Pay$/.test(p.type));
 const expText=p=>p.exp?` · תוקף ${p.exp}`:'';
 const expired=p=>{if(!p.exp)return false;const [m,y]=p.exp.split('/').map(Number);return new Date(2000+y,m,1)<=new Date()};
 function payListHtml(){const cs=cardsOf();return cs.length?cs.map(x=>`<div class="paym"><span class="grow"><span><b>${x.type==='ביט'?'📲':'💳'} ${esc(x.type)}</b> <span dir="ltr">${x.last4?'•••• '+esc(x.last4):''}</span></span><small class="sub">${[x.exp?'תוקף '+esc(x.exp):'',x.holder?esc(x.holder):''].filter(Boolean).join(' · ')}${expired(x)?' · <b style="color:var(--warn)">פג תוקף</b>':''}${x.type!=='ביט'&&!x.sample?(x.verified?' · ✅ אומת':' · ⏳ ממתין לאימות'):''}${x.sample?' · דוגמה':''}</small></span>
-    ${x.def?'<span class="pill good">ברירת מחדל</span>':`<button class="link" type="button" data-pdef="${x.id}">ברירת מחדל</button>`}<button class="link" type="button" data-pdel="${x.id}" aria-label="החלף והסר את ${esc(x.type)} ${esc(x.last4||'')}">🔁 החלף</button></div>`).join(''):'<div class="empty">אין כרטיסים שמורים</div>'}
+    ${x.def?'<span class="pill good">ברירת מחדל</span>':`<button class="link" type="button" data-pdef="${x.id}">ברירת מחדל</button>`}<button class="link" type="button" data-pdel="${x.id}" style="padding:12px 6px;margin:-12px -6px" aria-label="החלף והסר את ${esc(x.type)} ${esc(x.last4||'')}">🔁 החלף</button></div>`).join(''):'<div class="empty">אין כרטיסים שמורים</div>'}
 function removePay(id,redraw){const i=state.pays.findIndex(x=>x.id===id);if(i<0)return;const [x]=state.pays.splice(i,1);if(x.def&&cardsOf().length)cardsOf()[0].def=true;if(state.payCard===id)state.payCard=null;save();redraw();
   toast(`${x.type}${x.last4?' •••• '+x.last4:''} הוסר`,{label:'בטל',fn:()=>{state.pays.splice(i,0,x);if(x.def)state.pays.forEach(p=>p.def=p===x);save();redraw()}})}
 function bindPayList(root,redraw){if(!root)return;
@@ -4302,8 +4343,8 @@ function promoSection(){
       <small class="sub">המספר בסוגריים: מבצעי מועדון של 40% ומעלה כרגע.</small></div>`:''}
     <ul class="dlist">${pick.map(r=>{const c=CHB[r.cid];const member=state.clubs.includes(r.cid);
       return `<li class="drow">${thumb(r.v,TYPES[r.v.t][1],'thv')}<div class="grow"><b>${esc(vLabel(r.v))}</b>
-        <span class="dline"><b>${c.short}</b> · ${esc(r.pr.label)}</span>
-        <span class="dline">ליחידה: <b>${fmt(r.unit)}</b> במקום <s>${fmt(r.p)}</s>${r.pr.end?` · עד ${esc(String(r.pr.end).split('-').reverse().slice(0,2).join('.'))}`:''}</span>
+        <span class="dline"><b>${c.short}</b> · <b class="num">${fmt(r.unit)}</b> ליח׳ במקום <s class="num">${fmt(r.p)}</s>${r.pr.end?` · עד ${esc(String(r.pr.end).split('-').reverse().slice(0,2).join('.'))}`:''}</span>
+        <small class="dlabel">${esc(r.pr.label)}</small>
         <span class="row2" style="gap:4px"><span class="pill mega">−${r.pct}%</span>${(()=>{const k=dealCheck(r);return k?`<span class="pill ${k.cls==='good'?'good':'warnp'}">${k.cls==='good'?'✓':'⚠️'} ${esc(k.t)}</span>`:''})()}${r.pr.club?`<span class="pill ${member?'good':'y'}">${member?'✓ ':''}${esc(c.club)}</span>`:''}${r.pr.kind==='multi'?`<span class="pill">בקניית ${r.pr.n}</span>`:''}<button class="btn sm dadd" type="button" data-dv="${r.v.id}" data-q="${r.pr.n||1}" aria-label="הוסף ${esc(vLabel(r.v))}">+ הוסף</button></span></div></li>`}).join('')||`<li class="empty">${F==='club'&&mineC.length?'אין כרגע מבצעי מועדון של 40% ומעלה במועדונים שסימנת':'אין כרגע מבצעים בסינון הזה'}</li>`}</ul>
     ${rows.length>pick.length?'<button class="btn ghost" type="button" id="pmore">הצג עוד</button>':''}</section>`;
 }
@@ -4630,11 +4671,11 @@ const LEGAL={
   <h3>מנוי פרימיום</h3><p>מתחדש חודשית וניתן לביטול בכל עת, בהתאם לחוק הגנת הצרכן.</p></div>`]
 };
 /* account: location and payment stay open; every other card shows only its title until tapped */
-function accordion(root){const order=[...(state.profile.registered?[]:['👤']),'♿','🎨','📍','🎟️','💳','👤','🥗','🏪','🔔','📊','⭐','🔒'];
+function accordion(root){const order=[...(state.profile.registered?[]:['👤']),'📍','♿','🎨','🎟️','💳','👤','🥗','🏪','🔔','📊','⭐','🔒'];
   const secs=[...root.children].filter(x=>x.tagName==='SECTION');const key=sec=>sec.querySelector('h2')?.textContent.trim()||'';
   secs.sort((a,b)=>{const ia=order.findIndex(o=>key(a).startsWith(o)),ib=order.findIndex(o=>key(b).startsWith(o));return (ia<0?99:ia)-(ib<0?99:ib)}).forEach(x=>root.appendChild(x));
   state.accOpen=state.accOpen||[];
-  secs.forEach(sec=>{const h=sec.querySelector('h2');if(!h)return;const k=key(sec);if([...(state.profile.registered?[]:['👤']),'📍','🎟️','💳'].some(o=>k.startsWith(o)))return;
+  secs.forEach(sec=>{const h=sec.querySelector('h2');if(!h)return;const k=key(sec);if([...(state.profile.registered?[]:['👤']),'📍'].some(o=>k.startsWith(o)))return;
     sec.classList.add('acc');const open=state.accOpen.includes(k);sec.classList.toggle('open',open);
     const head=h.closest('.row2')||h;head.classList.add('acchead');
     const btn=document.createElement('button');btn.type='button';btn.className='accbtn';btn.setAttribute('aria-expanded',open);btn.innerHTML=h.innerHTML+'<span class="chev" aria-hidden="true">⌄</span>';h.innerHTML='';h.appendChild(btn);
@@ -4705,13 +4746,13 @@ function renderAccount(){
     <div class="fgrid"><label class="f">שפה<select id="plang"><option value="he">עברית</option><option disabled>English (בקרוב)</option><option disabled>العربية (בקרוב)</option><option disabled>Русский (בקרוב)</option></select></label></div></section>
   ${a11yCard()}
   ${skinCard()}
-  <section class="card"><h2>🎟️ מועדונים וקופונים</h2>
+  <section class="card"><h2>🎟️ מועדונים וקופונים${state.clubs.filter(id=>CHB[id]).length?` <small class="sub">· ${esc(state.clubs.filter(id=>CHB[id]).map(id=>CHB[id].short).join(', '))}</small>`:''}</h2>
     <p class="sub">${state.clubs.length?`חבר ב: ${state.clubs.filter(id=>CHB[id]).map(id=>CHB[id].club).join(', ')}`:'עוד לא סימנת מועדונים'} · ${(state.coupons||[]).filter(couponLive).length} קופונים פעילים</p>
-    <button class="btn" type="button" id="openClubs">ניהול מועדונים וקופונים</button></section>
+    <button class="btn ghost" type="button" id="openClubs">ניהול מועדונים וקופונים</button></section>
   <section class="card"><h2>📍 מיקום וכתובת למשלוח</h2>
     <div class="locsum"><b>${esc(locText())}</b>${p.apt?`<span class="sub">${esc(p.apt)}</span>`:''}${p.notes?`<span class="sub">הערה לשליח: ${esc(p.notes)}</span>`:''}</div>
     <p class="sub">לפי המיקום נבחר את הסניף הקרוב בכל רשת. אפשר גם לבחור סניף ידנית.</p>
-    <button class="btn" type="button" id="openLoc">שנה מיקום וסניפים</button></section>
+    <button class="btn ghost" type="button" id="openLoc">שנה מיקום וסניפים</button></section>
   <section class="card" id="realCard"><h2>📊 מחירים אמיתיים</h2>
     ${REAL?`<div class="banner">✅ נטענו <b>${REAL.count.toLocaleString('he-IL')}</b> מוצרים עם מחירים אמיתיים מ-${nOf(REAL.chains.length,'רשת אחת','רשתות')} (${REAL.chains.map(c=>CHB[c].short).join(', ')}) · עודכנו ${agoText(REAL.updated)||'בתאריך לא ידוע'}</div>
       <p class="sub">${REAL.source==='bundled'?'המחירים האלה מגיעים עם האפליקציה. ':''}כדי לעדכן, טען קובץ חדש שהשרת יצר. מבצעים, דמי משלוח וכשרות עדיין לדוגמה. ${REAL.chains.length<CH.length?`עדיין אין מחירים מ${CH.filter(c=>!REAL.chains.includes(c.id)).map(c=>c.short).join(', ')}.`:''}</p>`
@@ -4732,7 +4773,7 @@ function renderAccount(){
   <section class="card"><h2>💳 אמצעי תשלום</h2>
     <div class="banner">📱 ${WALLETS()[0].label} זמין אוטומטית במכשיר הזה</div>
     <div id="payList">${payListHtml()}</div>
-    <button class="btn" type="button" id="payManage">➕ הוספה והסרה של אמצעי תשלום</button>
+    <button class="btn ghost" type="button" id="payManage">➕ הוספה והסרה של אמצעי תשלום</button>
     <p class="sub">כרגע ההזמנה והתשלום נעשים באתר של הרשת. אמצעי התשלום כאן ישמשו כשנחבר תשלום בתוך מוזיל.</p></section>
   <section class="card"><h2>🏪 רשתות ומועדוני לקוחות</h2><p class="sub">אפשר להזמין דרך מוזיל מכל רשת פעילה. סמן מועדונים שאתה חבר בהם כדי לקבל את מחירי המועדון בהשוואה.</p>
     <div>${CH.map(c=>{const bs=branchesOf(c);return `<div class="chain" style="--sc:var(${c.c})"><span class="av">${c.ab}</span><div class="grow"><b>${c.name}</b><br>
