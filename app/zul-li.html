@@ -1103,6 +1103,11 @@ html[data-skin="retro"] .story .stn{color:var(--ink)}
 .story .ste{animation:stebob 2.8s ease-in-out infinite alternate}
 @keyframes stebob{from{transform:translateY(0) rotate(-6deg)}to{transform:translateY(-3px) rotate(6deg)}}
 @media (prefers-reduced-motion:reduce){.story .ring,.story .inner::before,.story .inner::after,.story .inner.ph .stph,.story .inner .hle,.story .ste{animation:none!important}.story .inner::after{display:none}}
+
+/* v143: on-sale chips: the text column shrinks and clips, so the discount pill never covers it */
+.qchip .qtx{flex:1 1 auto;min-width:0;overflow:hidden}
+.qchip .qtx>span,.qchip .qtx small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qchip>.pill{flex:none;position:static}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -2664,7 +2669,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='142';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='143';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
