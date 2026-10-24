@@ -2669,7 +2669,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='143';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='144';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -4067,8 +4067,10 @@ If the image is not a voucher, reply {"value": 0}.`,{images:img,signal:ctl.signa
   openSheet('מועדונים וקופונים','',draw);
 }
 /* a deal from the price files: [kind 'm'|'p', n, price|pct, club, end, desc] */
+let _tISO='',_tAt=0;const todayISO=()=>{const n=Date.now();if(n-_tAt>6e4){const d=new Date();_tISO=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;_tAt=n}return _tISO};
 function realDeal(d,cid){if(!Array.isArray(d))return null;const [k,n,val,club,end,desc,min,lim]=d;const lab=String(desc||'').trim();
   if(/קופון|הטבת|שובר|ביטוח/.test(lab))return null;/* needs a coupon or an outside benefit: not a shelf price */
+  if(end&&String(end).slice(0,10)<todayISO())return null;/* a deal that already ended (the price file can be a few hours old) */
   /* min: the deal needs a basket over min ₪ at that chain; lim: units per shopper */
   const base={club:!!club,end,label:'',min:+min>0?+min:0,lim:+lim>0?+lim:0};
   const cond=(base.min?` · בקנייה מעל ₪${Math.round(base.min)}`:'')+(base.lim?` · עד ${base.lim} יח׳`:'');
@@ -4491,7 +4493,7 @@ function cutoutIn(el){const fix=img=>{if(!img||img.dataset.cut)return;img.datase
     cutoutSrc(src).then(u=>{if(u&&document.contains(img)){img.src=u;el.classList.add('cut')}else el.classList.add('nocut')})};
   fix(el.querySelector('img'));new MutationObserver(()=>fix(el.querySelector('img'))).observe(el,{childList:true,subtree:true})}
 /* the groups are the same until the prices, the chains followed, the photos or the day change: built once, not on every screen */
-function storyGroups(){const k=[V.length,V[0]?.id,followed().map(c=>c.id).join(','),new Date().toDateString(),typeof HDIX!=='undefined'&&HDIX?1:0,typeof HDINFO!=='undefined'&&HDINFO?Object.keys(HDINFO).length:0,state.hideCats||''].join('|');
+function storyGroups(){const k=[REAL&&REAL.updated,V.length,V[0]?.id,followed().map(c=>c.id).join(','),new Date().toDateString(),typeof HDIX!=='undefined'&&HDIX?1:0,typeof HDINFO!=='undefined'&&HDINFO?Object.keys(HDINFO).length:0,state.hideCats||''].join('|');
   if(storyGroups.k===k)return storyGroups.v;storyGroups.k=k;return storyGroups.v=storyGroups0()}
 function storyGroups0(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)return [];
   const best=new Map();for(const r of dealRows(fol,20)){const k=r.v.id;if(!best.has(k)||best.get(k).pct<r.pct)best.set(k,r)}
@@ -4585,7 +4587,7 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
     paused=false;run(DUR);root.querySelector('.x').focus()};
   draw()}
 function renderDealsReal(){
-  $('screen').innerHTML=(()=>{const st=storiesHtml();return st?`<section class="card storycard" style="padding-bottom:6px"><h2 style="margin:0 0 6px">🔥 מבצעים לפי קטגוריה</h2>${st}</section>`:''})()+promoSection();
+  $('screen').innerHTML=(()=>{const st=storiesHtml();return st?`<section class="card storycard" style="padding-bottom:6px"><div class="row2 spread" style="margin:0 0 6px;align-items:baseline"><h2 style="margin:0">🔥 מבצעים לפי קטגוריה</h2>${REAL&&REAL.updated?`<small class="sub">עודכן ${esc(agoText(REAL.updated))}</small>`:''}</div>${st}</section>`:''})()+promoSection();
   $('screen').querySelectorAll('[data-story]').forEach(b=>b.onclick=()=>openStories(+b.dataset.story));storyFx();
   $('screen').querySelectorAll('[data-dv]').forEach(b=>b.onclick=()=>{const v=VB[b.dataset.dv];const q=+b.dataset.q||1;addItems([{t:v.t,v:v.id,q}]);update();toast(`${vLabel(v)}${q>1?' ×'+q:''} נוסף לרשימה`)});
   if($('pmore'))$('pmore').onclick=()=>{state.promoN=(state.promoN||20)+20;renderDealsReal()};
@@ -4922,8 +4924,13 @@ function render(){if(!state.dealsN)state.dealsN=20;
 }
 async function refreshPrices(){try{const v=await (await fetch('version.json',{cache:'no-store'})).json();if(!v||!v.updated||!REAL||v.updated===REAL.updated)return;
   const r=await fetch('prices.json',{cache:'no-cache'});if(!r.ok)return;const sum=await r.json();if(sum.updated===REAL.updated)return;
-  applyReal(sum);REAL.source='bundled';state.real={updated:REAL.updated,count:REAL.count,chains:REAL.chains,source:'bundled'};_brFiles.clear();_mem.clear();LOADING.clear();for(const k in BR)delete BR[k];
-  snapshotReal();cleanState();save();render();ensureChains();ensureBranches();toast('המחירים עודכנו לגרסה החדשה')}catch(e){}}
+  applyReal(sum);REAL.source='bundled';state.real={updated:REAL.updated,count:REAL.count,chains:REAL.chains,source:'bundled'};_brFiles.clear();_bdFiles.clear();_bdIdx.clear();_mem.clear();LOADING.clear();for(const k in BR)delete BR[k];
+  snapshotReal();cleanState();save();render();ensureChains();ensureBranches();toast('🔥 המחירים והמבצעים עודכנו')}catch(e){}}
+/* the price server publishes new prices and deals every few hours: while the app is open it checks every hour,
+   and again whenever the shopper comes back to it (at most every 20 minutes), so the deal stories are always today's */
+let _lastPx=0;function pricesTick(force){const n=Date.now();if(!force&&n-_lastPx<20*6e4)return;_lastPx=n;refreshPrices()}
+setInterval(()=>pricesTick(true),60*6e4);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pricesTick()});
 /* boot: if real prices were loaded before, bring them back before the first render (saved items point at real products) */
 /* ================= chain logos =================
    Each chain's own site icon (its apple-touch-icon, else its favicon), shown in the round chain badge for identification.
@@ -4977,7 +4984,7 @@ async function pushToggle(on){const L=LN();if(!L)return;if(on){let pr;try{pr=awa
   if(state.real&&state.real.source!=='bundled'){try{const sum=await idbGet('summary');if(sum){applyReal(sum);REAL.source='file';loaded=true}}catch(e){}}
   if(!loaded&&!state.demoOnly){
     // the phone keeps the last price file: open with it at once, then check in the background whether a newer one was published
-    try{const c=await idbGet('bundledV');if(restoreReal(c)){REAL.source='bundled';loaded=true;setTimeout(refreshPrices,800)}}catch(e){}
+    try{const c=await idbGet('bundledV');if(restoreReal(c)){REAL.source='bundled';loaded=true;setTimeout(()=>pricesTick(true),800)}}catch(e){}
     if(!loaded){try{const r=await fetch('prices.json',{cache:'no-cache'});if(r.ok){const sum=await r.json();applyReal(sum);REAL.source='bundled';loaded=true;snapshotReal()}}catch(e){}}}
   if(!_fromLS){try{const j=await idbGet('state');const s=j&&JSON.parse(j);if(s&&s.v===4&&Array.isArray(s.items))state={...state,...s,real:state.real}}catch(e){}}
   state.real=loaded?{updated:REAL.updated,count:REAL.count,chains:REAL.chains,source:REAL.source}:null;
