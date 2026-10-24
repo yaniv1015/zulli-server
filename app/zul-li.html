@@ -1066,8 +1066,9 @@ html[data-skin="retro"][data-theme="dark"] .promocard .link,html[data-skin="retr
 .story .sts{font-size:.72rem;font-weight:500;opacity:.8;max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:-3px}
 .story .sts.hot{color:#FF4B2B;opacity:1;font-weight:700}
 .story:active .ring{transform:scale(.92)}
-.stories.enter .story{animation:stpop .55s cubic-bezier(.3,1.5,.5,1) both;animation-delay:calc(var(--i)*60ms)}
-.stories.enter .story .hlp{animation:sttag .5s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(var(--i)*60ms + 280ms)}
+.stories.enter .story{animation:stpop .55s cubic-bezier(.3,1.5,.5,1) both;animation-delay:calc(var(--i)*60ms - var(--el,0ms))}
+.stories.waiting .story,.stories.waiting .story .hlp{animation-play-state:paused!important}
+.stories.enter .story .hlp{animation:sttag .5s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(var(--i)*60ms + 280ms - var(--el,0ms))}
 @keyframes stpop{from{transform:scale(.6) translateY(8px);opacity:0}to{transform:none;opacity:1}}
 @keyframes sttag{from{transform:rotate(-30deg) scale(.4);opacity:0}to{transform:rotate(-8deg);opacity:1}}
 .story.seen .inner.ph .stph{animation:none;filter:saturate(.55)}
@@ -1079,6 +1080,29 @@ html[data-skin="retro"] .story .sts{color:var(--muted);opacity:1}
 html[data-skin="retro"] .story .sts.hot{color:#B23A0B}
 html[data-skin="retro"] .story .stn{color:var(--ink)}
 @media (prefers-reduced-motion:reduce){.story .pulse,.story .inner.ph .stph,.stories.enter .story,.stories.enter .story .hlp{animation:none}}
+
+/* v142: livelier circles: a morphing color blob behind the product, the product floats, a light sweep, bigger rings */
+.story{width:98px}
+.story .ring{width:92px;height:92px;padding:4px;animation:ringspin 3.2s linear infinite,ringbreath 2.6s ease-in-out infinite}
+@keyframes ringbreath{0%,100%{padding:4px}50%{padding:5.5px}}
+.story .inner{isolation:isolate}
+.story .inner::before{content:'';position:absolute;inset:14%;z-index:-1;background:radial-gradient(circle at 35% 30%,#fff8 0,transparent 45%),linear-gradient(140deg,var(--g1,#E8A600),var(--g2,#B23A0B));opacity:.55;border-radius:42% 58% 63% 37%/45% 41% 59% 55%;animation:blob 7s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-0.7s);filter:blur(1px)}
+@keyframes blob{0%{border-radius:42% 58% 63% 37%/45% 41% 59% 55%;transform:rotate(0) scale(1)}50%{border-radius:60% 40% 35% 65%/58% 62% 38% 42%;transform:rotate(60deg) scale(1.12)}100%{border-radius:38% 62% 52% 48%/40% 55% 45% 60%;transform:rotate(120deg) scale(.96)}}
+.story .inner::after{content:'';position:absolute;inset:-20%;z-index:3;pointer-events:none;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.65) 48%,transparent 58%);transform:translateX(-120%);animation:shine 5.5s ease-in-out infinite;animation-delay:calc(var(--i)*.45s + 1.4s)}
+@keyframes shine{0%,62%{transform:translateX(120%)}82%,100%{transform:translateX(-120%)}}
+.story .inner.ph{background:#fff}
+.story .inner.ph .stph{animation:float 3.4s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.4s)}
+.story .inner .hle{animation:float 3.4s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.4s)}
+@keyframes float{from{transform:translateY(2px) rotate(-4deg) scale(1)}to{transform:translateY(-4px) rotate(3deg) scale(1.07)}}
+.story:active .ring{transform:scale(.9) rotate(-4deg)}
+.story .hlp{font-variant-numeric:tabular-nums;min-width:52px;text-align:center}
+.story.seen .ring{animation:none}
+.story.seen .inner::before,.story.seen .inner::after{animation:none;opacity:.25}
+.story.seen .inner::after{display:none}
+.story.seen .inner.ph .stph,.story.seen .inner .hle{animation:none}
+.story .ste{animation:stebob 2.8s ease-in-out infinite alternate}
+@keyframes stebob{from{transform:translateY(0) rotate(-6deg)}to{transform:translateY(-3px) rotate(6deg)}}
+@media (prefers-reduced-motion:reduce){.story .ring,.story .inner::before,.story .inner::after,.story .inner.ph .stph,.story .inner .hle,.story .ste{animation:none!important}.story .inner::after{display:none}}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -2640,7 +2664,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='141';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='142';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -2731,7 +2755,7 @@ function renderQuick(R,fold){if(!R)return;let html='';const has=state.items.leng
     const qd=rest?quickDeals():[];
     if(qd.length)html+=`<div class="qhead"><span class="sub">🔥 במבצע עכשיו${myTypes().size?' ממה שאתה קונה':''}</span></div><div class="qrow">${qd.map(r=>`<button class="chip qchip" type="button" style="--cc:${typeColor(r.v.t)}" data-addv="${r.v.id}" data-q="${r.pr.n||1}">${thumb(r.v,TYPES[r.v.t][1],'thc')}<span class="qtx"><span>${esc(vLabel(r.v))}</span><small>${CHB[r.cid].short} · ${esc(r.pr.label)}</small></span><span class="pill mega">−${r.pct}%</span></button>`).join('')}</div>`;
     R.innerHTML=html;R.classList.toggle('quick',!!html);
-    R.querySelectorAll('[data-story]').forEach(b=>b.onclick=()=>openStories(+b.dataset.story));
+    R.querySelectorAll('[data-story]').forEach(b=>b.onclick=()=>openStories(+b.dataset.story));storyFx();
     if($('qDeals'))$('qDeals').onclick=()=>go('deals');
     R.querySelectorAll('[data-occ]').forEach(b=>b.onclick=()=>openOccasion(b.dataset.occ));
     R.querySelectorAll('[data-depts]').forEach(b=>b.onclick=()=>openDepts(b.dataset.depts||null));
@@ -4491,15 +4515,23 @@ const storyKey=g=>g.rows.map(r=>r.key).join('~').slice(0,400);
 const HL={top:['🔥','#FFB800','#FF4B2B'],produce:['🥑','#C8F56A','#22B26B'],bakery:['🥐','#FFE0A8','#E58A2E'],dairy:['🧀','#FFF1A6','#F5B700'],
   meat:['🥩','#FFB8A8','#E23D4B'],frozen:['🍦','#D9F7FF','#4FB8F0'],pantry:['🍝','#FFE7A3','#F08A24'],snacks:['🍫','#FFC6E6','#B85CF5'],
   drink:['🥤','#A9F0FF','#2E6BFF'],baby:['🍼','#FFE1F0','#FF7DB8'],care:['🧴','#E6DDFF','#8B6CFF'],home:['🧼','#C9FFF0','#14B8A0'],elec:['⚡','#FFF59E','#FF8A00'],other:['🛒','#E8E8EE','#8A8A99']};
+/* the strip comes alive once per visit: each sticker counts up to its discount, and the strip nudges to show it scrolls */
+function storyFx(){if(storyFx._on||!document.querySelector('.stories.enter'))return;storyFx._on=1;if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const go=()=>{if(document.querySelector('.splash:not(.out)'))return setTimeout(go,100);storiesHtml._t0=storiesHtml._t0||Date.now();document.querySelectorAll('.stories.waiting').forEach(x=>x.classList.remove('waiting'));const T0=storiesHtml._t0,ms=900;
+    /* the strip may be redrawn meanwhile: every frame reads the circles on screen now */
+    const tick=()=>{const t=Date.now()-T0;let more=false;document.querySelectorAll('.stories .story .hlp[data-pct]').forEach(el=>{const k=+getComputedStyle(el.closest('.story')).getPropertyValue('--i')||0;const x=Math.max(0,Math.min(1,(t-k*60-280)/ms));if(x<1)more=true;el.textContent='−'+Math.round(+el.dataset.pct*(1-Math.pow(1-x,3)))+'%'});if(more&&t<5000)requestAnimationFrame(tick)};tick();
+    setTimeout(()=>{const st=document.querySelector('.stories');if(!st||st.scrollLeft||st.scrollWidth<=st.clientWidth+20)return;st.scrollBy({left:-46,behavior:'smooth'});setTimeout(()=>st.scrollBy({left:46,behavior:'smooth'}),520)},1100)};
+  go()}
 function storiesHtml(){const G=storyGroups();if(!G.length)return'';/* the first photo of the first circles loads while the shopper looks at the strip */clearTimeout(storiesHtml.t);storiesHtml.t=setTimeout(()=>{hdReady.then(()=>G.slice(0,4).forEach(g=>g.rows[0]&&warmHD(g.rows[0].v)))},1200);const seen=state.storySeen||{};
   /* unseen first (like any story app), each circle keeps its own index; the strip pops in once per visit */
-  const enter=!storiesHtml._shown;storiesHtml._shown=true;const now=Date.now();
+  /* the strip is redrawn often while data loads: the entrance keeps running on its own clock instead of restarting */
+  const now=Date.now();if(!storiesHtml._t0&&!document.querySelector('.splash:not(.out)'))storiesHtml._t0=now;const el=storiesHtml._t0?now-storiesHtml._t0:0;const enter=el<2200;const waiting=!storiesHtml._t0;
   let pulses=0;const order=G.map((g,i)=>({g,i,seen:seen[g.id]===storyKey(g)})).sort((a,b)=>(a.seen-b.seen)||(a.i-b.i));
-  return `<div class="storyband"><div class="stories${enter?' enter':''}" role="list" aria-label="מבצעים לפי קטגוריה">${order.map(({g,i,seen:sn},k)=>{const H=HL[g.id]||HL.other;const top=g.rows.find(r=>HAVE&&r.v.bc&&HAVE.has(r.v.bc));const best=Math.max(...g.rows.map(r=>r.pct));
+  return `<div class="storyband"><div class="stories${enter?' enter':''}${waiting?' waiting':''}" style="--el:${el}ms" role="list" aria-label="מבצעים לפי קטגוריה">${order.map(({g,i,seen:sn},k)=>{const H=HL[g.id]||HL.other;const top=g.rows.find(r=>HAVE&&r.v.bc&&HAVE.has(r.v.bc));const best=Math.max(...g.rows.map(r=>r.pct));
     const ends=g.rows.map(r=>r.pr.end?Math.ceil((new Date(r.pr.end)-now)/864e5):null).filter(d=>d!=null&&d>=0);const soon=ends.length?Math.min(...ends):null;const hot=soon!=null&&soon<=1;const nSoon=ends.filter(d=>d===soon).length;
     const sub=hot?`🔥 ${nSoon===1?'אחד נגמר':nSoon+' נגמרים'} ${soon===0?'היום':'מחר'}`:nOf(g.rows.length,'מבצע אחד','מבצעים');if(hot&&!sn)pulses++;
     return `<button type="button" class="story${sn?' seen':''}${hot&&!sn?' hot':''}" data-story="${i}" role="listitem" style="--i:${k};--n:${Math.min(g.rows.length,12)};--gap:${g.rows.length>1?'7deg':'0deg'}" aria-label="${esc(g.n)}: ${nOf(g.rows.length,'מבצע אחד','מבצעים')}, עד ${best}% הנחה${hot?', '+sub.slice(3):''}${sn?', נצפה':''}">
-      <span class="ring">${hot&&!sn&&pulses<=2?'<span class="pulse" aria-hidden="true"></span>':''}<span class="inner hl${top?' ph':''}" style="--g1:${H[1]};--g2:${H[2]}">${top?thumb(top.v,H[0],'stph'):`<span class="hle" aria-hidden="true">${H[0]}</span>`}</span>${top?`<span class="ste" aria-hidden="true">${H[0]}</span>`:''}<span class="hlp" dir="ltr">−${best}%</span></span>
+      <span class="ring">${hot&&!sn&&pulses<=2?'<span class="pulse" aria-hidden="true"></span>':''}<span class="inner hl${top?' ph':''}" style="--g1:${H[1]};--g2:${H[2]}">${top?thumb(top.v,H[0],'stph'):`<span class="hle" aria-hidden="true">${H[0]}</span>`}</span>${top?`<span class="ste" aria-hidden="true">${H[0]}</span>`:''}<span class="hlp" dir="ltr" data-pct="${best}">−${best}%</span></span>
       <small class="stn">${esc(g.n)}</small><small class="sts${hot&&!sn?' hot':''}">${sub}</small></button>`}).join('')}</div></div>`}
 function openStories(start){const G=storyGroups();if(!G[start])return;let gi=start,si=0,timer=0,t0=0,paused=false,left=0;let DUR=5000;
   const root=document.createElement('div');root.className='sview neo';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.appendChild(root);
@@ -4549,7 +4581,7 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
   draw()}
 function renderDealsReal(){
   $('screen').innerHTML=(()=>{const st=storiesHtml();return st?`<section class="card storycard" style="padding-bottom:6px"><h2 style="margin:0 0 6px">🔥 מבצעים לפי קטגוריה</h2>${st}</section>`:''})()+promoSection();
-  $('screen').querySelectorAll('[data-story]').forEach(b=>b.onclick=()=>openStories(+b.dataset.story));
+  $('screen').querySelectorAll('[data-story]').forEach(b=>b.onclick=()=>openStories(+b.dataset.story));storyFx();
   $('screen').querySelectorAll('[data-dv]').forEach(b=>b.onclick=()=>{const v=VB[b.dataset.dv];const q=+b.dataset.q||1;addItems([{t:v.t,v:v.id,q}]);update();toast(`${vLabel(v)}${q>1?' ×'+q:''} נוסף לרשימה`)});
   if($('pmore'))$('pmore').onclick=()=>{state.promoN=(state.promoN||20)+20;renderDealsReal()};
   if($('pclubs'))$('pclubs').onclick=openClubs;
