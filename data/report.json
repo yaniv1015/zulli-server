@@ -1,0 +1,306 @@
+{
+  "started": "2026-10-24T16:03:20.046Z",
+  "chains": {
+    "shufersal": {
+      "files": 434,
+      "products": 2360642,
+      "promos": 10663,
+      "errors": [],
+      "now": "promo PromoFull7290027600007-006-081-20261024-030840.gz",
+      "nowAt": "2026-10-24T16:07:54.211Z",
+      "promoStores": 9,
+      "deals": 1166,
+      "stores": 424,
+      "heapMB": 329
+    },
+    "yeshhesed": {
+      "splitFrom": "shufersal",
+      "stores": 22,
+      "products": 143926,
+      "promos": 2765,
+      "errors": [],
+      "deals": 2488
+    },
+    "rami": {
+      "files": 106,
+      "products": 1017209,
+      "promos": 13343,
+      "errors": [],
+      "now": "promo PromoFull7290058140886-001-006-20261024-180059.gz",
+      "nowAt": "2026-10-24T16:09:47.196Z",
+      "promoStores": 6,
+      "deals": 2578,
+      "stores": 99,
+      "heapMB": 323
+    },
+    "yochananof": {
+      "files": 55,
+      "products": 484064,
+      "promos": 7017,
+      "errors": [],
+      "now": "promo PromoFull7290803800003-000-009-20261024-004032.gz",
+      "nowAt": "2026-10-24T16:10:36.163Z",
+      "promoStores": 6,
+      "deals": 3944,
+      "stores": 48,
+      "heapMB": 413
+    },
+    "carrefour": {
+      "files": 0,
+      "products": 0,
+      "promos": 0,
+      "errors": [
+        "fetch failed"
+      ],
+      "now": "list",
+      "nowAt": "2026-10-24T16:11:00.172Z",
+      "keptPrevious": {
+        "prevProducts": 22781,
+        "newProducts": 0,
+        "storesPriced": 0,
+        "prevBranches": 147,
+        "newBranches": 0
+      }
+    },
+    "osherad": {
+      "files": 30,
+      "products": 147388,
+      "promos": 4455,
+      "errors": [],
+      "now": "promo PromoFull7290103152017-001-011-20261024-140526.gz",
+      "nowAt": "2026-10-24T16:11:49.667Z",
+      "promoStores": 6,
+      "deals": 1754,
+      "stores": 23,
+      "heapMB": 924
+    },
+    "tivtaam": {
+      "files": 61,
+      "products": 576125,
+      "promos": 12109,
+      "errors": [],
+      "now": "promo PromoFull7290873255550-000-006-20261024-004004.gz",
+      "nowAt": "2026-10-24T16:13:40.241Z",
+      "promoStores": 6,
+      "deals": 7139,
+      "stores": 54,
+      "heapMB": 239
+    },
+    "keshet": {
+      "files": 33,
+      "products": 290126,
+      "promos": 13484,
+      "errors": [],
+      "now": "promo PromoFull7290785400000-002-202610240011.gz",
+      "nowAt": "2026-10-24T16:14:20.850Z",
+      "promoStores": 6,
+      "deals": 7264,
+      "stores": 26,
+      "heapMB": 706
+    },
+    "stopmarket": {
+      "files": 17,
+      "products": 159642,
+      "promos": 16229,
+      "errors": [],
+      "now": "promo PromoFull7290639000004-001-008-20261024-001647.gz",
+      "nowAt": "2026-10-24T16:14:54.651Z",
+      "promoStores": 6,
+      "deals": 6764,
+      "stores": 10,
+      "heapMB": 829
+    },
+    "freshmarket": {
+      "files": 53,
+      "products": 408333,
+      "promos": 5423,
+      "errors": [],
+      "now": "promo PromoFull7290876100000-001-008-20261024-001231.gz",
+      "nowAt": "2026-10-24T16:15:49.233Z",
+      "promoStores": 6,
+      "deals": 181,
+      "stores": 46,
+      "heapMB": 321
+    },
+    "polizer": {
+      "files": 15,
+      "products": 108739,
+      "promos": 7197,
+      "errors": [],
+      "now": "promo PromoFull7291059100008-001-008-20261024-001128.gz",
+      "nowAt": "2026-10-24T16:16:12.734Z",
+      "promoStores": 6,
+      "deals": 3195,
+      "stores": 8,
+      "heapMB": 1000
+    },
+    "dabach": {
+      "files": 13,
+      "products": 94968,
+      "promos": 10747,
+      "errors": [],
+      "now": "promo PromoFull7290526500006-001-019-20261024-001110.gz",
+      "nowAt": "2026-10-24T16:16:35.520Z",
+      "promoStores": 6,
+      "deals": 3328,
+      "stores": 6,
+      "heapMB": 522
+    },
+    "doralon": {
+      "files": 163,
+      "products": 522986,
+      "promos": 4169,
+      "errors": [],
+      "now": "promo PromoFull7290492000005-001-501-20261024-000607.gz",
+      "nowAt": "2026-10-24T16:18:02.235Z",
+      "promoStores": 6,
+      "deals": 2318,
+      "stores": 156,
+      "heapMB": 363
+    },
+    "kingstore": {
+      "files": 55,
+      "products": 192176,
+      "promos": 2892,
+      "errors": [],
+      "now": "promo PromoFull7290058108879-000-007-20261024-040513.GZ",
+      "nowAt": "2026-10-24T16:18:49.575Z",
+      "promoStores": 6,
+      "deals": 1679,
+      "stores": 48,
+      "heapMB": 618
+    },
+    "maayan": {
+      "files": 45,
+      "products": 113327,
+      "promos": 2508,
+      "errors": [],
+      "now": "promo PromoFull7290058159628-000-007-20261024-030308.GZ",
+      "nowAt": "2026-10-24T16:19:24.747Z",
+      "promoStores": 6,
+      "deals": 1788,
+      "stores": 38,
+      "heapMB": 868
+    },
+    "shefa": {
+      "files": 29,
+      "products": 65677,
+      "promos": 2660,
+      "errors": [],
+      "now": "promo PromoFull7290058134977-000-017-20261024-050700.GZ",
+      "nowAt": "2026-10-24T16:19:50.099Z",
+      "promoStores": 6,
+      "deals": 1525,
+      "stores": 22,
+      "heapMB": 479
+    },
+    "supersapir": {
+      "files": 96,
+      "products": 324628,
+      "promos": 3262,
+      "errors": [],
+      "now": "promo PromoFull7290058156016-002-017-20261024-033946.GZ",
+      "nowAt": "2026-10-24T16:21:00.844Z",
+      "promoStores": 6,
+      "deals": 1904,
+      "stores": 89,
+      "heapMB": 487
+    },
+    "shukhayir": {
+      "files": 32,
+      "products": 103088,
+      "promos": 5277,
+      "errors": [],
+      "now": "promo PromoFull7290058148776-000-005-20261024-050257.GZ",
+      "nowAt": "2026-10-24T16:21:28.887Z",
+      "promoStores": 6,
+      "deals": 3490,
+      "stores": 25,
+      "heapMB": 1034
+    },
+    "zolbegadol": {
+      "files": 41,
+      "products": 147308,
+      "promos": 3392,
+      "errors": [],
+      "now": "promo PromoFull7290058173198-000-011-20261024-040429.GZ",
+      "nowAt": "2026-10-24T16:22:03.669Z",
+      "promoStores": 6,
+      "deals": 3164,
+      "stores": 34,
+      "heapMB": 890
+    },
+    "bareket": {
+      "files": 21,
+      "products": 80072,
+      "promos": 4460,
+      "errors": [],
+      "now": "promo PromoFull7290875100001-002-060-20261024-040750.GZ",
+      "nowAt": "2026-10-24T16:22:25.076Z",
+      "promoStores": 6,
+      "deals": 3180,
+      "stores": 14,
+      "heapMB": 577
+    },
+    "goodpharm": {
+      "files": 89,
+      "products": 280303,
+      "promos": 2152,
+      "errors": [],
+      "now": "promo PromoFull7290058197699-000-129-20261024-040208.GZ",
+      "nowAt": "2026-10-24T16:23:28.908Z",
+      "promoStores": 6,
+      "deals": 1456,
+      "stores": 82,
+      "heapMB": 388
+    },
+    "citymarket": {
+      "files": 31,
+      "products": 90802,
+      "promos": 654,
+      "errors": [],
+      "now": "promo PromoFull7290058288090-000-019-20261024-030209.GZ",
+      "nowAt": "2026-10-24T16:23:56.317Z",
+      "promoStores": 6,
+      "deals": 865,
+      "stores": 24,
+      "heapMB": 839
+    },
+    "meshnat": {
+      "files": 9,
+      "products": 17053,
+      "promos": 771,
+      "errors": [],
+      "now": "promo PromoFull7290058289400-000-004-20261024-020304.GZ",
+      "nowAt": "2026-10-24T16:24:08.898Z",
+      "promoStores": 4,
+      "deals": 823,
+      "stores": 4,
+      "heapMB": 347
+    },
+    "wolt": {
+      "files": 41,
+      "products": 169802,
+      "promos": 1672,
+      "errors": [],
+      "now": "promo PromoFull7290058249350-000-037-20261024-000047.gz",
+      "nowAt": "2026-10-24T16:24:33.365Z",
+      "promoStores": 6,
+      "deals": 638,
+      "stores": 34,
+      "heapMB": 863
+    },
+    "victory": {
+      "files": 0,
+      "products": 0,
+      "promos": 0,
+      "errors": [
+        "ויקטורי: השרת שלהם לא עונה מחוץ לישראל (fetch failed)"
+      ],
+      "now": "list",
+      "nowAt": "2026-10-24T16:10:43.174Z"
+    }
+  },
+  "totalProducts": 166047,
+  "finished": "2026-10-24T16:24:38.246Z"
+}
