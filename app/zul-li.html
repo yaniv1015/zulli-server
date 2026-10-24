@@ -1046,6 +1046,39 @@ label:has(>input[data-follow]){min-width:44px;min-height:44px;justify-content:ce
 .av{background-image:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.2))}
 html[data-skin="retro"][data-theme="dark"] .promocard .link,html[data-skin="retro"][data-theme="dark"] .promocard summary,html[data-skin="retro"][data-theme="dark"] .promocard s{color:#FF9A6B}
 @media (prefers-color-scheme:dark){html[data-skin="retro"]:not([data-theme="light"]) .promocard .link,html[data-skin="retro"]:not([data-theme="light"]) .promocard summary,html[data-skin="retro"]:not([data-theme="light"]) .promocard s{color:#FF9A6B}}
+
+/* v141 story circles: segmented ring (one segment per deal), the top deal's photo, a price-tag sticker, a pulse only when a deal really ends today or tomorrow */
+.story{width:90px;gap:6px;scroll-snap-align:start}
+.storyband .stories{gap:10px;scroll-snap-type:x proximity;-webkit-mask-image:linear-gradient(to left,transparent 0,#000 26px);mask-image:linear-gradient(to left,transparent 0,#000 26px);padding-inline-end:26px}
+.story .ring{width:84px;height:84px;padding:4px;transition:transform .18s cubic-bezier(.2,.8,.2,1)}
+.story .ring::after{content:'';position:absolute;inset:0;border-radius:50%;pointer-events:none;background:repeating-conic-gradient(from calc(var(--gap)/-2),var(--gapc,#101208) 0 var(--gap),transparent 0 calc(360deg/var(--n)))}
+.story .inner{position:relative;z-index:1}
+.story .inner.ph{background:#fff}
+.story .inner.ph .stph{width:100%;height:100%;display:grid;place-items:center;font-size:2.2rem;background:transparent;border:0;border-radius:50%;overflow:hidden;animation:kb 9s ease-in-out infinite alternate}
+.story .inner.ph .stph img{width:86%;height:86%;object-fit:contain}
+@keyframes kb{from{transform:scale(1)}to{transform:scale(1.1)}}
+.story .ste{position:absolute;z-index:2;top:-3px;inset-inline-end:-4px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:1rem;background:var(--surface2,#14141A);box-shadow:0 0 0 2px var(--gapc,#101208),0 4px 10px -4px rgba(0,0,0,.4)}
+.story .hlp{z-index:3;bottom:-6px;inset-inline-start:-8px;padding:5px 8px 5px 12px;border-radius:7px 9px 9px 7px;font-size:.8rem;box-shadow:0 6px 14px -6px rgba(0,0,0,.45)}
+.story .hlp::before{content:'';position:absolute;left:4px;top:50%;width:4px;height:4px;margin-top:-2px;border-radius:50%;background:currentColor;opacity:.7}
+.story .pulse{position:absolute;inset:-5px;border-radius:50%;border:2.5px solid #FF4B2B;animation:stpulse 1.8s ease-out infinite;pointer-events:none}
+@keyframes stpulse{0%{transform:scale(.94);opacity:.95}100%{transform:scale(1.2);opacity:0}}
+.story .stn{font-size:.82rem;font-weight:700;max-width:90px}
+.story .sts{font-size:.72rem;font-weight:500;opacity:.8;max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:-3px}
+.story .sts.hot{color:#FF4B2B;opacity:1;font-weight:700}
+.story:active .ring{transform:scale(.92)}
+.stories.enter .story{animation:stpop .55s cubic-bezier(.3,1.5,.5,1) both;animation-delay:calc(var(--i)*60ms)}
+.stories.enter .story .hlp{animation:sttag .5s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(var(--i)*60ms + 280ms)}
+@keyframes stpop{from{transform:scale(.6) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+@keyframes sttag{from{transform:rotate(-30deg) scale(.4);opacity:0}to{transform:rotate(-8deg);opacity:1}}
+.story.seen .inner.ph .stph{animation:none;filter:saturate(.55)}
+.story.seen .ste{filter:grayscale(.5)}
+html[data-skin="retro"] .story{--gapc:var(--surface2)}
+html[data-skin="retro"] .story .ste{background:var(--surface)}
+html[data-skin="retro"] .story .pulse{border-color:#B23A0B}
+html[data-skin="retro"] .story .sts{color:var(--muted);opacity:1}
+html[data-skin="retro"] .story .sts.hot{color:#B23A0B}
+html[data-skin="retro"] .story .stn{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.story .pulse,.story .inner.ph .stph,.stories.enter .story,.stories.enter .story .hlp{animation:none}}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -2607,7 +2640,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='140';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='141';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -4459,9 +4492,19 @@ const HL={top:['🔥','#FFB800','#FF4B2B'],produce:['🥑','#C8F56A','#22B26B'],
   meat:['🥩','#FFB8A8','#E23D4B'],frozen:['🍦','#D9F7FF','#4FB8F0'],pantry:['🍝','#FFE7A3','#F08A24'],snacks:['🍫','#FFC6E6','#B85CF5'],
   drink:['🥤','#A9F0FF','#2E6BFF'],baby:['🍼','#FFE1F0','#FF7DB8'],care:['🧴','#E6DDFF','#8B6CFF'],home:['🧼','#C9FFF0','#14B8A0'],elec:['⚡','#FFF59E','#FF8A00'],other:['🛒','#E8E8EE','#8A8A99']};
 function storiesHtml(){const G=storyGroups();if(!G.length)return'';/* the first photo of the first circles loads while the shopper looks at the strip */clearTimeout(storiesHtml.t);storiesHtml.t=setTimeout(()=>{hdReady.then(()=>G.slice(0,4).forEach(g=>g.rows[0]&&warmHD(g.rows[0].v)))},1200);const seen=state.storySeen||{};
-  return `<div class="storyband"><div class="stories" role="list" aria-label="מבצעים לפי קטגוריה">${G.map((g,i)=>`<button type="button" class="story${seen[g.id]===storyKey(g)?' seen':''}" data-story="${i}" role="listitem" aria-label="${esc(g.n)}: ${g.rows.length} מבצעים"><span class="ring"><span class="inner hl" style="--g1:${(HL[g.id]||HL.other)[1]};--g2:${(HL[g.id]||HL.other)[2]}"><span class="hle" aria-hidden="true">${(HL[g.id]||HL.other)[0]}</span></span><span class="hlp" dir="ltr">−${Math.max(...g.rows.map(r=>r.pct))}%</span></span><small>${esc(g.n)}</small></button>`).join('')}</div></div>`}
+  /* unseen first (like any story app), each circle keeps its own index; the strip pops in once per visit */
+  const enter=!storiesHtml._shown;storiesHtml._shown=true;const now=Date.now();
+  let pulses=0;const order=G.map((g,i)=>({g,i,seen:seen[g.id]===storyKey(g)})).sort((a,b)=>(a.seen-b.seen)||(a.i-b.i));
+  return `<div class="storyband"><div class="stories${enter?' enter':''}" role="list" aria-label="מבצעים לפי קטגוריה">${order.map(({g,i,seen:sn},k)=>{const H=HL[g.id]||HL.other;const top=g.rows.find(r=>HAVE&&r.v.bc&&HAVE.has(r.v.bc));const best=Math.max(...g.rows.map(r=>r.pct));
+    const ends=g.rows.map(r=>r.pr.end?Math.ceil((new Date(r.pr.end)-now)/864e5):null).filter(d=>d!=null&&d>=0);const soon=ends.length?Math.min(...ends):null;const hot=soon!=null&&soon<=1;const nSoon=ends.filter(d=>d===soon).length;
+    const sub=hot?`🔥 ${nSoon===1?'אחד נגמר':nSoon+' נגמרים'} ${soon===0?'היום':'מחר'}`:nOf(g.rows.length,'מבצע אחד','מבצעים');if(hot&&!sn)pulses++;
+    return `<button type="button" class="story${sn?' seen':''}${hot&&!sn?' hot':''}" data-story="${i}" role="listitem" style="--i:${k};--n:${Math.min(g.rows.length,12)};--gap:${g.rows.length>1?'7deg':'0deg'}" aria-label="${esc(g.n)}: ${nOf(g.rows.length,'מבצע אחד','מבצעים')}, עד ${best}% הנחה${hot?', '+sub.slice(3):''}${sn?', נצפה':''}">
+      <span class="ring">${hot&&!sn&&pulses<=2?'<span class="pulse" aria-hidden="true"></span>':''}<span class="inner hl${top?' ph':''}" style="--g1:${H[1]};--g2:${H[2]}">${top?thumb(top.v,H[0],'stph'):`<span class="hle" aria-hidden="true">${H[0]}</span>`}</span>${top?`<span class="ste" aria-hidden="true">${H[0]}</span>`:''}<span class="hlp" dir="ltr">−${best}%</span></span>
+      <small class="stn">${esc(g.n)}</small><small class="sts${hot&&!sn?' hot':''}">${sub}</small></button>`}).join('')}</div></div>`}
 function openStories(start){const G=storyGroups();if(!G[start])return;let gi=start,si=0,timer=0,t0=0,paused=false,left=0;let DUR=5000;
   const root=document.createElement('div');root.className='sview neo';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.appendChild(root);
+  {const o=document.querySelector(`[data-story="${start}"] .ring`);if(o&&root.animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const r=o.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+    try{root.animate([{clipPath:`circle(${r.width/2}px at ${x}px ${y}px)`,opacity:.6},{clipPath:`circle(150% at ${x}px ${y}px)`,opacity:1}],{duration:460,easing:'cubic-bezier(.2,.8,.2,1)'})}catch(e){}}}
   /* the page behind must not scroll sideways or under the story (iOS shifts fixed layers when the page is wider than the screen) */
   const ov=[document.documentElement.style.overflow,document.body.style.overflow];document.documentElement.style.overflow=document.body.style.overflow='hidden';window.scrollTo(0,window.scrollY);
   const prevFocus=document.activeElement;
