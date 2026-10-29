@@ -1108,6 +1108,10 @@ html[data-skin="retro"] .story .stn{color:var(--ink)}
 .qchip .qtx{flex:1 1 auto;min-width:0;overflow:hidden}
 .qchip .qtx>span,.qchip .qtx small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qchip>.pill{flex:none;position:static}
+
+/* v148: rotating photos inside a circle */
+.story .inner.ph .stph{position:absolute;inset:0;opacity:0;transition:opacity .7s ease}
+.story .inner.ph .stph.on{opacity:1}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -2669,7 +2673,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='144';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='148';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -4529,16 +4533,19 @@ function storyFx(){if(storyFx._on||!document.querySelector('.stories.enter'))ret
     const tick=()=>{const t=Date.now()-T0;let more=false;document.querySelectorAll('.stories .story .hlp[data-pct]').forEach(el=>{const k=+getComputedStyle(el.closest('.story')).getPropertyValue('--i')||0;const x=Math.max(0,Math.min(1,(t-k*60-280)/ms));if(x<1)more=true;el.textContent='−'+Math.round(+el.dataset.pct*(1-Math.pow(1-x,3)))+'%'});if(more&&t<5000)requestAnimationFrame(tick)};tick();
     setTimeout(()=>{const st=document.querySelector('.stories');if(!st||st.scrollLeft||st.scrollWidth<=st.clientWidth+20)return;st.scrollBy({left:-46,behavior:'smooth'});setTimeout(()=>st.scrollBy({left:46,behavior:'smooth'}),520)},1100)};
   go()}
+/* every few seconds each unseen circle shows the next of its top deals (a soft cross-fade), each on its own beat */
+let _stRot=0;const _stIdx={};setInterval(()=>{if(document.hidden||matchMedia('(prefers-reduced-motion: reduce)').matches)return;_stRot++;
+  document.querySelectorAll('.story:not(.seen) .inner.ph').forEach((el,k)=>{if((_stRot+k)%2)return;const ps=el.querySelectorAll('.stph');if(ps.length<2)return;const i=[...ps].findIndex(x=>x.classList.contains('on'));const n=(i+1)%ps.length;ps.forEach(x=>x.classList.remove('on'));ps[n].classList.add('on');if(el.dataset.gid)_stIdx[el.dataset.gid]=n})},2400);
 function storiesHtml(){const G=storyGroups();if(!G.length)return'';/* the first photo of the first circles loads while the shopper looks at the strip */clearTimeout(storiesHtml.t);storiesHtml.t=setTimeout(()=>{hdReady.then(()=>G.slice(0,4).forEach(g=>g.rows[0]&&warmHD(g.rows[0].v)))},1200);const seen=state.storySeen||{};
   /* unseen first (like any story app), each circle keeps its own index; the strip pops in once per visit */
   /* the strip is redrawn often while data loads: the entrance keeps running on its own clock instead of restarting */
   const now=Date.now();if(!storiesHtml._t0&&!document.querySelector('.splash:not(.out)'))storiesHtml._t0=now;const el=storiesHtml._t0?now-storiesHtml._t0:0;const enter=el<2200;const waiting=!storiesHtml._t0;
   let pulses=0;const order=G.map((g,i)=>({g,i,seen:seen[g.id]===storyKey(g)})).sort((a,b)=>(a.seen-b.seen)||(a.i-b.i));
-  return `<div class="storyband"><div class="stories${enter?' enter':''}${waiting?' waiting':''}" style="--el:${el}ms" role="list" aria-label="מבצעים לפי קטגוריה">${order.map(({g,i,seen:sn},k)=>{const H=HL[g.id]||HL.other;const top=g.rows.find(r=>HAVE&&r.v.bc&&HAVE.has(r.v.bc));const best=Math.max(...g.rows.map(r=>r.pct));
+  return `<div class="storyband"><div class="stories${enter?' enter':''}${waiting?' waiting':''}" style="--el:${el}ms" role="list" aria-label="מבצעים לפי קטגוריה">${order.map(({g,i,seen:sn},k)=>{const H=HL[g.id]||HL.other;const pics=g.rows.filter(r=>HAVE&&r.v.bc&&HAVE.has(r.v.bc)).slice(0,4);const top=pics[0];const best=Math.max(...g.rows.map(r=>r.pct));
     const ends=g.rows.map(r=>r.pr.end?Math.ceil((new Date(r.pr.end)-now)/864e5):null).filter(d=>d!=null&&d>=0);const soon=ends.length?Math.min(...ends):null;const hot=soon!=null&&soon<=1;const nSoon=ends.filter(d=>d===soon).length;
     const sub=hot?`🔥 ${nSoon===1?'אחד נגמר':nSoon+' נגמרים'} ${soon===0?'היום':'מחר'}`:nOf(g.rows.length,'מבצע אחד','מבצעים');if(hot&&!sn)pulses++;
     return `<button type="button" class="story${sn?' seen':''}${hot&&!sn?' hot':''}" data-story="${i}" role="listitem" style="--i:${k};--n:${Math.min(g.rows.length,12)};--gap:${g.rows.length>1?'7deg':'0deg'}" aria-label="${esc(g.n)}: ${nOf(g.rows.length,'מבצע אחד','מבצעים')}, עד ${best}% הנחה${hot?', '+sub.slice(3):''}${sn?', נצפה':''}">
-      <span class="ring">${hot&&!sn&&pulses<=2?'<span class="pulse" aria-hidden="true"></span>':''}<span class="inner hl${top?' ph':''}" style="--g1:${H[1]};--g2:${H[2]}">${top?thumb(top.v,H[0],'stph'):`<span class="hle" aria-hidden="true">${H[0]}</span>`}</span>${top?`<span class="ste" aria-hidden="true">${H[0]}</span>`:''}<span class="hlp" dir="ltr" data-pct="${best}">−${best}%</span></span>
+      <span class="ring">${hot&&!sn&&pulses<=2?'<span class="pulse" aria-hidden="true"></span>':''}<span class="inner hl${top?' ph':''}" data-gid="${esc(g.id)}" style="--g1:${H[1]};--g2:${H[2]}">${top?pics.map((r,j)=>thumb(r.v,H[0],'stph'+(j===(_stIdx[g.id]||0)%pics.length?' on':''))).join(''):`<span class="hle" aria-hidden="true">${H[0]}</span>`}</span>${top?`<span class="ste" aria-hidden="true">${H[0]}</span>`:''}<span class="hlp" dir="ltr" data-pct="${best}">−${best}%</span></span>
       <small class="stn">${esc(g.n)}</small><small class="sts${hot&&!sn?' hot':''}">${sub}</small></button>`}).join('')}</div></div>`}
 function openStories(start){const G=storyGroups();if(!G[start])return;let gi=start,si=0,timer=0,t0=0,paused=false,left=0;let DUR=5000;
   const root=document.createElement('div');root.className='sview neo';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.appendChild(root);
@@ -4547,12 +4554,15 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
   /* the page behind must not scroll sideways or under the story (iOS shifts fixed layers when the page is wider than the screen) */
   const ov=[document.documentElement.style.overflow,document.body.style.overflow];document.documentElement.style.overflow=document.body.style.overflow='hidden';window.scrollTo(0,window.scrollY);
   const prevFocus=document.activeElement;
-  const close=()=>{clearTimeout(timer);markSeen();removeEventListener('resize',onRs);root.remove();document.documentElement.style.overflow=ov[0];document.body.style.overflow=ov[1];document.removeEventListener('keydown',key);update();prevFocus?.focus?.()};
+  const close=()=>{clearTimeout(timer);markSeen();['pointerup','pointercancel','touchend','touchcancel'].forEach(t=>document.removeEventListener(t,up,true));document.removeEventListener('visibilitychange',vis);removeEventListener('resize',onRs);root.remove();document.documentElement.style.overflow=ov[0];document.body.style.overflow=ov[1];document.removeEventListener('keydown',key);update();prevFocus?.focus?.()};
   const markSeen=()=>{(state.storySeen||={})[G[gi].id]=storyKey(G[gi]);save()};
   const go=(d)=>{clearTimeout(timer);si+=d;if(si>=G[gi].rows.length){markSeen();gi++;si=0;if(gi>=G.length){gi--;return close()}}if(si<0){if(gi>0){gi--;si=G[gi].rows.length-1}else si=0}draw()};
   const run=(ms)=>{clearTimeout(timer);t0=Date.now();left=ms;const bar=root.querySelector('.bars i.cur b');if(bar){bar.style.transition='none';bar.style.width=(100*(1-ms/DUR))+'%';bar.offsetWidth;bar.style.transition=`width ${ms}ms linear`;bar.style.width='100%'}timer=setTimeout(()=>go(1),ms)};
   const pause=()=>{if(paused)return;paused=true;clearTimeout(timer);left=Math.max(0,left-(Date.now()-t0));const bar=root.querySelector('.bars i.cur b');if(bar){const w=getComputedStyle(bar).width;bar.style.transition='none';bar.style.width=w}};
   const resume=()=>{if(!paused)return;paused=false;run(left||DUR)};
+  /* the finger can leave anywhere (or the phone can lock): the story never stays frozen */
+  const up=()=>resume();document.addEventListener('pointerup',up,true);document.addEventListener('pointercancel',up,true);document.addEventListener('touchend',up,true);document.addEventListener('touchcancel',up,true);
+  const vis=()=>{if(document.hidden)pause();else resume()};document.addEventListener('visibilitychange',vis);
   const key=e=>{if(e.key==='Escape')close();else if(e.key==='ArrowLeft')go(1);else if(e.key==='ArrowRight')go(-1)};document.addEventListener('keydown',key);
   /* the showcase takes all the room left between the title and the details: as big as the screen allows */
   const fitStage=()=>{const st=root.querySelector('.svstage');if(!st)return;root.style.setProperty('--cs','10px');
@@ -4578,7 +4588,7 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
       if(cur&&cur.cls==='warn'&&k.cls!=='warn')return;if(k.cls==='info'&&cur)return;el.hidden=false;el.className='svcheck '+k.cls;el.textContent=k.t})}
     root.querySelector('.x').onclick=close;
     root.querySelector('.tapzone.next').onclick=()=>go(1);root.querySelector('.tapzone.prev').onclick=()=>go(-1);
-    const body=root.querySelector('.svhero');body.onpointerdown=()=>{pause()};body.onpointerup=()=>{resume()};body.onpointerleave=()=>{resume()};
+    const body=root.querySelector('.svhero');body.onpointerdown=()=>{pause()};body.onpointerup=body.onpointerleave=body.onpointercancel=body.onlostpointercapture=()=>{resume()};
     root.querySelector('#stAdd').onclick=()=>{addItems([{t:r.v.t,v:r.v.id,q:r.pr.kind==='multi'?r.pr.n:1}]);save();toast(`${vLabel(r.v)} נוסף לרשימה`);go(1)};
     root.querySelector('#stRep').onclick=()=>{close();openReport(r.v,r.cid)};
     root.querySelector('#stCheck').onclick=()=>{close();openPriceCheck(r.v)};
