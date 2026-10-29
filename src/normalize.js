@@ -126,6 +126,7 @@ export function dealFor(pr, base, now = new Date()) {
   deal.unit = Math.round(unit * 100) / 100;
   deal.club = pr.clubs.some((c) => String(c) !== '0') ? 1 : 0;
   deal.end = day(pr.end);
+  deal.start = day(pr.start); // when the deal began: the app shows new deals first
   deal.desc = String(pr.description || '').trim().slice(0, 60);
   if (pr.minPurchaseAmount > 0) deal.min = Math.round(pr.minPurchaseAmount);
   if (pr.limit >= 1 && pr.limit < 100) deal.lim = Math.round(pr.limit);
@@ -165,10 +166,11 @@ export function addPromos(db, chainKey, parsed) {
   }
 }
 
-/** deal → [kind, n, price|pct, club, end, desc] (+ [min basket ₪, unit limit] when the deal has them) */
+/** deal → [kind, n, price|pct, club, end, desc] (+ [min basket ₪, unit limit] when the deal has them, + start date when known) */
 export const packDeal = (d) => {
   const a = [d.kind, d.n, d.kind === 'm' ? d.price : d.pct, d.club, d.end, d.desc];
-  if (d.min || d.lim) a.push(d.min || 0, d.lim || 0);
+  if (d.min || d.lim || d.start) a.push(d.min || 0, d.lim || 0);
+  if (d.start) a.push(d.start);
   return a;
 };
 

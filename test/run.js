@@ -125,6 +125,9 @@ assert.equal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'], isGiftItem: 
   assert.equal(d.price, 19.9); assert.equal(d.club, 1); assert.equal(d.min, 100); assert.equal(d.lim, 3);
   assert.deepEqual(packDeal(d).slice(6), [100, 3], 'packed with its minimum and limit');
   assert.equal(packDeal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'] }, 10)).length, 6, 'plain deals stay 6 long');
+  { const today = new Date().toISOString().slice(0, 10);
+    const p = packDeal(dealFor({ discountedPrice: 5, minQty: 1, clubs: ['0'], start: today + ' 00:00' }, 10));
+    assert.deepEqual(p.slice(6), [0, 0, today], 'a deal keeps its start date (for "new deals first")'); }
 }
 
 // 6b. the chain price is the one most branches charge; branches that differ keep their own price

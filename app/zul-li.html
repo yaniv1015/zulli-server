@@ -1112,6 +1112,10 @@ html[data-skin="retro"] .story .stn{color:var(--ink)}
 /* v148: rotating photos inside a circle */
 .story .inner.ph .stph{position:absolute;inset:0;opacity:0;transition:opacity .7s ease}
 .story .inner.ph .stph.on{opacity:1}
+
+.story .sts.new{color:#256B43;opacity:1;font-weight:700}
+html:not([data-skin="retro"]) .story .sts.new{color:#B6FF3B}
+.svnew{color:#B6FF3B;font-weight:800}
 </style>
 
 <div class="splash" id="splash" dir="rtl" lang="he" role="status" aria-live="polite" aria-label="מוזיל נטען">
@@ -2673,7 +2677,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='148';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='149';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -4072,11 +4076,11 @@ If the image is not a voucher, reply {"value": 0}.`,{images:img,signal:ctl.signa
 }
 /* a deal from the price files: [kind 'm'|'p', n, price|pct, club, end, desc] */
 let _tISO='',_tAt=0;const todayISO=()=>{const n=Date.now();if(n-_tAt>6e4){const d=new Date();_tISO=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;_tAt=n}return _tISO};
-function realDeal(d,cid){if(!Array.isArray(d))return null;const [k,n,val,club,end,desc,min,lim]=d;const lab=String(desc||'').trim();
+function realDeal(d,cid){if(!Array.isArray(d))return null;const [k,n,val,club,end,desc,min,lim,start]=d;const lab=String(desc||'').trim();
   if(/קופון|הטבת|שובר|ביטוח/.test(lab))return null;/* needs a coupon or an outside benefit: not a shelf price */
   if(end&&String(end).slice(0,10)<todayISO())return null;/* a deal that already ended (the price file can be a few hours old) */
   /* min: the deal needs a basket over min ₪ at that chain; lim: units per shopper */
-  const base={club:!!club,end,label:'',min:+min>0?+min:0,lim:+lim>0?+lim:0};
+  const base={club:!!club,end,start:/^\d{4}-\d{2}-\d{2}$/.test(String(start||''))?start:'',label:'',min:+min>0?+min:0,lim:+lim>0?+lim:0};
   const cond=(base.min?` · בקנייה מעל ₪${Math.round(base.min)}`:'')+(base.lim?` · עד ${base.lim} יח׳`:'');
   if(k==='m'&&n>1)return{...base,kind:'multi',n,price:+val,label:(lab||`${n} ב-${fmt(+val)}`)+cond};
   if(k==='m')return{...base,kind:'fixed',price:+val,label:(lab||`מבצע ${fmt(+val)}`)+cond};
@@ -4497,18 +4501,31 @@ function cutoutIn(el){const fix=img=>{if(!img||img.dataset.cut)return;img.datase
     cutoutSrc(src).then(u=>{if(u&&document.contains(img)){img.src=u;el.classList.add('cut')}else el.classList.add('nocut')})};
   fix(el.querySelector('img'));new MutationObserver(()=>fix(el.querySelector('img'))).observe(el,{childList:true,subtree:true})}
 /* the groups are the same until the prices, the chains followed, the photos or the day change: built once, not on every screen */
-function storyGroups(){const k=[REAL&&REAL.updated,V.length,V[0]?.id,followed().map(c=>c.id).join(','),new Date().toDateString(),typeof HDIX!=='undefined'&&HDIX?1:0,typeof HDINFO!=='undefined'&&HDINFO?Object.keys(HDINFO).length:0,state.hideCats||''].join('|');
+function storyGroups(){const k=[storySlot(),REAL&&REAL.updated,V.length,V[0]?.id,followed().map(c=>c.id).join(','),new Date().toDateString(),typeof HDIX!=='undefined'&&HDIX?1:0,typeof HDINFO!=='undefined'&&HDINFO?Object.keys(HDINFO).length:0,state.hideCats||''].join('|');
   if(storyGroups.k===k)return storyGroups.v;storyGroups.k=k;return storyGroups.v=storyGroups0()}
+/* what goes into the stories: big discounts, but new deals first and a different mix every day.
+   fresh: the deal began in the last days (the chains publish the start date); perpetual "deals" that end in years are not news */
+const dayDiff=(a,b)=>Math.round((Date.parse(a)-Date.parse(b))/864e5);
+const dealAge=r=>r.pr.start?dayDiff(todayISO(),r.pr.start):null;
+const isNewDeal=r=>{const a=dealAge(r);return a!=null&&a>=0&&a<=2};
+function storyScore(r){const a=dealAge(r);let s=r.pct;if(a!=null&&a>=0)s+=a<=1?30:a<=3?18:a<=7?8:0;
+  if(r.pr.end&&dayDiff(r.pr.end,todayISO())>365)s-=20;
+  return s}
+/* three times a day (morning, noon, evening) each circle shows another slice of its best deals; new deals always lead */
+const storySlot=()=>Math.floor((Date.now()+2*36e5)/(8*36e5));
+function rotateRows(rows){const fresh=rows.filter(r=>{const a=dealAge(r);return a!=null&&a>=0&&a<=3}),rest=rows.filter(r=>!fresh.includes(r));
+  const w=Math.min(rest.length,45);if(w<2)return [...fresh,...rest];const off=(storySlot()*5)%w;
+  return [...fresh,...rest.slice(off,w),...rest.slice(0,off),...rest.slice(w)]}
 function storyGroups0(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)return [];
   const best=new Map();for(const r of dealRows(fol,20)){const k=r.v.id;if(!best.has(k)||best.get(k).pct<r.pct)best.set(k,r)}
   const promo=new Set(),names=new Set();
-  const all=[...best.values()].filter(r=>!r.pr.club||state.clubs.includes(r.cid)).sort((a,b)=>b.pct-a.pct).filter(r=>{
+  const all=[...best.values()].filter(r=>!r.pr.club||state.clubs.includes(r.cid)).map(r=>(r.score=storyScore(r),r)).sort((a,b)=>b.score-a.score).filter(r=>{
     /* one story per promotion ("10 ב-9.90" on many plates is one deal) and per product name (the same item under several barcodes) */
     const pk=r.cid+'|'+norm(String(r.pr.label||'')).replace(/\s+/g,' ').trim(),nk=norm(vLabel(r.v)).replace(/[^\p{L}\p{N}]+/gu,' ').trim().split(' ').slice(0,3).join(' ');
     if(promo.has(pk)||names.has(nk))return false;promo.add(pk);names.add(nk);return true});
   /* products with a photo first; a group keeps photo-less ones only when it has few pictures */
   const hdp=r=>!!(HD&&r.v.bc&&HD.has(r.v.bc));const pic=r=>hdp(r)||!!(HAVE&&r.v.bc&&HAVE.has(r.v.bc));
-  const pick=(rows,n)=>{if(!HAVE&&!HD)return rows.slice(0,n);rows=[...rows.filter(hdp),...rows.filter(r=>!hdp(r))];const a=rows.filter(pic);return a.length>=Math.min(5,rows.length)?a.slice(0,n):[...a,...rows.filter(r=>!pic(r))].slice(0,n)};
+  const pick=(rows,n)=>{rows=rotateRows(rows);if(!HAVE&&!HD)return rows.slice(0,n);rows=[...rows.filter(hdp),...rows.filter(r=>!hdp(r))];const a=rows.filter(pic);return a.length>=Math.min(5,rows.length)?a.slice(0,n):[...a,...rows.filter(r=>!pic(r))].slice(0,n)};
   const by={};for(const r of all){const a=storyShelf(r.v);(by[a]||=[]).push(r)}
   const groups=[{id:'top',e:'🔥',n:'הכי שווים',rows:pick(all,15)}];
   /* electrical: products of the appliances and electronics departments on any deal (10%+), the biggest saving in shekels first,
@@ -4516,7 +4533,7 @@ function storyGroups0(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)
   const D=deptItems(),elecIds=new Set([...(D.appliances?.all||[]),...(D.phones?.all||[])].map(x=>x.v.id));
   if(elecIds.size){const eb=new Map();for(const r of dealRows(fol,10)){if(!elecIds.has(r.v.id)||r.pr.club&&!state.clubs.includes(r.cid))continue;const o=eb.get(r.v.id);if(!o||o.p-o.unit<r.p-r.unit)eb.set(r.v.id,r)}
     const en=new Set(),erows=[...eb.values()].sort((a,b)=>(b.p-b.unit)-(a.p-a.unit)).filter(r=>{const k=norm(vLabel(r.v)).split(/\s+/).slice(0,3).join(' ');if(en.has(k))return false;en.add(k);return true});
-    const rows=erows.slice(0,15);/* few electrical items have photos: keep the saving order */if(rows.length>=2)groups.push({id:'elec',e:'⚡',n:'מוצרי חשמל',rows})}
+    const rows=rotateRows(erows).slice(0,15);/* few electrical items have photos: keep the saving order */if(rows.length>=2)groups.push({id:'elec',e:'⚡',n:'מוצרי חשמל',rows})}
   for(const [id,name] of SHELVES){if(id==='other')continue;const rows=pick(by[id]||[],15);if(rows.length>=2)groups.push({id,e:name.split(' ')[0],n:name.split(' ').slice(1).join(' ').replace(/,.*$/,''),rows})}
   /* electrical and babies right after the best deals */
   const rank=g=>({top:0,elec:1,baby:2})[g.id]??3;
@@ -4543,10 +4560,11 @@ function storiesHtml(){const G=storyGroups();if(!G.length)return'';/* the first 
   let pulses=0;const order=G.map((g,i)=>({g,i,seen:seen[g.id]===storyKey(g)})).sort((a,b)=>(a.seen-b.seen)||(a.i-b.i));
   return `<div class="storyband"><div class="stories${enter?' enter':''}${waiting?' waiting':''}" style="--el:${el}ms" role="list" aria-label="מבצעים לפי קטגוריה">${order.map(({g,i,seen:sn},k)=>{const H=HL[g.id]||HL.other;const pics=g.rows.filter(r=>HAVE&&r.v.bc&&HAVE.has(r.v.bc)).slice(0,4);const top=pics[0];const best=Math.max(...g.rows.map(r=>r.pct));
     const ends=g.rows.map(r=>r.pr.end?Math.ceil((new Date(r.pr.end)-now)/864e5):null).filter(d=>d!=null&&d>=0);const soon=ends.length?Math.min(...ends):null;const hot=soon!=null&&soon<=1;const nSoon=ends.filter(d=>d===soon).length;
-    const sub=hot?`🔥 ${nSoon===1?'אחד נגמר':nSoon+' נגמרים'} ${soon===0?'היום':'מחר'}`:nOf(g.rows.length,'מבצע אחד','מבצעים');if(hot&&!sn)pulses++;
+    const nNew=g.rows.filter(isNewDeal).length;
+    const sub=hot?`🔥 ${nSoon===1?'אחד נגמר':nSoon+' נגמרים'} ${soon===0?'היום':'מחר'}`:nNew?`🆕 ${nNew===1?'מבצע חדש':nNew+' חדשים'}`:nOf(g.rows.length,'מבצע אחד','מבצעים');if(hot&&!sn)pulses++;
     return `<button type="button" class="story${sn?' seen':''}${hot&&!sn?' hot':''}" data-story="${i}" role="listitem" style="--i:${k};--n:${Math.min(g.rows.length,12)};--gap:${g.rows.length>1?'7deg':'0deg'}" aria-label="${esc(g.n)}: ${nOf(g.rows.length,'מבצע אחד','מבצעים')}, עד ${best}% הנחה${hot?', '+sub.slice(3):''}${sn?', נצפה':''}">
       <span class="ring">${hot&&!sn&&pulses<=2?'<span class="pulse" aria-hidden="true"></span>':''}<span class="inner hl${top?' ph':''}" data-gid="${esc(g.id)}" style="--g1:${H[1]};--g2:${H[2]}">${top?pics.map((r,j)=>thumb(r.v,H[0],'stph'+(j===(_stIdx[g.id]||0)%pics.length?' on':''))).join(''):`<span class="hle" aria-hidden="true">${H[0]}</span>`}</span>${top?`<span class="ste" aria-hidden="true">${H[0]}</span>`:''}<span class="hlp" dir="ltr" data-pct="${best}">−${best}%</span></span>
-      <small class="stn">${esc(g.n)}</small><small class="sts${hot&&!sn?' hot':''}">${sub}</small></button>`}).join('')}</div></div>`}
+      <small class="stn">${esc(g.n)}</small><small class="sts${hot&&!sn?' hot':nNew&&!sn?' new':''}">${sub}</small></button>`}).join('')}</div></div>`}
 function openStories(start){const G=storyGroups();if(!G[start])return;let gi=start,si=0,timer=0,t0=0,paused=false,left=0;let DUR=5000;
   const root=document.createElement('div');root.className='sview neo';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');document.body.appendChild(root);
   {const o=document.querySelector(`[data-story="${start}"] .ring`);if(o&&root.animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const r=o.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
@@ -4574,7 +4592,7 @@ function openStories(start){const G=storyGroups();if(!G[start])return;let gi=sta
       <div class="svhead"><div class="svtitle"><b>${esc(g.n)} <span class="te">${g.e}</span></b><small>מבצע ${si+1} מתוך ${g.rows.length}</small></div><button class="x" type="button" aria-label="סגור">✕</button></div>
       <div class="svstage"><div class="case"><div class="prod">${noPic(r.v)?textCard(r.v):HD&&r.v.bc&&HD.has(r.v.bc)?'<span class="th hdwait" aria-hidden="true"></span>':thumb(r.v,TYPES[r.v.t][1])}</div></div><div class="podium"><span class="neonpct" dir="ltr">−${r.pct}%</span></div></div>
       <button class="tapzone prev" type="button" aria-label="הקודם"></button><button class="tapzone next" type="button" aria-label="הבא"></button></div>
-      <div class="sinfo"><div class="svchain" style="--sc:var(${c.c})"><span>המבצע ב<b>${esc(c.name)}</b>${r.pr.club?` <small>· למועדון ${esc(c.club||"")}</small>`:''}${left!=null&&left>=0?` <small class="svdays">· ${left===0?'נגמר היום':`עוד ${nOf(left,'יום אחד','ימים')}`}</small>`:''}</span></div><div class="nm">${esc(vLabel(r.v))}${r.v.s&&!vLabel(r.v).includes(r.v.s)?` <small style="color:#C9C9D1">${esc(r.v.s)}</small>`:''}</div>
+      <div class="sinfo"><div class="svchain" style="--sc:var(${c.c})"><span>המבצע ב<b>${esc(c.name)}</b>${r.pr.club?` <small>· למועדון ${esc(c.club||"")}</small>`:''}${isNewDeal(r)?' <small class="svnew">· 🆕 חדש</small>':''}${left!=null&&left>=0?` <small class="svdays">· ${left===0?'נגמר היום':`עוד ${nOf(left,'יום אחד','ימים')}`}</small>`:''}</span></div><div class="nm">${esc(vLabel(r.v))}${r.v.s&&!vLabel(r.v).includes(r.v.s)?` <small style="color:#C9C9D1">${esc(r.v.s)}</small>`:''}</div>
         <div class="pr"><b>${fmt(r.unit)}</b>${r.pr.kind==='multi'?' ליח׳':''} &nbsp;<s>${fmt(r.p)}</s></div>${r.pr.kind==='multi'?`<small style="color:#C9C9D1">${esc(r.pr.label)}</small>`:''}
         ${(()=>{const k=dealCheck(r);return `<div class="svcheck ${k?k.cls:''}" id="svck"${k?'':' hidden'}>${k?(k.cls==='good'?'✓ ':'⚠️ ')+esc(k.t):''}</div>`})()}
 </div>
