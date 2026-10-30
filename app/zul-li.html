@@ -1787,7 +1787,7 @@ function applyReal(sum){
   // keep the shopper's list: map each demo product to the closest real one
   for(const [i,label] of prevLabels){if(i.v&&VB[i.v])continue;const m=label?matchDesc(label):null;if(m){i.v=m.id;i.t=m.t}else i.v=null}
   CHAIN_FILES=sum.chainFiles&&typeof sum.chainFiles==='object'?sum.chainFiles:{};LOADED.clear();for(const c of chainsSeen)LOADED.add(c);
-  REAL={updated:sum.updated||null,count:out.length,chains:[...new Set([...chainsSeen,...Object.keys(CHAIN_FILES).filter(c=>CHB[c])])]};
+  REAL={updated:sum.updated||null,fresh:sum.fresh&&typeof sum.fresh==='object'?sum.fresh:null,count:out.length,chains:[...new Set([...chainsSeen,...Object.keys(CHAIN_FILES).filter(c=>CHB[c])])]};
   return REAL;
 }
 /* neighborhood chains come in their own small files (chains/<id>.json), loaded only where they have a branch,
@@ -1806,11 +1806,11 @@ function ensureChains(){if(!REAL)return Promise.resolve();
     .then(()=>{if(need.length)update()})} // loading a chain only adds products, so the saved state needs no cleanup
 /* the processed catalog (products with their kinds, branches) is kept on the phone, so opening the app skips the slow processing */
 const NEW_CITIES=new Set();
-function snapshotReal(){if(!REAL)return;const snap={ver:REAL.updated,V:V.map(({key,...v})=>v),stores:REAL_STORES,noCity:NOCITY,newCities:[...NEW_CITIES],chainFiles:CHAIN_FILES,loaded:[...LOADED],chains:REAL.chains};
+function snapshotReal(){if(!REAL)return;const snap={ver:REAL.updated,V:V.map(({key,...v})=>v),stores:REAL_STORES,noCity:NOCITY,newCities:[...NEW_CITIES],chainFiles:CHAIN_FILES,loaded:[...LOADED],chains:REAL.chains,fresh:REAL.fresh||null};
   idbSet('bundledV',snap).catch(()=>{});idbDel('bundled')}
 function restoreReal(c){if(!c||!Array.isArray(c.V)||!c.V.length)return null;if(!DEMO_V)DEMO_V=V.slice();V.length=0;for(const v of c.V)V.push(v);rebuildIndex();
   for(const k in REAL_STORES)delete REAL_STORES[k];Object.assign(REAL_STORES,c.stores||{});for(const k in NOCITY)delete NOCITY[k];Object.assign(NOCITY,c.noCity||{});for(const k of c.newCities||[])if(!CITIES[k]){CITIES[k]=GENERIC_AREAS;NEW_CITIES.add(k)}
-  CHAIN_FILES=c.chainFiles||{};LOADED.clear();(c.loaded||[]).forEach(x=>LOADED.add(x));REAL={updated:c.ver,count:V.length,chains:c.chains||[]};return REAL}
+  CHAIN_FILES=c.chainFiles||{};LOADED.clear();(c.loaded||[]).forEach(x=>LOADED.add(x));REAL={updated:c.ver,fresh:c.fresh||null,count:V.length,chains:c.chains||[]};return REAL}
 function dropReal(){if(!DEMO_V)return;V.length=0;for(const v of DEMO_V)V.push(v);rebuildIndex();for(const k in REAL_STORES)delete REAL_STORES[k];REAL=null}
 /* persist the (large) price file in IndexedDB; localStorage is too small */
 function idb(){return new Promise((res,rej)=>{try{const r=indexedDB.open('zulli',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}})}
@@ -2677,7 +2677,7 @@ async function openRegister(after,welcome){const P=state.profile;const ce=await 
    Errors are kept on the phone (the last 20) and go out only inside a feedback message the user sends.
    SUPPORT_EMAIL: where feedback and reports go (an email app opens with the text); empty = the phone's share menu. */
 const SUPPORT_EMAIL='';
-const BUILD='149';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
+const BUILD='150';/* shown in the photo sheet and the account screen, so a screenshot tells which version is running */
 const ERRLOG=(()=>{try{return JSON.parse(localStorage.getItem('mozilErr')||'[]')}catch(e){return []}})();
 function logErr(m){try{ERRLOG.push({t:new Date().toISOString().slice(0,16),m:String(m).slice(0,300)});while(ERRLOG.length>20)ERRLOG.shift();localStorage.setItem('mozilErr',JSON.stringify(ERRLOG))}catch(e){}}
 window.addEventListener('error',e=>logErr((e.message||'error')+' @'+(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
@@ -4516,7 +4516,10 @@ const storySlot=()=>Math.floor((Date.now()+2*36e5)/(8*36e5));
 function rotateRows(rows){const fresh=rows.filter(r=>{const a=dealAge(r);return a!=null&&a>=0&&a<=3}),rest=rows.filter(r=>!fresh.includes(r));
   const w=Math.min(rest.length,45);if(w<2)return [...fresh,...rest];const off=(storySlot()*5)%w;
   return [...fresh,...rest.slice(off,w),...rest.slice(0,off),...rest.slice(w)]}
-function storyGroups0(){const fol=followed().map(c=>c.id);if(!REAL||!fol.length)return [];
+/* a chain whose files stopped coming in (the server keeps its last data) is left out of the stories:
+   its deals may have ended. Back in as soon as fresh files arrive. */
+const staleChain=cid=>{const f=REAL&&REAL.fresh;if(!f||!(cid in f))return false;const t=Date.parse(f[cid]);return !t||Date.now()-t>36*36e5};
+function storyGroups0(){const fol=followed().map(c=>c.id).filter(id=>!staleChain(id));if(!REAL||!fol.length)return [];
   const best=new Map();for(const r of dealRows(fol,20)){const k=r.v.id;if(!best.has(k)||best.get(k).pct<r.pct)best.set(k,r)}
   const promo=new Set(),names=new Set();
   const all=[...best.values()].filter(r=>!r.pr.club||state.clubs.includes(r.cid)).map(r=>(r.score=storyScore(r),r)).sort((a,b)=>b.score-a.score).filter(r=>{

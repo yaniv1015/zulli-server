@@ -19,7 +19,8 @@ for f in srcs:                       # merge several summaries (e.g. a run per g
         for k in ('m', 'u', 'q', 'w'):
             if p.get(k) and not q.get(k): q[k] = p[k]
     full['stores'].update(s.get('stores', {}))
-core = {'updated': full['updated'], 'products': {}, 'stores': full['stores'], 'chainFiles': {}}
+    full.setdefault('fresh', {}).update(s.get('fresh', {}))   # when each chain last came in fresh
+core = {'updated': full['updated'], 'products': {}, 'stores': full['stores'], 'chainFiles': {}, 'fresh': full.get('fresh', {})}
 local = {}
 for bc, p in full['products'].items():
     cp = {c: v for c, v in p['p'].items() if c in CORE}

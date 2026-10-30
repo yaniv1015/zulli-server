@@ -37,8 +37,20 @@ const report = { started: new Date().toISOString(), chains: {} };
 // stores than last time keeps its previous prices, deals and branches instead of shrinking the app's catalog.
 let prev = null;
 try { prev = JSON.parse(await readFile('data/prev.json', 'utf8')); } catch {}
+/* when each chain's data last came in fresh: { chain: ISO time }. A chain that keeps its previous data keeps its old
+   time, so the app can leave stale deals out of the stories (Carrefour and Victory block servers outside Israel). */
+function withFresh(sum) {
+  const now = report.started, fresh = {};
+  for (const key of chainKeys) {
+    if (report.chains[key]?.keptPrevious) { fresh[key] = prev?.fresh?.[key] || ''; continue; } // '' = stale since before we kept times
+    if (Object.values(sum.products).some((p) => p.p?.[key] != null)) fresh[key] = now;
+  }
+  for (const [parent, subs] of Object.entries(SPLITS)) for (const sub of subs) if (parent in fresh) fresh[sub.key] = fresh[parent];
+  sum.fresh = fresh;
+  return sum;
+}
 function withFallback(sum) {
-  if (!prev?.products) return sum;
+  if (!prev?.products) return withFresh(sum);
   for (const key of chainKeys) {
     const before = (prev.stores?.[key] || []).length, now = (sum.stores?.[key] || []).length;
     const priced = report.chains[key]?.stores || 0;
@@ -59,7 +71,7 @@ function withFallback(sum) {
   }
   for (const p of Object.values(sum.products)) { if (p.d && !Object.keys(p.d).length) delete p.d; if (p.dc && !Object.keys(p.dc).length) delete p.dc; }
   for (const [bc, p] of Object.entries(sum.products)) if (!Object.keys(p.p).length) delete sum.products[bc];
-  return sum;
+  return withFresh(sum);
 }
 
 async function saveOutputs(done = false) {
