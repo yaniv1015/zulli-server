@@ -1940,19 +1940,25 @@ const localHere=c=>(state.anywhere||[]).includes(c.id)||(state.cmpBy==='city'?br
 const followed=()=>{if(_fol)return _fol.slice();_fol=CH.filter(c=>state.follow.includes(c.id)&&(!REAL||REAL.chains.includes(c.id))&&(!c.local||!REAL||(localHere(c)&&LOADED.has(c.id))));setTimeout(()=>{_fol=null},0);return _fol.slice()};
 function log(txt){const me=state.profile.name||'אני';const e={ts:Date.now(),txt:`${me} ${txt}`};state.family.feed.unshift(e);state.family.feed=state.family.feed.slice(0,8);FAM.feedOut.push(e)}
 /* ================= family list (shared, live) =================
-   One shared document per family, families/<code>: {items, rev, by, ts, feed, members}. Everyone who opens this app
-   (shared with them) and joins with the code sees the same list; each change replaces the list (last change wins). */
+   One shared document per family, fam/<code>/l/main: {items, rev, by, ts, feed, members}. Everyone who opens this app
+   (shared with them) and joins with the code sees the same list; each change replaces the list (last change wins).
+   The code is part of the path, so the codes cannot be listed: only someone who has the code reaches the list.
+   (Lists made before this lived in families/<code>, which anyone could list; that collection is now closed to all but
+   the owner, and an old list is copied to its new place the first time it is opened.) */
 const FAM={db:null,user:null,unsub:null,code:null,synced:'',lastRev:'',busy:Promise.resolve(),feedOut:[],remote:null,err:'',ready:false};
 (async()=>{try{FAM.db=await window.claude?.use?.('db');FAM.user=await window.claude?.use?.('user');FAM.me=(await FAM.user?.id?.().catch(()=>null))||null}catch(e){FAM.db=null}FAM.ready=true;if(FAM.db&&state.fam?.code)famListen(state.fam.code);if(state.tab==='mine')render()})();
 const famItems=()=>JSON.stringify(state.items.map(({k,t,v,q,bh,sz})=>({k,t,v,q,...(bh?{bh}:{}),...(sz?{sz}:{})})));
-const famRef=code=>FAM.db.doc('families/'+code);
+const famRef=code=>FAM.db.doc('fam/'+code+'/l/main');
+const famCode=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+async function famMigrate(code){try{const ref=famRef(code);if((await ref.get()).exists)return;
+  const old=await FAM.db.doc('families/'+code).get();if(old.exists)await ref.set(old.data())}catch(e){}}
 // a product this phone does not know (yet) keeps its kind, so the row still shows and compares
 /* the shared list comes from other people's phones: keep only known fields, in known shapes (ids go into the page's markup) */
 const famStr=(x,n)=>typeof x==='string'?x.replace(/[<>"'`]/g,'').slice(0,n):undefined;
 const famClean=a=>(Array.isArray(a)?a:[]).slice(0,300).filter(i=>i&&typeof i==='object'&&typeof i.t==='string'&&Object.prototype.hasOwnProperty.call(TYPES,i.t)).map(i=>{
   const q=Math.min(999,Math.max(.5,Math.round((+i.q||1)*2)/2));const o={k:typeof i.k==='string'&&/^[a-z0-9]{3,20}$/i.test(i.k)?i.k:nid(),t:i.t,q,v:typeof i.v==='string'&&Object.prototype.hasOwnProperty.call(VB,i.v)?i.v:null};
   const bh=famStr(i.bh,40),sz=famStr(i.sz,30);if(bh)o.bh=bh;if(sz)o.sz=sz;return o});
-function famListen(code){if(FAM.unsub){FAM.unsub();FAM.unsub=null}FAM.code=code;FAM.err='';
+async function famListen(code){if(FAM.unsub){FAM.unsub();FAM.unsub=null}FAM.code=code;FAM.err='';await famMigrate(code);if(FAM.code!==code||FAM.unsub)return;
   FAM.unsub=famRef(code).onSnapshot(snap=>{const d=snap.exists?snap.data():null;FAM.remote=d;
     if(d&&Array.isArray(d.items)&&d.rev!==FAM.lastRev){FAM.lastRev=d.rev;const incoming=JSON.stringify(d.items);
       if(incoming!==famItems()){state.items=famClean(d.items);FAM.synced=famItems();save();render();
@@ -1962,8 +1968,8 @@ function famPush(){if(!FAM.db||!state.fam?.code||FAM.code!==state.fam.code)retur
   FAM.synced=now;const rev=nid();FAM.lastRev=rev;const feed=[...FAM.feedOut,...(FAM.remote?.feed||[])].slice(0,10);FAM.feedOut=[];
   const body={items:JSON.parse(now),rev,by:FAM.me||'',byName:state.profile.name||'',ts:Date.now(),feed,members:FAM.remote?.members||[]};
   FAM.busy=FAM.busy.then(()=>famRef(state.fam.code).set(body)).catch(e=>{FAM.err=e?.code||'unavailable';toast(FAM.err==='invalid_argument'?'אין לך הרשאה לעדכן את הרשימה המשפחתית':'הרשימה המשפחתית לא התעדכנה, ננסה בשינוי הבא')})}
-async function famJoin(code,create){code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length<4){toast('קוד לא תקין');return false}
-  try{FAM.me=FAM.me||(await FAM.user?.id?.())||nid();const ref=famRef(code);const snap=await ref.get();const d=snap.exists?snap.data():null;
+async function famJoin(code,create){code=famCode(code);if(code.length<6||code.length>12){toast('קוד לא תקין');return false}
+  try{FAM.me=FAM.me||(await FAM.user?.id?.())||nid();if(!create)await famMigrate(code);const ref=famRef(code);const snap=await ref.get();const d=snap.exists?snap.data():null;
     if(!d&&!create){toast('לא מצאנו רשימה עם הקוד הזה');return false}
     const members=[...((d&&d.members)||[]).filter(m=>m.id!==FAM.me),{id:FAM.me,name:state.profile.name||'בן משפחה',ts:Date.now()}].slice(-20);
     if(d){await ref.update({members});state.items=famClean(d.items);FAM.lastRev=d.rev}

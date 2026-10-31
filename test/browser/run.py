@@ -9,7 +9,7 @@ the way the tests expect (the page and the data one level up); a test fails when
 line, a Python traceback, page errors, or (sec) any payload hit."""
 import argparse,os,re,shutil,subprocess,sys,tempfile,pathlib,time
 HERE=pathlib.Path(__file__).resolve().parent;REPO=HERE.parent.parent
-TESTS=['qa','qa4','flow','edit','rf4','pick','a11y','lk2','ln','reg','sec2','sec3','sec']
+TESTS=['qa','qa4','flow','edit','rf4','pick','a11y','lk2','ln','reg','fam','sec2','sec3','sec']
 BAD=re.compile(r'^FAIL(?!S 0 )|Traceback|FAILS [1-9]|^(page )?errors?:? \[[^\]]|^errs \[[^\]]|pwned: [1-9]|DIALOG',re.M)
 ap=argparse.ArgumentParser();ap.add_argument('--data',required=True);ap.add_argument('--only',default='');ap.add_argument('--keep',action='store_true')
 a=ap.parse_args();data=pathlib.Path(a.data).resolve()
