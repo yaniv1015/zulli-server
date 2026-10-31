@@ -15,7 +15,7 @@ async def main():
     await pg.goto('https://zulli.test/');await pg.wait_for_selector('#q');await pg.wait_for_timeout(2000)
     X='"><img src=x onerror="window.__pwn=1">'
     # a malicious shared list arriving from another phone
-    await pg.evaluate("""X=>{let cb;FAM.db={doc:()=>({onSnapshot:(f)=>{cb=f;return()=>{}},set:async()=>{},get:async()=>({exists:false})})};state.fam={code:'ABCD12'};famListen('ABCD12');
+    await pg.evaluate("""async X=>{let cb;FAM.db={doc:()=>({onSnapshot:(f)=>{cb=f;return()=>{}},set:async()=>{},get:async()=>({exists:false})})};state.fam={code:'ABCD12'};await famListen('ABCD12');
       cb({exists:true,data:()=>({rev:'r1',by:'other',byName:X,items:[{k:X,t:'milk',q:'2',bh:X,sz:X},{k:'ok1',t:'constructor',q:1},{k:'ok2',t:'__proto__',q:1},{k:'ok3',t:'bamba',q:1e9,v:'nope'},{t:'eggs',q:-5,evil:X}],feed:[{txt:X,ts:1}],members:[{id:'z',name:X}]})})}""",X)
     await pg.wait_for_timeout(800)
     items=await pg.evaluate("state.items")
