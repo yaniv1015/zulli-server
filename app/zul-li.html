@@ -3271,12 +3271,14 @@ function qtyFor(item,amount){const a=String(amount||'').replace(',','.').trim();
    shopper's own feed (on this phone, state.links). Ingredients: from the post's text the shopper pastes, or, without it,
    Claude's estimate from the dish name. */
 function linkInfo(u){u=String(u||'').trim();let m;
+  /* only a real web address, taken from the pasted text: javascript:/data: text that merely mentions a video site is not a link */
+  u=(u.match(/https?:\/\/[^\s"'<>`]+/i)||[])[0];if(!u)return null;
   if(m=u.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/i)||u.match(/tiktok\.com\/(?:v|embed(?:\/v2)?)\/(\d+)/i))return{site:'tiktok',name:'טיקטוק',embed:`https://www.tiktok.com/embed/v2/${m[1]}`,url:u};
   if(/(vm|vt)\.tiktok\.com\//i.test(u)||/tiktok\.com\/t\//i.test(u))return{site:'tiktok',name:'טיקטוק',embed:null,url:u};
   if(m=u.match(/instagram\.com\/(?:[^/]+\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/i))return{site:'instagram',name:'אינסטגרם',embed:`https://www.instagram.com/${m[1]==='p'?'p':'reel'}/${m[2]}/embed`,url:u};
   if(/(facebook\.com|fb\.watch)\//i.test(u))return{site:'facebook',name:'פייסבוק',embed:`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(u)}&show_text=false`,url:u};
   if(m=u.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/i))return{site:'youtube',name:'יוטיוב',embed:`https://www.youtube.com/embed/${m[1]}`,url:u};
-  if(/^https?:\/\//i.test(u))return{site:'web',name:'האתר',embed:null,url:u};return null}
+  return{site:'web',name:'האתר',embed:null,url:u}}
 /* a short share link (vm.tiktok.com/…, tiktok.com/t/…, fb.watch, instagram share) has no video number in it: the number is found
    by following the link (in the Android app, natively) or from TikTok's oEmbed, so the video plays here, in the feed */
 async function resolveLink(L){if(!L||L.embed)return L;

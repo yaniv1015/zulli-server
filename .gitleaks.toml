@@ -1,0 +1,7 @@
+# gitleaks settings: the default rules, minus known false positives.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "data branches hold base64 photos; test fixtures use fake keys"
+paths = ['''^img/''', '''^data/''', '''^hist/''', '''chartbeat-board/test\.js''', '''app/static/zxing\.js''']

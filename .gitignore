@@ -1,2 +1,14 @@
 node_modules/
 data/
+
+# secrets and signing keys never go into the repo
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+config.json
+!mobile/capacitor.config.json
