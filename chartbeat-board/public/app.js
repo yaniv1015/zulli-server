@@ -15,6 +15,14 @@ let timer = null;
 let last = null;
 let prevPeople = new Map();
 
+// קוד גישה לאתר: מגיע פעם אחת בקישור (?code=...) ונשמר בדפדפן
+let code = '';
+try {
+  const fromUrl = new URLSearchParams(location.search).get('code');
+  if (fromUrl) { localStorage.setItem('boardCode', fromUrl); history.replaceState(null, '', location.pathname); }
+  code = localStorage.getItem('boardCode') || '';
+} catch {}
+
 // ---------- שעון ----------
 function tick() {
   $('clock').textContent = new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -103,6 +111,7 @@ function render(d) {
     st.textContent = d.demo
       ? (d.configured ? 'מצב הדגמה' : 'מצב הדגמה — לחצו על ⚙ כדי להזין מפתח Chartbeat')
       : `עודכן ${time} · ${d.host}`;
+    if (d.demo && !d.configured && $('openSettings').hidden) st.textContent = 'מצב הדגמה — חסרים CHARTBEAT_API_KEY ו-CHARTBEAT_HOST בהגדרות האתר';
   }
 }
 
@@ -110,7 +119,13 @@ function render(d) {
 async function load() {
   clearTimeout(timer);
   try {
-    const res = await fetch('/api/dashboard', { cache: 'no-store' });
+    const res = await fetch('/api/dashboard', { cache: 'no-store', headers: { 'x-board-code': code } });
+    if (res.status === 401) {
+      code = prompt('קוד גישה ללוח:') || '';
+      try { localStorage.setItem('boardCode', code); } catch {}
+      timer = setTimeout(load, 500);
+      return;
+    }
     const d = await res.json();
     if (!res.ok) throw new Error(d.error || res.status);
     render(d);
@@ -125,6 +140,7 @@ async function load() {
 async function readConfig() {
   const cfg = await (await fetch('/api/config')).json();
   refreshMs = Math.max(5, Number(cfg.refreshSeconds) || 15) * 1000;
+  $('openSettings').hidden = Boolean(cfg.hosted); // באתר ההגדרות נקבעות ב-Vercel
   return cfg;
 }
 

@@ -1,0 +1,6 @@
+{
+  "installCommand": "npm install --omit=dev --no-audit --no-fund",
+  "buildCommand": "",
+  "outputDirectory": "public",
+  "functions": { "api/*.js": { "maxDuration": 30 } }
+}

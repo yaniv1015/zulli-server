@@ -46,4 +46,24 @@ await fetch(base + '/api/config', { method: 'POST', body: JSON.stringify({ apiKe
 assert.equal((await (await fetch(base + '/api/config')).json()).apiKey, '••••3456');
 assert.equal((await fetch(base + '/../server.js')).status, 404);
 server.close();
+
+// גרסת האתר (Vercel): קוד גישה, ובלי לחשוף את המפתח
+const fakeRes = () => {
+  const r = { headers: {}, setHeader(k, v) { r.headers[k] = v; }, status(c) { r.code = c; return r; }, json(b) { r.body = b; return r; } };
+  return r;
+};
+const { default: dashboard } = await import('./api/dashboard.js');
+const { default: config } = await import('./api/config.js');
+process.env.BOARD_CODE = 'secret';
+process.env.CHARTBEAT_API_KEY = 'abcdef123456';
+process.env.BOARD_TITLE = 'NEWS BOARD';
+let r = fakeRes(); await dashboard({ headers: {} }, r);
+assert.equal(r.code, 401);
+process.env.CHARTBEAT_DEMO = '1';
+r = fakeRes(); await dashboard({ headers: { 'x-board-code': 'secret' } }, r);
+assert.equal(r.code, 200);
+assert.equal(r.body.title, 'NEWS BOARD');
+r = fakeRes(); config({ headers: {} }, r);
+assert.equal(r.body.hosted, true);
+assert.ok(!JSON.stringify(r.body).includes('abcdef'));
 console.log('כל הבדיקות עברו');

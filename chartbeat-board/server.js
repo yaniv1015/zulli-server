@@ -172,7 +172,7 @@ async function todayTotals(cfg) {
 // מגבלת הקריאות ולא לעכב את הלוח בזמן ששאילתה ארוכה רצה
 function slowCache(fn, ms = 5 * 60 * 1000) {
   let value = null, error = null, at = 0, pending = null;
-  return (cfg) => {
+  const get = (cfg) => {
     if (!pending && Date.now() - at > ms) {
       pending = fn(cfg)
         .then((v) => { value = v; error = null; }, (e) => { error = e.message; })
@@ -180,9 +180,24 @@ function slowCache(fn, ms = 5 * 60 * 1000) {
     }
     return { value, error };
   };
+  // באתר (Vercel) אין תהליך שרץ ברקע בין בקשות, אז בפעם הראשונה מחכים לתשובה עד זמן מוגבל
+  get.settle = (waitMs) => pending && Promise.race([pending, new Promise((r) => setTimeout(r, waitMs))]);
+  return get;
 }
 
-export async function buildDashboard(cfg, caches) {
+export const createCaches = () => ({ comparisons: slowCache(comparisons), totals: slowCache(todayTotals) });
+
+// הגדרות האתר נקבעות במשתני סביבה (CHARTBEAT_API_KEY, CHARTBEAT_HOST, BOARD_TITLE, BOARD_CODE)
+export function envConfig() {
+  const cfg = loadConfig('');
+  if (process.env.BOARD_TITLE) cfg.title = process.env.BOARD_TITLE;
+  return cfg;
+}
+
+// קוד גישה אופציונלי לאתר, כדי שלא כל מי שמחזיק בקישור יראה את הנתונים
+export const codeOk = (req) => !process.env.BOARD_CODE || req.headers['x-board-code'] === process.env.BOARD_CODE;
+
+export async function buildDashboard(cfg, caches, { waitSlowMs = 0 } = {}) {
   if (cfg.demo || !cfg.apiKey || !cfg.host) {
     return { ...demoDashboard(), demo: true, configured: Boolean(cfg.apiKey && cfg.host), title: cfg.title };
   }
@@ -190,6 +205,9 @@ export async function buildDashboard(cfg, caches) {
     cbLive(cfg, 'quickstats').then(parseQuickstats),
     cbLive(cfg, 'toppages', { limit: 50 }).then(parseToppages),
   ]);
+  caches.comparisons(cfg);
+  caches.totals(cfg);
+  if (waitSlowMs) await Promise.all([caches.comparisons.settle(waitSlowMs), caches.totals.settle(waitSlowMs)]);
   const cmp = caches.comparisons(cfg);
   const tot = caches.totals(cfg);
   const errors = [qs.reason?.message, tp.reason?.message, cmp.error, cmp.value?.error, tot.error].filter(Boolean);
@@ -222,7 +240,7 @@ const TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascrip
 
 export function startServer({ port = 8080, configFile = path.join(HERE, 'config.json') } = {}) {
   let cfg = loadConfig(configFile);
-  const caches = { comparisons: slowCache(comparisons), totals: slowCache(todayTotals) };
+  let caches = createCaches();
 
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://x');
@@ -242,8 +260,7 @@ export function startServer({ port = 8080, configFile = path.join(HERE, 'config.
         if (!next.apiKey || next.apiKey.startsWith('••••')) delete next.apiKey; // שדה ריק או מוסתר = לא לשנות
         cfg = { ...cfg, ...next };
         saveConfig(configFile, cfg);
-        caches.comparisons = slowCache(comparisons);
-        caches.totals = slowCache(todayTotals);
+        caches = createCaches();
         return json(200, { ok: true });
       }
       const file = path.normalize(path.join(PUBLIC, url.pathname === '/' ? 'index.html' : url.pathname));

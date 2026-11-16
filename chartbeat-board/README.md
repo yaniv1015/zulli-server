@@ -33,6 +33,23 @@ npm run dist:win   # dist/Chartbeat Board.exe (נייד, בלי התקנה)
 npm run dist:mac
 ```
 
+## גרסת אתר (Vercel, חינם)
+
+אותו לוח ככתובת באינטרנט שפותחים בכל דפדפן או טלוויזיה חכמה. המפתח שמור בהגדרות האתר ב-Vercel ולא מגיע לדפדפן.
+
+1. נכנסים ל-vercel.com ונרשמים עם חשבון ה-GitHub.
+2. **Add New → Project**, בוחרים את המאגר `zulli-server` (אם הוא לא מופיע: Adjust GitHub App Permissions ומאשרים גישה אליו).
+3. **Root Directory**: `chartbeat-board`. Framework: Other.
+4. **Environment Variables**:
+   - `CHARTBEAT_API_KEY` — המפתח
+   - `CHARTBEAT_HOST` — שם האתר, למשל `example.co.il`
+   - `BOARD_CODE` — קוד גישה (מומלץ). בלעדיו כל מי שיש לו את הקישור רואה את הנתונים
+   - `BOARD_TITLE` — הכותרת בראש הלוח (לא חובה)
+5. **Deploy**. בסוף מקבלים כתובת כמו `chartbeat-board.vercel.app`.
+6. במסך שבמערכת פותחים פעם אחת `https://<הכתובת>/?code=<קוד הגישה>`. הדפדפן זוכר את הקוד.
+
+הקוד נמצא כרגע בענף `chartbeat-board`. כדי ש-Vercel יפרסם ממנו: Settings → Environments → Production → Branch Tracking, ומשנים ל-`chartbeat-board` (או ממזגים את הענף ל-main).
+
 ## מאיפה כל מספר מגיע
 
 | בלוח | קריאה ל-Chartbeat | רענון |
