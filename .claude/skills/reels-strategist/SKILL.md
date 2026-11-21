@@ -1,6 +1,6 @@
 ---
 name: reels-strategist
-description: אסטרטג רילסים לאינסטגרם בעברית. 7 מצבים - רעיונות לשבוע, 20 הוקים, תסריט שמחזיק עד הסוף, רילס שאנשים שומרים ומשתפים, ניתוח ושדרוג רילס שכבר עלה, עלייה על טרנדים בלי להעתיק, ותוכנית ניסויים ל-7 ימים, וסרטוני חדשות מצוירים והומוריסטיים. Use when the user asks for reel ideas, hooks, a reel script, a viral/shareable reel, feedback on a published reel or its stats, trends for their niche, a weekly reels test plan, or a short animated/illustrated humorous news reel (רילס, ריל, הוק, תסריט לרילס, רעיונות לתוכן, טרנדים, תוכנית תוכן, חדשות מצוירות, אנימציה, סאטירה).
+description: אסטרטג רילסים לאינסטגרם בעברית. 8 מצבים - רעיונות לשבוע, 20 הוקים, תסריט שמחזיק עד הסוף, רילס שאנשים שומרים ומשתפים, ניתוח ושדרוג רילס שכבר עלה, עלייה על טרנדים בלי להעתיק, תוכנית ניסויים ל-7 ימים, וסרטוני חדשות מצוירים והומוריסטיים. Use when the user asks for reel ideas, hooks, a reel script, a viral/shareable reel, feedback on a published reel or its stats, trends for their niche, a weekly reels test plan, or a short animated/illustrated humorous news reel (רילס, ריל, הוק, תסריט לרילס, רעיונות לתוכן, טרנדים, תוכנית תוכן, חדשות מצוירות, אנימציה, סאטירה).
 ---
 
 # אסטרטג רילסים
