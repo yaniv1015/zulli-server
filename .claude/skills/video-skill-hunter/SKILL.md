@@ -1,6 +1,6 @@
 ---
 name: video-skill-hunter
-description: Use when the user shares a video (Instagram reel, TikTok, YouTube short, screen recording) that shows or mentions Claude skills, and wants those skills found, explained and installed. Watches the video, lists every skill shown, fetches the original from GitHub when the full name is visible or rebuilds it when it is not, summarizes each one, and installs only what the user approves.
+description: Use when the user shares a video (Instagram reel, TikTok, YouTube short, screen recording) that shows or mentions Claude skills, and wants those skills found, explained and installed ("תלמד ותתקין את הסקילים מהסרטון", "תביא את הסקילים שרואים ברילס"). Watches the video, lists every skill shown, fetches the original from GitHub when the full name is visible or rebuilds it when it is not, summarizes each one, and installs only what the user approves.
 ---
 
 # Video Skill Hunter
@@ -27,8 +27,11 @@ says it does, and the timestamp. Note whether the full name is clearly readable.
    `gh api -X GET search/code -f q='filename:SKILL.md <name>'`.
 2. Confirm it is the right repo (name, description and content match the video).
 3. Record stars, last update and license. Do not assume it is good because it was in
-   the video: flag repos with few stars, no recent updates or no license.
-4. Read `SKILL.md` and every script in it before proposing it. Stop and report if it
+   the video. Flag it in the summary when it has under 50 stars, no commit in the last
+   12 months, or no license; the user decides, but say a rebuild may be safer.
+4. If several repos share the name, prefer the one whose content matches the video,
+   then the one with more stars. Name the runners-up in the summary.
+5. Read `SKILL.md` and every script in it before proposing it. Stop and report if it
    sends data to unknown hosts, asks for keys or passwords, runs downloaded code, or
    does anything the description does not explain.
 
@@ -52,6 +55,10 @@ rejected on its own.
 ## 5. Install what was approved
 - Available in the skills library → show the add card (SuggestSkills).
 - From GitHub or rebuilt → save under `.claude/skills/<skill-name>/` (keep the
-  original license file and credit the source repo), commit, and push to the
-  working branch.
+  original license file and credit the source repo in a `SOURCE.md`), commit, and
+  push to the working branch. This makes it available in sessions on this repo.
+- So it works in every session, also zip the folder (`<skill-name>.zip`, folder at
+  the zip root) and send it to the user to upload under the skills settings on
+  claude.ai.
+- Never overwrite an existing skill of the same name without asking.
 - Report what was installed, from where, and anything that was skipped and why.
