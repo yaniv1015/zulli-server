@@ -110,6 +110,9 @@ def main(argv=None):
     except YouTubeTranscriptApiException as e:
         fail(str(e).strip().splitlines()[0] if str(e).strip() else type(e).__name__)
     except OSError as e:
+        if "/sorry/" in str(e):
+            fail("YouTube's bot check blocked this request (it redirected to google.com/sorry). "
+                 "This happens from cloud/server IPs. Run it from your own computer.", 4)
         fail(f"network error: {e}", 4)
 
     segments = fetched.to_raw_data()
