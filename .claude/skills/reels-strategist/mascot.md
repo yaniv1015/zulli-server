@@ -36,3 +36,8 @@ red necktie, holding a black whiteboard marker in one wing.
 Background: [whiteboard with scribbles / אחר]. No text in the image.
 ```
 טקסט עברי מוסיפים בעריכה ולא בתוך התמונה, כי מחוללי תמונות משבשים עברית.
+
+## תמונת ייחוס
+דף דמות ראשון נוצר ב-Canva, מזהה מדיה `MAHbhe9Ck_M`.
+כשמייצרים סצנה עם `generate-image` של Canva, העבר אותו ב-`imageReferences` (type MEDIA) כדי ששוקי ייראה אותו דבר בכל סרטון.
+אם מחליפים את דף הדמות - עדכן כאן את המזהה.
