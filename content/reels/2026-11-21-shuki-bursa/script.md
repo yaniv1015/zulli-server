@@ -31,3 +31,7 @@
 
 ## נכסים ב-Canva
 סצנות 1-5: `MAHbhd45hSA`, `MAHbhcIeBm8`, `MAHbhTpegj8`, `MAHbhdIEygk`, `MAHbheS86Ew`
+
+## עיצוב ב-Canva
+סטורי של 5 עמודים עם כתוביות עבריות, מוכן לייצוא MP4: https://canva.link/ygxmhveyup4iph2 (design `DAHbhaieSfc`).
+חסר: קריינות, אפקטים קוליים ומוזיקה, ואנימציה בתוך הסצנות (כרגע זה מעבר בין 5 תמונות סטילס).
